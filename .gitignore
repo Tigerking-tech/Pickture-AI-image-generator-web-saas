@@ -56,3 +56,4 @@ next-env.d.ts
 
 # Video proof scripts
 video-proofs/*.mjs
+.github/

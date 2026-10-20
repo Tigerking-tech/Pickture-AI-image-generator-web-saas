@@ -1,47 +1,36 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@/components/Analytics";
+import { JsonLd } from "@/components/JsonLd";
+import { buildMetadata, SITE_NAME, SITE_TAGLINE, softwareApplicationJsonLd } from "@/lib/seo";
 import "./globals.css";
 
+// 展示字：电影感、可紧收字距（Leonardo 的 ufficioDisplay 角色）
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage-grotesque",
   subsets: ["latin"],
   weight: ["400", "500", "700", "800"],
 });
 
+// 正文：人文主义无衬线，开放字腔、长文可读（Leonardo 的 canvaSans 角色）
+const instrumentSans = Instrument_Sans({
+  variable: "--font-instrument-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+// 元数据与标签：等宽（Midjourney 用等宽承载 tag / 参数的惯例）
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://nextjs-supabase-creem-boilerplate.vercel.app",
-  ),
-  title: "SaaSKit — Next.js + Supabase + Creem Boilerplate",
-  description:
-    "The most comprehensive SaaS boilerplate with Creem payments. Auth, subscriptions, license keys, credits, webhooks, and demo mode — ship your SaaS in hours.",
-  keywords: [
-    "SaaS boilerplate",
-    "Next.js",
-    "Supabase",
-    "Creem",
-    "payments",
-    "subscriptions",
-    "TypeScript",
-  ],
-  openGraph: {
-    title: "SaaSKit — Next.js + Supabase + Creem Boilerplate",
-    description:
-      "Auth, payments, subscriptions, license keys, credits wallet — ship your SaaS in hours.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "SaaSKit — Ship your SaaS in hours",
-    description: "Production-ready boilerplate with Creem payments, Supabase auth, and demo mode.",
-  },
-};
+export const metadata: Metadata = buildMetadata({
+  title: `${SITE_NAME} — One sentence. A few clicks. One finished image.`,
+  description: SITE_TAGLINE,
+  path: "/",
+});
 
 export default function RootLayout({
   children,
@@ -50,8 +39,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${bricolage.variable} ${jetbrainsMono.variable} antialiased`}>
+      <body
+        className={`${bricolage.variable} ${instrumentSans.variable} ${jetbrainsMono.variable} antialiased bg-canvas text-ink`}
+      >
         {children}
+        {/* R12：全站 JSON-LD；R11：可观测脚本（未配置环境变量时不注入） */}
+        <JsonLd data={softwareApplicationJsonLd()} />
+        <Analytics />
       </body>
     </html>
   );

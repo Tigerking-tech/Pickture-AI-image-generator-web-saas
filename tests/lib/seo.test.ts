@@ -15,8 +15,28 @@ describe("sitemap", () => {
     expect(urls.some((u) => u.includes("/pricing"))).toBe(true);
   });
 
-  test("returns 4 entries", () => {
-    expect(sitemap()).toHaveLength(4);
+  // PRD §8 信息架构新增 /create 与 /gallery，条数由 4 增至 6
+  test("returns 6 entries", () => {
+    expect(sitemap()).toHaveLength(6);
+  });
+
+  test("includes create and gallery pages", () => {
+    const urls = sitemap().map((e) => e.url);
+    expect(urls.some((u) => u.includes("/create"))).toBe(true);
+    expect(urls.some((u) => u.includes("/gallery"))).toBe(true);
+  });
+});
+
+describe("robots — AI 爬虫放行（R12 / PRD §11.3）", () => {
+  test("explicitly allows GPTBot / ClaudeBot / PerplexityBot", () => {
+    const config = robots();
+    const rules = Array.isArray(config.rules) ? config.rules : [config.rules];
+    const agents = rules.flatMap((r) =>
+      Array.isArray(r.userAgent) ? r.userAgent : r.userAgent ? [r.userAgent] : [],
+    );
+    expect(agents).toContain("GPTBot");
+    expect(agents).toContain("ClaudeBot");
+    expect(agents).toContain("PerplexityBot");
   });
 });
 

@@ -1,0 +1,60 @@
+-- ============================================================
+-- 000_schema：脚手架原始 supabase/schema.sql 的迁移化副本
+-- 原因：schema.sql 不在 migrations/ 目录，supabase db reset 不会应用它，
+--       导致 002_expand.sql 因缺少 public.subscriptions 而失败。
+-- 本文件需与 supabase/schema.sql 保持同步（后者用于 Dashboard 手动执行）。
+-- ============================================================
+
+-- Subscriptions table: synced via Creem webhooks
+create table if not exists public.subscriptions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade unique not null,
+  creem_customer_id text,
+  creem_subscription_id text,
+  creem_product_id text,
+  product_name text,
+  status text default 'inactive' check (status in ('active', 'cancelled', 'paused', 'expired', 'inactive')),
+  current_period_end timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Indexes
+create index if not exists idx_subscriptions_user_id on public.subscriptions(user_id);
+create index if not exists idx_subscriptions_creem_subscription_id on public.subscriptions(creem_subscription_id);
+create index if not exists idx_subscriptions_creem_customer_id on public.subscriptions(creem_customer_id);
+
+-- RLS
+alter table public.subscriptions enable row level security;
+
+-- Users can only read their own subscription
+create policy "Users can view own subscription"
+  on public.subscriptions for select
+  using (auth.uid() = user_id);
+
+-- Note: Service role (used by webhooks) bypasses RLS automatically.
+
+-- Auto-update updated_at
+create or replace function public.handle_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger subscriptions_updated_at
+  before update on public.subscriptions
+  for each row execute function public.handle_updated_at();
+
+-- Webhook events: idempotency tracking
+create table if not exists public.webhook_events (
+  id text primary key,
+  event_type text not null,
+  processed_at timestamptz default now()
+);
+
+create index if not exists idx_webhook_events_processed_at on public.webhook_events(processed_at);
+
+alter table public.webhook_events enable row level security;
+

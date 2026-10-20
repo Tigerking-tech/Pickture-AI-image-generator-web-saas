@@ -1,24 +1,89 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Pictory 设计宪法 v2
+   综合全球 top 3 AI 生图平台的设计语言：
+
+   · Midjourney — 近黑画布让作品成为唯一主角；密集网格无边框、无分隔色块；
+     发丝级分隔线；等宽字体承载元数据；拒绝品牌色，身份寄于结构与排版。
+   · Leonardo.ai — 纯黑 #000000 底面；电影感展示字重（500–700，紧收字距）；
+     白色全胶囊 CTA 是页面最亮物体；单一紫罗兰 #8B5CF6 只用于生成状态；
+     卡片微抬升，用发丝线而非投影做分离。
+   · Ideogram — Material 中性灰阶；Linear 式单强调色纪律（一个饱和色，
+     只按位置使用，绝不装饰性铺开）；克制的微文案语气。
+
+   配色纪律 70-20-10：
+     70% 画布黑（--canvas / --surface）
+     20% 图片内容与中性灰阶铬色（--ink-* / --hairline）
+     10% 紫罗兰强调 + 白色 CTA（--accent / --cta）
+   ============================================================ */
+
 :root {
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #1e1e1e;
-  --bg-cream: #f5f0eb;
-  --bg-violet: #c4b5fd;
-  --text-primary: #ffffff;
-  --text-secondary: #a1a1a1;
-  --text-muted: #666666;
-  --text-dark: #0a0a0a;
-  --accent-orange: #ff6b2c;
-  --accent-violet: #8b5cf6;
-  --border: #2a2a2a;
-  --border-bold: #ffffff;
+  /* 画布与层次：越黑越好，作品才是唯一颜色来源 */
+  --canvas: #000000;
+  --surface: #0a0a0b;
+  --surface-elevated: #141417;
+  --surface-hover: #1c1c21;
+
+  /* 中性灰阶（Material 阶梯 + Midjourney ink 体系） */
+  --ink: #ebecef;
+  --ink-secondary: #c6c9d2;
+  --ink-muted: #8f94a3;
+  /* 注：--ink-dim 用于 placeholder 等最小文本，实测 #6b7080 在纯黑上仅 4.42:1，
+     低于 WCAG AA 的 4.5:1，故提亮至 #7c8294（约 5.7:1） */
+  --ink-dim: #7c8294;
+
+  /* 发丝级分隔：不投影、不发光，靠对比度表达层次 */
+  --hairline: #1f1f23;
+  --hairline-strong: #2e2e35;
+
+  /* 唯一强调色 + 最亮 CTA */
+  --accent: #8b5cf6;
+  --accent-soft: rgba(139, 92, 246, 0.14);
+  --cta: #ffffff;
+  --cta-ink: #000000;
+
+  --danger: #f2330d;
   --success: #22c55e;
-  --error: #ef4444;
   --warning: #eab308;
+
+  /* ── 兼容层：脚手架既有组件引用这些变量名，此处重映射到暗色宪法，
+        使 pricing / login / signup 与全局风格一致 ── */
+  --bg-primary: var(--canvas);
+  --bg-secondary: var(--surface);
+  --bg-cream: var(--surface); /* 原浅奶油底 → 深色画布 */
+  --bg-violet: var(--accent);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-secondary);
+  --text-muted: var(--ink-muted);
+  --text-dark: var(--ink); /* 原用于深底上的黑字 → 改为纸白 */
+  --accent-orange: var(--accent); /* 原 Neo-brut 橙 → 紫罗兰 */
+  --accent-violet: var(--accent);
+  --border: var(--hairline);
+  --border-bold: var(--cta);
 }
 
 @theme inline {
+  /* 新宪法 token */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-hover: var(--surface-hover);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-dim: var(--ink-dim);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-cta: var(--cta);
+  --color-cta-ink: var(--cta-ink);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  /* 兼容层映射 */
   --color-bg-primary: var(--bg-primary);
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-cream: var(--bg-cream);
@@ -31,64 +96,84 @@
   --color-accent-violet: var(--accent-violet);
   --color-border: var(--border);
   --color-border-bold: var(--border-bold);
-  --color-success: var(--success);
-  --color-error: var(--error);
-  --color-warning: var(--warning);
-  --font-sans: var(--font-bricolage-grotesque);
+
+  /* 字体：电影感展示字 + 人文主义正文 + 等宽元数据（Midjourney 的 tag 惯例） */
+  --font-display: var(--font-bricolage-grotesque);
+  --font-sans: var(--font-instrument-sans);
   --font-mono: var(--font-jetbrains-mono);
 }
 
 body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--canvas);
+  color: var(--ink);
   font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Neo-brut button utilities */
+/* ── 主 CTA：白色全胶囊，纯黑页面上的最亮物体（Leonardo / Apple / Vercel 共识）── */
 @utility btn-primary {
-  @apply bg-accent-orange text-black font-bold border-2 border-black rounded-full;
-  box-shadow: 4px 4px 0px #000;
+  @apply bg-cta text-cta-ink font-semibold rounded-full;
+  border: 1px solid var(--cta);
   &:hover {
-    translate: 2px 2px;
-    box-shadow: 2px 2px 0px #000;
+    background: color-mix(in oklab, var(--cta) 88%, transparent);
   }
   &:active {
-    translate: 4px 4px;
-    box-shadow: none;
+    translate: 0 1px;
   }
-  transition: all 150ms;
+  transition:
+    background 150ms ease,
+    transform 150ms ease;
 }
 
+/* 保留脚手架既有 utility 名，避免其组件报错，但统一为暗色宪法 */
 @utility btn-secondary {
-  @apply bg-white text-black font-bold border-2 border-black rounded-full;
-  box-shadow: 4px 4px 0px #000;
+  @apply btn-ghost;
+}
+
+/* ── 次级按钮：透明 + 发丝描边（ghost），层级绝不喧宾夺主 ── */
+@utility btn-ghost {
+  @apply text-ink rounded-full;
+  border: 1px solid var(--hairline-strong);
   &:hover {
-    translate: 2px 2px;
-    box-shadow: 2px 2px 0px #000;
+    background: var(--surface-elevated);
+    border-color: var(--ink-dim);
   }
-  &:active {
-    translate: 4px 4px;
-    box-shadow: none;
-  }
-  transition: all 150ms;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
 }
 
 @utility btn-dark {
-  @apply bg-black text-white font-bold border-2 border-black rounded-full;
-  box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.2);
-  &:hover {
-    translate: 2px 2px;
-    box-shadow: 2px 2px 0px rgba(255, 255, 255, 0.2);
-  }
-  &:active {
-    translate: 4px 4px;
-    box-shadow: none;
-  }
-  transition: all 150ms;
+  @apply btn-ghost;
 }
 
 @utility btn-disabled {
   @apply opacity-50;
   translate: 0 0 !important;
   box-shadow: none !important;
+}
+
+/* ── 微抬升面板：靠底色差异与发丝线分离，不用投影 ── */
+@utility panel {
+  background: var(--surface-elevated);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+}
+
+/* 尊重系统的降低动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 可见焦点态（键盘可达性） */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

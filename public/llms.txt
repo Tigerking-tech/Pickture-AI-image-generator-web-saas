@@ -1,0 +1,40 @@
+# Pictory
+
+> Turn one plain-language sentence into a finished image by answering a few visual multiple-choice questions — no prompt writing, no re-rolling the dice.
+
+Pictory is a visual decision-tree AI image tool. Instead of asking users to write a 200-word prompt and re-generate 6–10 times, it:
+1. takes one sentence (e.g. "a girl and a dog running at sunset"),
+2. automatically decomposes it into visual elements (VISTA schema: character / environment / lighting / composition / camera / style / effects),
+3. renders 2–4 real candidate images per element so the user just clicks to choose,
+4. lets the user refine any node by chatting,
+5. composes one final high-quality image (FLUX.1 Pro).
+
+## Why it is different
+
+- Traditional text-to-image: write a long prompt, roll the dice 8 times, ~20 minutes, $0.15–0.40 per usable image.
+- Pictory: one sentence + a few clicks, 2–5 minutes, ~$0.10 per finished piece.
+- 18 cheap preview images are *decision aids*; the expensive final image is generated only once.
+
+## Key pages
+
+- / : Landing page with the value proposition and pricing entry
+- /create : The creation workspace — sentence input, element decision tree, candidate grids, final image
+- /gallery : Public gallery of shared works (growth flywheel)
+- /pricing : Free / Starter / Pro plans and credit packs
+
+## Plans
+
+- Free: $0, 60 credits/month (≈6 works), watermarked, FLUX.1 schnell previews, 2 Pro final-image trials
+- Starter: $9.9/mo, 600 credits, Pro final image, no watermark, personal commercial license
+- Pro: $29/mo, 2400 credits, priority queue, private generation
+
+## Compliance
+
+- All final images retain machine-readable C2PA provenance metadata.
+- Deepfake-class outputs (e.g. editing a real person's photo) carry a visible "AI generated" label (EU AI Act Art. 50(4)).
+- Text and image moderation run server-side on every request, identical standards for free and paid users.
+- Reference-image uploads require just-in-time granular consent; images are deleted after processing.
+
+## Tech
+
+Next.js (App Router) + TypeScript + Tailwind, Supabase (Postgres + Auth + RLS), Creem (Merchant of Record, VAT handled), fal.ai FLUX (schnell for previews, Pro for final), deployed on Vercel.

@@ -28,7 +28,8 @@
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "resend": "^6.9.4"
+    "resend": "^6.9.4",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
@@ -45,5 +46,10 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
   }
 }

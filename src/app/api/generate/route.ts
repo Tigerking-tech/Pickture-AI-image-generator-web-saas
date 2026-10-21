@@ -5,54 +5,32 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { persistImage } from "@/lib/storage";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { toPrompt, type VistaTree, validateVistaTree } from "@/lib/vista";
+import { getImageProvider } from "@/lib/providers/image";
 
 /**
  * R3 节点预览生图 / R4 终图合成
  *
- * - preview：对某节点的每个候选值各出一张便宜的 schnell 图（数组长度 = 候选数）
- * - final  ：按完整要素树合成 1 张 Pro 终图，并扣 1 个作品的积分
+ * - preview：对某节点的每个候选值各出一张便宜的图（数组长度 = 候选数）
+ * - final  ：按完整要素树合成 1 张终图，并扣 1 个作品的积分
  *
- * 缺 FAL_KEY 时返回 503 并明确报错 —— 不静默降级、不返回假图。
+ * 图像 provider 经 getImageProvider() 注入（fal / 火山引擎按 env 切换）。
+ * 缺 key 时返回 503 并明确报错 —— 不静默降级、不返回假图。
  */
 
-const FAL_RUN = "https://fal.run";
-
-interface FalImageResult {
-  images?: Array<{ url: string }>;
+/** 可选模型覆盖：避免切换供应商时改代码 */
+function resolvePreviewModel(base: string): string {
+  return process.env.IMAGE_MODEL_PREVIEW?.trim() || base;
 }
-
-async function callFal(
-  apiKey: string,
-  model: string,
-  body: Record<string, unknown>,
-): Promise<{ ok: true; urls: string[] } | { ok: false; status: number; detail: string }> {
-  const res = await fetch(`${FAL_RUN}/${model}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Key ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    return { ok: false, status: res.status, detail: (await res.text()).slice(0, 500) };
-  }
-
-  const json = (await res.json()) as FalImageResult;
-  const urls = (json.images ?? []).map((i) => i.url).filter(Boolean);
-  return { ok: true, urls };
+function resolveFinalModelName(plan: unknown, proTrialsUsed: number): string {
+  const base = resolveFinalModel(plan, proTrialsUsed);
+  return process.env.IMAGE_MODEL_FINAL?.trim() || base;
 }
 
 export async function POST(request: NextRequest) {
-  const falKey = process.env.FAL_KEY;
-  if (!falKey) {
+  const img = getImageProvider();
+  if (!img.isConfigured()) {
     return NextResponse.json(
-      {
-        error: "MISSING_FAL_KEY",
-        message:
-          "FAL_KEY is not configured, so no image can be generated. Add your fal.ai key to .env.local and retry. This endpoint will not return fake images.",
-      },
+      { error: "MISSING_IMAGE_PROVIDER_KEY", message: img.missingKeyMessage() },
       { status: 503 },
     );
   }
@@ -73,7 +51,6 @@ export async function POST(request: NextRequest) {
     candidates?: string[];
     tree?: VistaTree;
     proTrialsUsed?: number;
-    sessionId?: string;
   };
   try {
     body = await request.json();
@@ -84,7 +61,7 @@ export async function POST(request: NextRequest) {
   const plan = normalizePlan(body.plan);
   const route = routeForPlan(plan);
 
-  // ── R3 节点预览：每个候选一张 schnell 图 ──
+  // ── R3 节点预览：每个候选一张图 ──
   if (body.mode === "preview") {
     const candidates = Array.isArray(body.candidates) ? body.candidates.slice(0, 4) : [];
     if (candidates.length < 2) {
@@ -97,12 +74,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const model = resolvePreviewModel(route.previewModel);
     const settled = await Promise.all(
       candidates.map((c) =>
-        callFal(falKey, route.previewModel, {
+        img.generate({
           prompt: c,
-          image_size: "square_hd",
-          num_images: 1,
+          model,
+          numImages: 1,
+          size: "square_hd",
         }),
       ),
     );
@@ -124,10 +103,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // fal CDN 上的图约 7 天过期，转存到自有存储后再返回给前端
+    // 图在 CDN 上约 7 天过期，转存到自有存储后再返回给前端
     const stamp = Date.now();
     const uid = user?.id ?? "anon";
-    // basePath 不带扩展名：persistImage 会产出 .webp 与 __thumb.webp 两级
     const stored = await Promise.all(urls.map((u, i) => persistImage(u, `${uid}/${stamp}-${i}`)));
     const images = stored.map((p, i) => p?.url ?? urls[i]);
     const thumbs = stored.map((p, i) => p?.thumbUrl ?? urls[i]);
@@ -137,12 +115,11 @@ export async function POST(request: NextRequest) {
       images,
       thumbs,
       candidates,
-      // 明确告知前端哪些是临时地址，便于后续重试转存
       persisted: stored.map((p) => Boolean(p)),
     });
   }
 
-  // ── R4 终图：1 张 Pro（免费档超出体验次数则降级 schnell） ──
+  // ── R4 终图：1 张（免费档超出体验次数则降级预览模型） ──
   if (body.mode === "final") {
     if (!body.tree) {
       return NextResponse.json({ error: "tree_required" }, { status: 400 });
@@ -166,13 +143,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const model = resolveFinalModel(plan, body.proTrialsUsed ?? 0);
+    const model = resolveFinalModelName(plan, body.proTrialsUsed ?? 0);
     const prompt = toPrompt(body.tree);
 
-    const result = await callFal(falKey, model, {
+    const result = await img.generate({
       prompt,
-      image_size: "square_hd",
-      num_images: 1,
+      model,
+      numImages: 1,
+      size: "square_hd",
     });
 
     if (!result.ok) {
@@ -188,7 +166,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 终图是核心资产，必须落到自有存储（fal CDN 约 7 天过期）
+    // 终图是核心资产，必须落到自有存储（CDN 约 7 天过期）
     const persisted = await persistImage(
       result.urls[0],
       `${user?.id ?? "anon"}/${Date.now()}-final`,
@@ -201,7 +179,7 @@ export async function POST(request: NextRequest) {
       persisted: Boolean(persisted),
       model,
       prompt,
-      // R10：C2PA 机器可读标记由 fal.ai 随图保留，此处回传供落库
+      // R10：C2PA 机器可读标记（fal 随图保留，火山等需后续补充）
       provenance: { c2pa: true, generator: model },
     });
   }

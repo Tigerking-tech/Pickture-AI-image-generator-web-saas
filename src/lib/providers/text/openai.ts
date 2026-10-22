@@ -18,6 +18,8 @@ export interface OpenAIConfig {
   missingKeyMessage: string;
   /** 可选附加请求头（OpenRouter 需要 Authorization 之外的 referer 等） */
   extraHeaders?: Record<string, string>;
+  /** 强制使用的模型名，覆盖请求里带来的模型标识（如接入 Tencent 时锁定免费模型） */
+  defaultModel?: string;
 }
 
 const SYSTEM_PROMPT = `You are a visual element decomposer for an AI image tool.
@@ -71,7 +73,7 @@ export function createOpenAIProvider(config: OpenAIConfig): TextProvider {
           ...config.extraHeaders,
         },
         body: JSON.stringify({
-          model: req.model,
+          model: config.defaultModel ?? req.model,
           temperature: 0.4,
           response_format: { type: "json_object" },
           messages: [

@@ -7,6 +7,7 @@
 import type { TextProvider } from "../types";
 import { createOpenAIProvider } from "./openai";
 import { openRouterTextProvider } from "./openrouter";
+import { tencentTextProvider } from "./tencent";
 
 const openaiTextProvider: TextProvider = createOpenAIProvider({
   name: "openai",
@@ -21,6 +22,9 @@ export function getTextProvider(): TextProvider {
   switch (kind) {
     case "openrouter":
       return openRouterTextProvider;
+    case "tencent":
+    case "hunyuan":
+      return tencentTextProvider;
     case "openai":
     default:
       return openaiTextProvider;

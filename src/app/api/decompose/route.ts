@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { withDefaultModes } from "@/lib/elementConfig";
 import { normalizePlan } from "@/lib/modelRouter";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseServer } from "@/lib/supabase/server";
 import { emptyVistaTree, type VistaTree, validateVistaTree } from "@/lib/vista";
 import { getTextProvider } from "@/lib/providers/text";
 
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { sentence?: string; imageUrl?: string; plan?: string };
+  let body: { sentence?: string; imageUrl?: string; plan?: string; sessionId?: string };
   try {
     body = await request.json();
   } catch {
@@ -86,6 +88,31 @@ export async function POST(request: NextRequest) {
       { error: "schema_validation_failed", errors: validation.errors.slice(0, 10) },
       { status: 502 },
     );
+  }
+
+  // ── 拆解留档（PRD §9.5.5）──
+  // 把这次"一句话 → VISTA 树"的 JSON 存下来，是将来做学习点 D
+  // （把高满意度拆解作为 few-shot 回灌拆解 LLM）的原始数据。
+  // 落库失败不阻断主流程：拆解结果已经能返回给用户，飞轮数据丢了下次再攒。
+  try {
+    const supabase = await createSupabaseServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await getSupabaseAdmin()
+      .from("decompositions")
+      .insert({
+        session_id:
+          typeof body.sessionId === "string" && body.sessionId !== ""
+            ? body.sessionId
+            : `srv-${Date.now()}`,
+        user_id: user?.id ?? null,
+        sentence,
+        tree,
+        satisfaction_score: null,
+      });
+  } catch {
+    // 静默：飞轮落库不是主流程
   }
 
   return NextResponse.json(tree);

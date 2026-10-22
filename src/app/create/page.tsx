@@ -32,6 +32,18 @@ export default function CreatePage() {
   const [finalImage, setFinalImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<"" | "decompose" | string | "final">("");
   const [error, setError] = useState<string | null>(null);
+  // 数据飞轮（PRD §9.5）：一次创作会话一个 sessionId，把该会话的所有选择串起来
+  const [sessionId, setSessionId] = useState("");
+  // 每个节点被"重出"的次数，用于识别负信号（PRD §9.5.2：重出 > 3 次）
+  const [regenCount, setRegenCount] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    setSessionId(
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
+  }, []);
 
   // 从 Landing 的入口框带过来的句子（/create?q=...）
   useEffect(() => {
@@ -56,6 +68,34 @@ export default function CreatePage() {
     return json;
   }, []);
 
+  /**
+   * 数据飞轮埋点（PRD §9.5.1 学习点 A：选择信号沉淀）
+   *
+   * 埋点失败绝不影响用户操作 —— 飞轮数据这次丢了下次再攒，主流程必须继续走完。
+   * 这里只"记录用户选了什么"，不做任何自动改写候选的动作
+   * （红线 §9.5.4：飞轮只优化排序，绝不替用户做决定）。
+   */
+  const track = useCallback(
+    (payload: {
+      nodeAttr: string;
+      candidateIndex: number;
+      wasPicked?: boolean;
+      satisfaction?: "positive" | "neutral" | "negative";
+      event?: "pick" | "outcome";
+      candidateValue?: string;
+    }) => {
+      if (sessionId === "") return;
+      void fetch("/api/selections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, ...payload }),
+      }).catch(() => {
+        // 静默：埋点不是主流程
+      });
+    },
+    [sessionId],
+  );
+
   async function handleDecompose(e: React.FormEvent) {
     e.preventDefault();
     if (sentence.trim() === "") return;
@@ -68,6 +108,7 @@ export default function CreatePage() {
     try {
       const json = (await callApi("/api/decompose", {
         sentence: sentence.trim(),
+        sessionId,
       })) as unknown as VistaTree;
       setTree(json);
     } catch (err) {
@@ -81,6 +122,17 @@ export default function CreatePage() {
   async function handlePreview(node: DecisionNode) {
     setError(null);
     setLoading(node.id);
+    // 重出计数：同一节点反复重出说明候选没命中，是明确的负信号（PRD §9.5.2）
+    const nextCount = (regenCount[node.id] ?? 0) + 1;
+    setRegenCount((prev) => ({ ...prev, [node.id]: nextCount }));
+    if (nextCount > 3) {
+      track({
+        nodeAttr: `${node.group}.${node.key}`,
+        candidateIndex: -1,
+        event: "outcome",
+        satisfaction: "negative",
+      });
+    }
     try {
       const json = (await callApi("/api/generate", {
         mode: "preview",
@@ -94,7 +146,20 @@ export default function CreatePage() {
     }
   }
 
-  function handlePick(nodeId: string, group: VistaGroup, key: string, value: string) {
+  function handlePick(
+    nodeId: string,
+    group: VistaGroup,
+    key: string,
+    value: string,
+    candidateIndex = -1,
+  ) {
+    // 学习点 A：记录"这个节点的哪个候选被选中"（序号 + 值文本）
+    track({
+      nodeAttr: `${group}.${key}`,
+      candidateIndex,
+      candidateValue: value,
+      wasPicked: true,
+    });
     setPicked((prev) => ({ ...prev, [nodeId]: value }));
     setTree((prev) => {
       if (!prev) return prev;
@@ -116,6 +181,13 @@ export default function CreatePage() {
     try {
       const json = (await callApi("/api/generate", { mode: "final", tree })) as { image?: string };
       setFinalImage(json.image ?? null);
+      // 强正信号：会话走完并产出终图（PRD §9.5.2）
+      track({
+        nodeAttr: "__session__",
+        candidateIndex: -1,
+        event: "outcome",
+        satisfaction: "positive",
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -246,7 +318,7 @@ export default function CreatePage() {
 
                   {/* 候选图：网格隐形，负空间即画布 */}
                   {nodeImages[active.id]?.length ? (
-                    <div className="mt-3 grid grid-cols-2 gap-1.5 md:grid-cols-4">
+                    <div className="mt-3 grid grid-cols-2 gap-1.5 md:grid-cols-3">
                       {nodeImages[active.id].map((url, idx) => {
                         const value = active.candidates[idx] ?? `candidate ${idx + 1}`;
                         const isPicked = picked[active.id] === value;
@@ -254,7 +326,9 @@ export default function CreatePage() {
                           <button
                             key={url}
                             type="button"
-                            onClick={() => handlePick(active.id, active.group, active.key, value)}
+                            onClick={() =>
+                              handlePick(active.id, active.group, active.key, value, idx)
+                            }
                             aria-pressed={isPicked}
                             aria-label={`Pick ${value}`}
                             className="group relative overflow-hidden rounded-md"
@@ -290,7 +364,15 @@ export default function CreatePage() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const v = (e.target as HTMLInputElement).value.trim();
-                        if (v) handlePick(active.id, active.group, active.key, v);
+                        if (v) {
+                          handlePick(
+                            active.id,
+                            active.group,
+                            active.key,
+                            v,
+                            active.candidates.indexOf(v),
+                          );
+                        }
                       }
                     }}
                   />

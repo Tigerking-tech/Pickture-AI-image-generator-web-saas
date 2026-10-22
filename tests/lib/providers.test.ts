@@ -27,6 +27,34 @@ describe("provider selection (env-driven)", () => {
     expect(getImageProvider().name).toBe("volcano");
   });
 
+  it("IMAGE_PROVIDER=aliyun 切到阿里云百炼", () => {
+    process.env.IMAGE_PROVIDER = "aliyun";
+    expect(getImageProvider().name).toBe("aliyun");
+  });
+
+  it("IMAGE_PROVIDER 别名（alibaba / qwen）同样切到阿里云", () => {
+    process.env.IMAGE_PROVIDER = "qwen";
+    expect(getImageProvider().name).toBe("aliyun");
+    process.env.IMAGE_PROVIDER = "alibaba";
+    expect(getImageProvider().name).toBe("aliyun");
+  });
+
+  it("IMAGE_PROVIDER=tencent 切到腾讯混元", () => {
+    process.env.IMAGE_PROVIDER = "tencent";
+    expect(getImageProvider().name).toBe("tencent");
+  });
+
+  it("未配置 key 时阿里云 provider 如实报告未配置", () => {
+    process.env.IMAGE_PROVIDER = "aliyun";
+    const savedAliyun = process.env.ALIYUN_API_KEY;
+    const savedDash = process.env.DASHSCOPE_API_KEY;
+    delete process.env.ALIYUN_API_KEY;
+    delete process.env.DASHSCOPE_API_KEY;
+    expect(getImageProvider().isConfigured()).toBe(false);
+    if (savedAliyun !== undefined) process.env.ALIYUN_API_KEY = savedAliyun;
+    if (savedDash !== undefined) process.env.DASHSCOPE_API_KEY = savedDash;
+  });
+
   it("默认文本 provider 是 openai", () => {
     expect(getTextProvider().name).toBe("openai");
   });

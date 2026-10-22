@@ -315,6 +315,19 @@ export const VISTA_ATTRIBUTES: readonly VistaAttributeMeta[] = [
   },
   {
     group: "character",
+    key: "orientation",
+    label: "朝向",
+    labelEn: "Orientation",
+    // 主体相对镜头的朝向 —— "背影"类描述的正确归属地（不要塞进 pose，更不要误解成光线）
+    pool: [
+      "facing camera",
+      "back to camera (seen from behind)",
+      "side profile",
+      "three-quarter view",
+    ],
+  },
+  {
+    group: "character",
     key: "expression",
     label: "表情",
     labelEn: "Expression",
@@ -530,6 +543,11 @@ export function toPrompt(tree: VistaTree): string {
   push("camera");
   push("style");
   push("effects");
+
+  // 兜底：附上用户原句。即使拆解时某条明确约束（如"背影"）被丢失或改写，
+  // 生图模型仍能看到原始意图。放在末尾，不干扰要素精修。
+  const sentence = tree.meta?.sentence?.trim();
+  if (sentence) parts.push(`(original scene: ${sentence})`);
 
   return parts.join(", ");
 }

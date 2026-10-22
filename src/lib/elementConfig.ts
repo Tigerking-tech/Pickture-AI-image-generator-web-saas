@@ -19,9 +19,10 @@ import {
 
 /** 每个属性的默认决策方式 */
 export const ATTRIBUTE_MODES: Record<string, DecisionMode> = {
-  // --- 主体：姿态出图选，其余文字选/自动定 ---
+  // --- 主体：姿态/朝向出图选（背影/视角类描述对画面影响同样大），其余文字选/自动定 ---
   "character.species": "text",
   "character.pose": "visual",
+  "character.orientation": "visual",
   "character.expression": "text",
   "character.clothing": "text",
   "character.hairstyle": "text",
@@ -95,9 +96,16 @@ export const DECISION_TREE_ORDER: ReadonlyArray<{ group: VistaGroup; key: string
 
 /** 出图节点的候选图数量区间（R2/R3 要求 2–4 张） */
 export const CANDIDATE_MIN = 2;
-export const CANDIDATE_MAX = 4;
-/** 默认每个出图节点出 3 张（PRD §9.4：6 节点 × 3 张 = 18 图） */
-export const CANDIDATE_DEFAULT = 3;
+export const CANDIDATE_MAX = 9;
+/**
+ * 默认每个出图节点出 9 个候选（与网格上限一致）。
+ *
+ * 成本说明：网格出候选后，候选数与 API 调用次数解耦 ——
+ * 9 个候选 = 1 次调用画 3x3 网格 + 本地切割，
+ * 所以 6 个节点 × 9 候选 ≈ 6 次调用，反而比旧方案（6 × 3 张 = 18 次调用）更便宜，
+ * 而用户的选择面从 3 个扩到 9 个。
+ */
+export const CANDIDATE_DEFAULT = 9;
 
 export function getAttributeMode(group: VistaGroup, key: string): DecisionMode {
   return ATTRIBUTE_MODES[`${group}.${key}`] ?? "auto";

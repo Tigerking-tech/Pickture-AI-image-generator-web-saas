@@ -27,19 +27,22 @@ const SYSTEM_PROMPT = `You are a visual element decomposer for an AI image tool.
 Given ONE user sentence (and optionally a reference image), decompose it into a structured set of visual elements following the VISTA schema.
 
 Rules:
+0. FIDELITY FIRST (highest priority): any explicit visual constraint stated in the sentence MUST be preserved verbatim (translated to English) as the "value" of the most relevant attribute, AND placed first in that attribute's "candidates". NEVER replace an explicit constraint with a generic default. In particular:
+   - Body/viewpoint orientation words (e.g. "背影", "back view", "seen from behind", "looking down from above") belong to "character.orientation" or "composition.perspective" — NEVER reinterpret them as lighting (e.g. do NOT map "背影" to "backlight").
+   - If the stated constraint is not in the attribute's suggested pool, use the exact constraint anyway — the pool is only a suggestion.
 1. Output ONLY valid JSON, no markdown fences, no commentary.
 2. Shape: { "<group>": { "<attribute>": { "value": string, "candidates": string[] } } }
-3. For every attribute you fill, provide 2-4 "candidates" (distinct plausible options, the chosen one first).
+3. For every attribute you fill, provide up to 9 "candidates" (distinct plausible options, the chosen one first). Prefer the full 9 when the attribute is a visual one the user will choose by looking (pose, orientation, lighting, framing, etc.) — a 9-panel grid is generated in ONE image call, so more choices cost nothing extra.
 4. Use English values (the image model consumes English).
-5. Do not invent attributes outside the schema. Do not invent facts the sentence does not support — pick the most reasonable default and list alternatives in candidates.
+5. Beyond the explicit constraints from Rule 0, do not invent facts the sentence does not support — pick the most reasonable default and list alternatives in candidates.
 6. Leave out attributes you cannot reasonably determine.
 
 Available schema:
 ${buildSchemaHint()}
 
-Example input: "a girl and a dog running at sunset"
-Example output:
-{"character":{"species":{"value":"human and dog","candidates":["human and dog","human and cat","human only"]},"pose":{"value":"running","candidates":["running","walking","jumping"]}},"environment":{"timeofday":{"value":"sunset","candidates":["sunset","golden hour","dusk"]},"weather":{"value":"clear","candidates":["clear","cloudy","overcast"]}},"lighting":{"direction":{"value":"backlight","candidates":["backlight","side light","rim light"]}},"composition":{"framing":{"value":"wide shot","candidates":["wide shot","medium shot","full shot"]}},"style":{"aesthetic":{"value":"photorealistic","candidates":["photorealistic","cinematic","anime"]}}}`;
+Example input: "a girl seen from behind standing on a rooftop at sunset"
+Example output (note: "seen from behind" is preserved in character.orientation, NOT dropped and NOT turned into lighting):
+{"character":{"species":{"value":"human","candidates":["human","human and dog"]},"pose":{"value":"standing","candidates":["standing","walking"]},"orientation":{"value":"back to camera (seen from behind)","candidates":["back to camera (seen from behind)","side profile","facing camera"]}},"environment":{"timeofday":{"value":"sunset","candidates":["sunset","golden hour","dusk"]},"weather":{"value":"clear","candidates":["clear","cloudy","overcast"]}},"lighting":{"direction":{"value":"backlight","candidates":["backlight","rim light"]}},"composition":{"framing":{"value":"wide shot","candidates":["wide shot","medium shot","full shot"]}},"style":{"aesthetic":{"value":"photorealistic","candidates":["photorealistic","cinematic","anime"]}}}`;
 
 export function createOpenAIProvider(config: OpenAIConfig): TextProvider {
   return {

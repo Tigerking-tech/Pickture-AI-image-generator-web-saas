@@ -30,6 +30,12 @@ export interface ImageProvider {
   /** 未配置时的明确报错信息（不静默降级、不伪造输出） */
   missingKeyMessage(): string;
   generate(req: ImageGenRequest): Promise<ImageGenResult>;
+  /**
+   * 可选能力：一次调用画出一张 N 格网格图（req.prompt 已是构造好的网格提示词）。
+   * 用于把一个决策节点的 N 个候选压成 1 次 API 调用，再由调用方按坐标切割。
+   * 不支持网格的 provider（如 fal）不实现此方法，调用方自动回退逐张生成。
+   */
+  generateGrid?(req: ImageGenRequest): Promise<ImageGenResult>;
 }
 
 /** 文本拆句请求参数（供应商中立） */

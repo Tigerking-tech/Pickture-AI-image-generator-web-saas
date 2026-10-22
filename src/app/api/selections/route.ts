@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     candidateIndex?: number;
     wasPicked?: boolean;
     satisfaction?: string;
+    event?: string;
+    candidateValue?: string;
   };
   try {
     body = await request.json();
@@ -47,6 +49,8 @@ export async function POST(request: NextRequest) {
     body.satisfaction === "negative"
       ? body.satisfaction
       : null;
+  // pick = 节点点选（学习点 A 的核心数据）；outcome = 会话级满意度信号（PRD §9.5.2）
+  const event = body.event === "outcome" ? "outcome" : "pick";
 
   const db = getSupabaseAdmin();
   const { error } = await db.from("selections").insert({
@@ -56,6 +60,10 @@ export async function POST(request: NextRequest) {
     candidate_index: body.candidateIndex,
     was_picked: body.wasPicked ?? false,
     satisfaction,
+    event,
+    // 被选中的候选值文本：学习点 B（全局候选重排）与飞轮看板都依赖它
+    candidate_value:
+      typeof body.candidateValue === "string" ? body.candidateValue.slice(0, 200) : null,
   });
 
   if (error) {

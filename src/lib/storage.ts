@@ -57,10 +57,23 @@ export async function persistImage(
   try {
     const res = await fetch(sourceUrl);
     if (!res.ok) return null;
-
     const input = Buffer.from(await res.arrayBuffer());
     if (input.byteLength === 0) return null;
+    return await persistImageBuffer(input, basePath);
+  } catch {
+    return null;
+  }
+}
 
+/**
+ * 把一张已在内存里的图（如网格切割出的单格）转存为自有存储的两级 WebP。
+ * 与 persistImage 共用转码与上传逻辑，只是省掉重新下载。
+ */
+export async function persistImageBuffer(
+  input: Buffer,
+  basePath: string,
+): Promise<PersistResult | null> {
+  try {
     const [full, thumb] = await Promise.all([
       transcode(input, FULL_MAX, FULL_QUALITY),
       transcode(input, THUMB_MAX, THUMB_QUALITY),
@@ -87,8 +100,8 @@ export async function persistImage(
     const { data: dThumb } = db.storage.from(WORKS_BUCKET).getPublicUrl(thumbPath);
 
     return {
-      url: dFull.publicUrl,
-      thumbUrl: dThumb.publicUrl,
+      url: toSameOrigin(dFull.publicUrl),
+      thumbUrl: toSameOrigin(dThumb.publicUrl),
       path,
       thumbPath,
       bytes: full.byteLength + thumb.byteLength,
@@ -96,6 +109,21 @@ export async function persistImage(
   } catch {
     return null;
   }
+}
+
+/**
+ * 本地 Supabase 的公网地址是 http://127.0.0.1:54321/... —— 手机等外部设备
+ * 访问时会指向设备自身，图片必然裂开。这里改写成同域路径 /sb/... ，
+ * 由 next.config.ts 的 rewrite 反向代理回本地 Supabase。
+ * 使用云端 Supabase（公网域名）时原样返回，不做任何改写。
+ */
+function toSameOrigin(publicUrl: string): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  if (!/127\.0\.0\.1|localhost/.test(base)) return publicUrl;
+  const marker = "/storage/";
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return publicUrl;
+  return `/sb${publicUrl.slice(idx)}`;
 }
 
 /** 删除一张已存图片的两级文件（GDPR / 用户删作品） */

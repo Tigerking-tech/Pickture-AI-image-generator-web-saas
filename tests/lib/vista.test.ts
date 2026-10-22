@@ -179,7 +179,7 @@ describe("决策树配置（产品灵魂）", () => {
     }
   });
 
-  it("默认每节点出 3 张（PRD §9.4：6 节点 × 3 张 = 18 图）", () => {
+  it("默认每节点出 9 个候选（网格模式下 9 候选仍是 1 次调用）", () => {
     const tree = sampleTree();
     tree.environment.weather!.candidates = [
       "clear",
@@ -188,12 +188,18 @@ describe("决策树配置（产品灵魂）", () => {
       "rainy",
       "foggy",
       "snowy",
+      "stormy",
+      "drizzle",
+      "hazy",
+      "windy",
+      "misty",
+      "sleet",
     ];
     const node = buildDecisionTree(tree).find((n) => n.id === "environment.weather");
     expect(node?.candidates.length).toBe(CANDIDATE_DEFAULT);
   });
 
-  it("候选数上限被硬性裁剪到 4，绝不超预算（R2 / R3）", () => {
+  it("候选数上限被硬性裁剪到 9，绝不超预算（R2 / R3）", () => {
     const tree = sampleTree();
     tree.environment.weather!.candidates = [
       "clear",
@@ -202,6 +208,12 @@ describe("决策树配置（产品灵魂）", () => {
       "rainy",
       "foggy",
       "snowy",
+      "stormy",
+      "drizzle",
+      "hazy",
+      "windy",
+      "misty",
+      "sleet",
     ];
     const node = buildDecisionTree(tree, { candidatesPerNode: 99 }).find(
       (n) => n.id === "environment.weather",
@@ -209,10 +221,10 @@ describe("决策树配置（产品灵魂）", () => {
     expect(node?.candidates.length).toBe(CANDIDATE_MAX);
   });
 
-  it("预览图总量可预估，与 PRD §9.4 的 ~18 张同量级", () => {
+  it("预览图总量可预估，且调用次数与候选数解耦（网格：N 候选 = 1 次调用）", () => {
     const count = estimatePreviewCount(sampleTree());
     expect(count).toBeGreaterThan(0);
-    expect(count).toBeLessThanOrEqual(24);
+    expect(count).toBeLessThanOrEqual(60);
   });
 
   it("withDefaultModes 为缺 mode 的属性补齐标记", () => {

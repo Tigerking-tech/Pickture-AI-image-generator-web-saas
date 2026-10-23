@@ -32,10 +32,14 @@ export default function CreatePage() {
   const [finalImage, setFinalImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<"" | "decompose" | string | "final">("");
   const [error, setError] = useState<string | null>(null);
+  // 流式拆解的实时进度文案（长句拆解 30-45s，必须让用户看到它在动）
+  const [progress, setProgress] = useState<string>("");
   // 数据飞轮（PRD §9.5）：一次创作会话一个 sessionId，把该会话的所有选择串起来
   const [sessionId, setSessionId] = useState("");
   // 每个节点被"重出"的次数，用于识别负信号（PRD §9.5.2：重出 > 3 次）
   const [regenCount, setRegenCount] = useState<Record<string, number>>({});
+  // 用户最近选中的候选图 —— 后续节点的"主体锚"（控制变量：小猫不变，只变其他要素）
+  const [pickedImageUrl, setPickedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setSessionId(
@@ -55,12 +59,21 @@ export default function CreatePage() {
   const active: DecisionNode | undefined = nodes.find((n) => n.id === activeId) ?? nodes[0];
   const pickedCount = useMemo(() => nodes.filter((n) => picked[n.id]).length, [nodes, picked]);
 
-  const callApi = useCallback(async (url: string, body: unknown) => {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+  const callApi = useCallback(async (url: string, body: unknown, retries = 0) => {
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      // 浏览器级网络错误（如 "Failed to fetch"）：长请求经代理偶发超时，自动重试
+      if (retries > 0) return callApi(url, body, retries - 1);
+      throw new Error(
+        "Network hiccup — the request took too long or the connection dropped. Please try again (repeat sentences return instantly from cache).",
+      );
+    }
     const json = (await res.json().catch(() => ({}))) as ApiError & Record<string, unknown>;
     if (!res.ok) {
       throw new Error(json.message ?? json.error ?? `Request failed (HTTP ${res.status})`);
@@ -100,26 +113,28 @@ export default function CreatePage() {
     e.preventDefault();
     if (sentence.trim() === "") return;
     setError(null);
+    setProgress("");
     setLoading("decompose");
     setFinalImage(null);
     setNodeImages({});
     setPicked({});
+    setPickedImageUrl(null);
     setActiveId("");
     try {
-      const json = (await callApi("/api/decompose", {
-        sentence: sentence.trim(),
-        sessionId,
-      })) as unknown as VistaTree;
+      // 流式拆解：边生成边推送，避免长请求被中间代理判为超时
+      const json = await decomposeStreaming(sentence.trim(), sessionId, setProgress);
       setTree(json);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setTree(null);
     } finally {
       setLoading("");
+      setProgress("");
     }
   }
 
   async function handlePreview(node: DecisionNode) {
+    if (!tree) return;
     setError(null);
     setLoading(node.id);
     // 重出计数：同一节点反复重出说明候选没命中，是明确的负信号（PRD §9.5.2）
@@ -134,9 +149,18 @@ export default function CreatePage() {
       });
     }
     try {
+      // 关键：把整棵树 + 当前属性一起传给后端 —— 后端会把"树里其他要素 +
+      // 本节点的每个候选值"组装成完整提示词。否则只发一个 "running"，
+      // 猫/场景全丢，生图模型只能默认画人。
       const json = (await callApi("/api/generate", {
         mode: "preview",
         candidates: node.candidates,
+        tree,
+        attribute: { group: node.group, key: node.key },
+        // 已锚定主体 → 后续节点图生图锁主体（只变当前要素）；
+        // 尚未锚定（第一个节点）→ 允许主体外观变化，给用户更多选择
+        referenceUrl: pickedImageUrl ?? undefined,
+        varySubject: !pickedImageUrl,
       })) as { images?: string[] };
       setNodeImages((prev) => ({ ...prev, [node.id]: json.images ?? [] }));
     } catch (err) {
@@ -152,6 +176,7 @@ export default function CreatePage() {
     key: string,
     value: string,
     candidateIndex = -1,
+    imageUrl?: string,
   ) {
     // 学习点 A：记录"这个节点的哪个候选被选中"（序号 + 值文本）
     track({
@@ -160,6 +185,8 @@ export default function CreatePage() {
       candidateValue: value,
       wasPicked: true,
     });
+    // 记住这张图：后续节点生成时以它为参考（图生图锁主体，只变当前要素）
+    if (imageUrl) setPickedImageUrl(imageUrl);
     setPicked((prev) => ({ ...prev, [nodeId]: value }));
     setTree((prev) => {
       if (!prev) return prev;
@@ -230,6 +257,13 @@ export default function CreatePage() {
         {error && (
           <div className="mt-4 rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-ink">
             {error}
+          </div>
+        )}
+
+        {progress && !error && (
+          <div className="mt-4 flex items-center gap-2 text-sm text-ink-muted">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>{progress}</span>
           </div>
         )}
 
@@ -327,7 +361,14 @@ export default function CreatePage() {
                             key={url}
                             type="button"
                             onClick={() =>
-                              handlePick(active.id, active.group, active.key, value, idx)
+                              handlePick(
+                                active.id,
+                                active.group,
+                                active.key,
+                                value,
+                                idx,
+                                nodeImages[active.id]?.[idx],
+                              )
                             }
                             aria-pressed={isPicked}
                             aria-label={`Pick ${value}`}
@@ -449,4 +490,84 @@ export default function CreatePage() {
       )}
     </div>
   );
+}
+
+/**
+ * 流式拆解：读 SSE 事件流，实时回调进度，拿到 done 事件里的完整树。
+ *
+ * 为什么走流式：长句拆解要 30-45s，一次性等待容易被中间代理判为超时
+ * （浏览器报 "Failed to fetch"）。流式让连接持续有数据，既不会超时，
+ * 也能让用户在等待时看到进度而不是干等一个转圈。
+ *
+ * 服务端不支持流式（返回非 SSE）时自动回退为一次性 JSON。
+ */
+async function decomposeStreaming(
+  sentence: string,
+  sessionId: string,
+  onProgress: (text: string) => void,
+): Promise<VistaTree> {
+  const res = await fetch("/api/decompose", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sentence, sessionId, stream: true }),
+  });
+
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!res.ok || !contentType.includes("text/event-stream")) {
+    const json = (await res.json().catch(() => ({}))) as ApiError & Record<string, unknown>;
+    if (!res.ok) {
+      throw new Error(json.message ?? json.error ?? "Decompose failed");
+    }
+    return json as unknown as VistaTree;
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error("Failed to read the response stream");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let chars = 0;
+  let tree: VistaTree | null = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const blocks = buffer.split("\n\n");
+    buffer = blocks.pop() ?? "";
+    for (const block of blocks) {
+      const lines = block.split("\n");
+      const eventLine = lines.find((l) => l.startsWith("event:"));
+      const dataLine = lines.find((l) => l.startsWith("data:"));
+      if (!dataLine) continue;
+      const event = eventLine?.slice(6).trim();
+      let data: {
+        text?: string;
+        done?: number;
+        total?: number;
+        tree?: VistaTree;
+        message?: string;
+        cached?: boolean;
+      };
+      try {
+        data = JSON.parse(dataLine.slice(5).trim());
+      } catch {
+        continue;
+      }
+      if (event === "delta") {
+        chars += data.text?.length ?? 0;
+        onProgress(`Decomposing… ${chars} characters received`);
+      } else if (event === "batch") {
+        onProgress(`Decomposing… ${data.done ?? 0}/${data.total ?? 0} element groups done`);
+      } else if (event === "done") {
+        onProgress(data.cached ? "Loaded from cache" : "Finalizing…");
+        tree = (data.tree ?? null) as VistaTree | null;
+      } else if (event === "error") {
+        throw new Error(data.message ?? "Decompose failed");
+      }
+    }
+  }
+
+  if (!tree) throw new Error("Decomposition stream ended without a result");
+  return tree;
 }

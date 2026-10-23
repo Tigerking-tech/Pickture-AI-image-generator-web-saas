@@ -12,7 +12,15 @@ import {
   sliceGrid,
 } from "@/lib/imageGrid";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { toPrompt, type VistaTree, validateVistaTree } from "@/lib/vista";
+import {
+  cloneVistaTree,
+  emptyVistaTree,
+  toPrompt,
+  type VistaGroup,
+  type VistaTree,
+  validateVistaTree,
+} from "@/lib/vista";
+import { withDefaultModes } from "@/lib/elementConfig";
 import { getImageProvider, type ImageGenResult } from "@/lib/providers/image";
 
 /**
@@ -59,6 +67,11 @@ export async function POST(request: NextRequest) {
     candidates?: string[];
     tree?: VistaTree;
     proTrialsUsed?: number;
+    attribute?: { group?: string; key?: string };
+    /** 用户在前序节点选中的图（服务端可访问 URL），作为后续节点的主体锚 */
+    referenceUrl?: string;
+    /** 尚未锚定主体时为 true：网格允许主体外观变化，给用户更多选择 */
+    varySubject?: boolean;
   };
   try {
     body = await request.json();
@@ -72,7 +85,7 @@ export async function POST(request: NextRequest) {
   // ── R3 节点预览：每个候选一张图 ──
   if (body.mode === "preview") {
     // 上限与网格能力对齐（2~9 个候选，9 个时走 3x3 网格，仍是 1 次调用）
-    const candidates = Array.isArray(body.candidates)
+    let candidates = Array.isArray(body.candidates)
       ? body.candidates.slice(0, GRID_MAX_PANELS)
       : [];
     if (candidates.length < 2) {
@@ -85,12 +98,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ── 核心修复：候选值 → 完整生图提示词 ──
+    // 之前只把 "running" 这样的短值发给生图模型，猫/场景/光线全部丢失，
+    // 模型只能自由发挥（用户输入小猫，候选图全是人）。
+    // 修复采用业界标准的 identity-block 结构（2026-10 核实多家指南一致）：
+    //   树中其他已确定的要素 = 固定的 identity block（措辞不变）
+    //   当前节点的候选值 = 唯一变量（一次只改一个变量）
+    //   逐个替换后用 toPrompt 组装成完整提示词。
+    // 附带收益：网格的 sharedConstraintOf 会自动提取"猫+场景"作为公共约束，
+    //   让九宫格的每个格子都锁住主体，只变 pose。
+    const incomingTree = body.tree;
+    const attribute = body.attribute;
+    if (
+      incomingTree &&
+      typeof attribute?.group === "string" &&
+      typeof attribute?.key === "string"
+    ) {
+      const base: VistaTree = { ...emptyVistaTree(), ...incomingTree };
+      withDefaultModes(base);
+      const group = attribute.group as VistaGroup;
+      const key = attribute.key;
+      candidates = candidates.map((c) => {
+        const copy = cloneVistaTree(base);
+        const attr = copy[group]?.[key];
+        if (attr) {
+          copy[group][key] = { ...attr, value: c, source: "user", changed: true };
+        }
+        // 候选图提示词不带原句：原句里的动作/光线会压掉当前候选值
+        //（实测：原句有"奔跑"，sitting 候选也画成奔跑）
+        return toPrompt(copy, { includeSentence: false });
+      });
+    }
+
     const model = resolvePreviewModel(route.previewModel);
 
     // ① 优先走网格：一次调用把 N 个候选画进一张网格图，再按坐标切割。
     //    成本从 N 次调用降到 1 次（N=3 时省约 67%，N=9 时省 89%）。
     //    网格画歪 / 切割数不符 / 落库失败，一律自动回退到 ②。
-    const gridResult = await tryGridPreview(img, candidates, model, user?.id ?? "anon");
+    const gridResult = await tryGridPreview(img, candidates, model, user?.id ?? "anon", {
+      referenceUrl: typeof body.referenceUrl === "string" ? body.referenceUrl : undefined,
+      varySubject: body.varySubject === true,
+    });
     if (gridResult) {
       return NextResponse.json({ mode: "preview", ...gridResult, candidates });
     }
@@ -106,6 +154,7 @@ export async function POST(request: NextRequest) {
           model,
           numImages: 1,
           size: "square_hd",
+          referenceUrl: typeof body.referenceUrl === "string" ? body.referenceUrl : undefined,
         }),
       );
     }
@@ -222,16 +271,26 @@ async function tryGridPreview(
   candidates: string[],
   model: string,
   uid: string,
+  opts?: { referenceUrl?: string; varySubject?: boolean },
 ): Promise<{ images: string[]; thumbs: string[]; persisted: boolean[]; grid: GridLayout } | null> {
   const n = candidates.length;
   if (!img.generateGrid) return null;
   if (n < GRID_MIN_PANELS || n > GRID_MAX_PANELS) return null;
 
   const layout = gridLayoutFor(n);
-  const prompt = buildGridPrompt(candidates, layout);
+  const prompt = buildGridPrompt(candidates, layout, {
+    varySubject: opts?.varySubject,
+    withReference: Boolean(opts?.referenceUrl),
+  });
 
   try {
-    const res = await img.generateGrid({ prompt, model, numImages: 1, size: "square" });
+    const res = await img.generateGrid({
+      prompt,
+      model,
+      numImages: 1,
+      size: "square",
+      referenceUrl: opts?.referenceUrl,
+    });
     if (!res.ok || res.urls.length === 0) return null;
 
     const fetched = await fetch(res.urls[0]);

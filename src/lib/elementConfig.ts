@@ -11,6 +11,7 @@
 import {
   type DecisionMode,
   getAttributeMeta,
+  VISTA_ATTRIBUTES,
   VISTA_GROUPS,
   type VistaAttributeValue,
   type VistaGroup,
@@ -141,6 +142,62 @@ function clampCandidates(list: string[], limit: number): string[] {
   if (list.length === 0) return [];
   if (list.length <= max) return [...list];
   return list.slice(0, max);
+}
+
+/** pool 用尽后的兜底修饰词：与候选组合生成视觉上有差异的变体 */
+const QUALIFIERS = [
+  "playful",
+  "energetic",
+  "graceful",
+  "dramatic",
+  "serene",
+  "dynamic",
+  "bold",
+  "gentle",
+];
+
+/**
+ * 保证"出图选"（visual）属性恰好有 min 个候选。
+ *
+ * 为什么需要：分批拆解后，模型并不总遵守 schema 里标注的候选数
+ * （实测长句时 pose/orientation 只给了 3 个，而网格需要 9 个）。
+ * 补齐顺序：LLM 给的（保留其判断）→ 属性 pool 补 → 修饰变体兜底。
+ * 统一到 9 还有一个原因：用户要求每个节点的宫格数量一致（8/9 混着很难看）。
+ */
+export function ensureVisualCandidates(tree: VistaTree, min = CANDIDATE_DEFAULT): void {
+  for (const a of VISTA_ATTRIBUTES) {
+    if (ATTRIBUTE_MODES[`${a.group}.${a.key}`] !== "visual") continue;
+    const pool = getAttributeMeta(a.group, a.key)?.pool ?? [];
+
+    // 第一层兜底：模型没填这个属性（实测偶发跳过 direction）→ 用 pool 默认值补全，
+    // 保证所有出图节点永远存在、永远可出图
+    const section = tree[a.group] ?? {};
+    let attr = section[a.key] as VistaAttributeValue | undefined;
+    if (!attr || typeof attr !== "object" || typeof attr.value !== "string" || attr.value === "") {
+      if (pool.length === 0) continue;
+      attr = { value: pool[0], candidates: [...pool], mode: "visual" };
+      section[a.key] = attr;
+    }
+    tree[a.group] = section;
+    if (!Array.isArray(attr.candidates)) attr.candidates = [];
+
+    // 第二层兜底：候选不足 min 个时，pool 优先、修饰变体兜底，统一到 9
+    const merged = [...attr.candidates];
+    for (const p of pool) {
+      if (merged.length >= min) break;
+      if (!merged.includes(p)) merged.push(p);
+    }
+    if (merged.length < min && merged.length > 0) {
+      const bases = [...merged];
+      let qi = 0;
+      while (merged.length < min && qi < QUALIFIERS.length * bases.length) {
+        const variant = `${QUALIFIERS[qi % QUALIFIERS.length]} ${bases[qi % bases.length]}`;
+        if (!merged.includes(variant)) merged.push(variant);
+        qi++;
+      }
+    }
+    attr.candidates = merged;
+  }
 }
 
 /**

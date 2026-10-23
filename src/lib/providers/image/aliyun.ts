@@ -96,6 +96,25 @@ async function callOnce(
   model: string,
   baseUrl: string,
 ): Promise<ImageGenResult> {
+  // 参考图（图生图）：把用户选中的图取回来转 base64 传入，锁住主体
+  let referencePart: { image: string; text: string } | null = null;
+  if (req.referenceUrl) {
+    try {
+      const refRes = await fetch(req.referenceUrl, { signal: AbortSignal.timeout(30_000) });
+      if (refRes.ok) {
+        const buf = Buffer.from(await refRes.arrayBuffer());
+        if (buf.byteLength > 0 && buf.byteLength < 10 * 1024 * 1024) {
+          const b64 = `data:image/jpeg;base64,${buf.toString("base64")}`;
+          // 实测（2026-10-23）：z-image 要求 image 与 text 合并在同一个 content 项里，
+          // 且整个 content 只允许一个 text 项
+          referencePart = { image: b64, text: req.prompt };
+        }
+      }
+    } catch {
+      // 参考图取不到就退化为纯文生图，不阻断
+    }
+  }
+
   // 生图耗时较长（数十秒），给足超时，避免请求被过早中断
   let res: Response;
   try {
@@ -108,7 +127,12 @@ async function callOnce(
       body: JSON.stringify({
         model,
         input: {
-          messages: [{ role: "user", content: [{ text: req.prompt }] }],
+          messages: [
+            {
+              role: "user",
+              content: referencePart ? [referencePart] : [{ text: req.prompt }],
+            },
+          ],
         },
         parameters: {
           size: aliyunSize(req.size ?? "square_hd"),

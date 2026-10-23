@@ -16,6 +16,12 @@ export interface ImageGenRequest {
   numImages?: number;
   /** 尺寸提示，默认 "square_hd" */
   size?: string;
+  /**
+   * 可选：参考图 URL（服务端可访问）。用于"控制变量"——
+   * 用户在前序节点选中的图作为主体锚，后续节点只变一个要素。
+   * 支持图生图的 provider（阿里）会取图转 base64 传入；不支持的忽略。
+   */
+  referenceUrl?: string;
 }
 
 export type ImageGenResult =
@@ -46,6 +52,12 @@ export interface TextDecomposeRequest {
   imageUrl?: string;
   /** 来自 modelRouter 的模型标识（如 gpt-4o-mini） */
   model: string;
+  /**
+   * 可选：只拆指定分组时传入该分组的 schema 提示。
+   * 用于"分批拆解"——把一次大输出拆成几次小输出并行调用，降低单次耗时。
+   * 不传则使用完整 schema。
+   */
+  schemaHint?: string;
 }
 
 export type TextResult =
@@ -57,4 +69,10 @@ export interface TextProvider {
   isConfigured(): boolean;
   missingKeyMessage(): string;
   decompose(req: TextDecomposeRequest): Promise<TextResult>;
+  /**
+   * 可选能力：流式拆解。每收到一段增量文本就回调 onDelta，
+   * 用于把生成过程实时推给前端（SSE），避免长请求被中间代理判为超时。
+   * 不支持流式的 provider 不实现此方法，调用方回退到普通 decompose。
+   */
+  decomposeStream?(req: TextDecomposeRequest, onDelta: (text: string) => void): Promise<TextResult>;
 }

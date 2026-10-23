@@ -64,7 +64,11 @@ export function sharedConstraintOf(candidates: string[]): string {
  *   2) 必要时的负面约束（朝向类最容易漂，必须反向堵死）
  *   3) 网格格式 + 逐格标注（每格都带上公共约束关键词）
  */
-export function buildGridPrompt(candidates: string[], layout: GridLayout): string {
+export function buildGridPrompt(
+  candidates: string[],
+  layout: GridLayout,
+  opts?: { varySubject?: boolean; withReference?: boolean },
+): string {
   const shared = sharedConstraintOf(candidates);
   const n = candidates.length;
   const { rows, cols } = layout;
@@ -79,6 +83,20 @@ export function buildGridPrompt(candidates: string[], layout: GridLayout): strin
         "No frontal view, no side view, no three-quarter view. Every panel shows the subject's back only."
       : "";
 
+  // 主体策略（两种模式互斥）：
+  //   withReference = 用户已选中一张图作锚 → 所有格子必须复刻参考图主体（控制变量）
+  //   varySubject   = 尚未锚定（通常是第一个节点）→ 格子间允许主体外观变化，给用户更多选择
+  let subjectRule = "";
+  if (opts?.withReference) {
+    subjectRule =
+      "\nSUBJECT LOCK: every panel MUST show the EXACT same subject as the attached reference image — same fur/texture, same face, same size, same outfit. " +
+      "The ONLY thing that changes between panels is the varying detail listed below. Do not redesign the subject in any panel.";
+  } else if (opts?.varySubject) {
+    subjectRule =
+      "\nSUBJECT VARIETY: across the panels, also vary the subject's appearance (e.g. coat color, pattern, breed for animals; outfit for people) so the user has a wider range to choose from. " +
+      "Each panel still shows exactly ONE subject in the SAME scene and style.";
+  }
+
   const panels = candidates.map((c, i) => `Panel ${i + 1}: ${c}`).join("\n");
   // 满格方阵里多出来的格子：指令为"重复最后一格"，避免模型自由发挥画无关内容
   const filler =
@@ -89,6 +107,7 @@ export function buildGridPrompt(candidates: string[], layout: GridLayout): strin
       ? `CRITICAL CONSTRAINT — applies to ALL ${total} panels equally: ${shared}. Keep this identical across every panel; panels may differ ONLY in the varying detail listed below.`
       : `CRITICAL CONSTRAINT — all ${total} panels must show the same scene, same subject, same outfit, same location and same style.`,
     negative,
+    subjectRule,
     `A clean ${rows}x${cols} contact sheet grid: exactly ${total} equal square panels arranged in ${rows} rows and ${cols} columns, separated by thin white borders, no text, no captions, no numbers.`,
     "The panels differ ONLY in this way:",
     panels,

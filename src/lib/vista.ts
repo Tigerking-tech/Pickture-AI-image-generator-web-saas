@@ -452,6 +452,62 @@ export function isVistaGroup(value: unknown): value is VistaGroup {
 }
 
 /** 构造空的要素树 */
+/**
+ * 丢弃模型编造的、不在 VISTA schema 里的属性（保留已知部分）。
+ *
+ * 为什么需要：LLM 偶发输出 schema 外的键（实测出现过 environment.place、
+ * character.prop、environment.elements），严格校验会让整个拆解请求失败。
+ * 编造的键承载不了后续流程（没有 pool、不进决策树），丢掉比整体失败更合理。
+ */
+export function stripUnknownAttributes(raw: unknown): Record<string, unknown> {
+  const known = new Map<string, Set<string>>();
+  for (const a of VISTA_ATTRIBUTES) {
+    if (!known.has(a.group)) known.set(a.group, new Set());
+    known.get(a.group)?.add(a.key);
+  }
+
+  const out: Record<string, unknown> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [group, section] of Object.entries(raw as Record<string, unknown>)) {
+    const keys = known.get(group);
+    if (!keys || !section || typeof section !== "object") continue;
+    const kept: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(section as Record<string, unknown>)) {
+      if (keys.has(key)) kept[key] = value;
+    }
+    out[group] = kept;
+  }
+  return out;
+}
+
+/**
+ * 把 orientation 的值强制规范成"纯朝向"，动作词剥离回 pose。
+ *
+ * 为什么需要：模型经常把动作写进朝向（实测 "朝着镜头跑来" → "running towards
+ * camera"）。朝向一旦含动作，就会和 pose 节点冲突——用户选 "sitting" 也画不出
+ * 坐姿（朝向里的 running 把它压掉）。归一化不依赖模型遵循，代码直接保证：
+ * orientation ∈ {facing camera, back to camera, side profile, viewed from above}。
+ */
+const MOTION_WORDS =
+  /\b(running|walk(ing)?|jump(ing)?|sitting|standing|crouching|lying|chasing|chase)\b/i;
+
+export function normalizeOrientation(tree: VistaTree): void {
+  const attr = tree.character?.orientation;
+  if (!attr || typeof attr.value !== "string" || attr.value.trim() === "") return;
+  const v = attr.value;
+  let pure: string | null = null;
+  if (/back|behind|rear|背影|背后/i.test(v)) pure = "back to camera (seen from behind)";
+  else if (/side|profile|侧面/i.test(v)) pure = "side profile";
+  else if (/above|overhead|top.?down|俯视/i.test(v)) pure = "viewed from above";
+  else if (/facing|toward|towards|front|镜头|正面|面向/i.test(v)) pure = "facing camera";
+  if (!pure) return; // 识别不出就保持原样，不冒险改写
+  attr.value = pure;
+  attr.candidates = [
+    pure,
+    ...attr.candidates.filter((c) => c !== pure && typeof c === "string" && !MOTION_WORDS.test(c)),
+  ];
+}
+
 export function emptyVistaTree(): VistaTree {
   const tree = {} as VistaTree;
   for (const group of VISTA_GROUPS) {
@@ -519,7 +575,8 @@ export function validateVistaTree(input: unknown): VistaValidationResult {
  * 把要素树序列化为生图提示词（英文，FLUX 系列吃英文）。
  * 只输出有值的属性；顺序按分组固定的叙述顺序，保证同一棵树每次得到同一段提示词。
  */
-export function toPrompt(tree: VistaTree): string {
+export function toPrompt(tree: VistaTree, opts?: { includeSentence?: boolean }): string {
+  const includeSentence = opts?.includeSentence ?? true;
   const parts: string[] = [];
 
   const push = (group: VistaGroup, keys?: string[]) => {
@@ -544,10 +601,13 @@ export function toPrompt(tree: VistaTree): string {
   push("style");
   push("effects");
 
-  // 兜底：附上用户原句。即使拆解时某条明确约束（如"背影"）被丢失或改写，
-  // 生图模型仍能看到原始意图。放在末尾，不干扰要素精修。
-  const sentence = tree.meta?.sentence?.trim();
-  if (sentence) parts.push(`(original scene: ${sentence})`);
+  // 原句兜底：防止拆解丢失约束（如"背影"）。
+  // ⚠️ 但组装"候选图提示词"时必须排除 —— 原句里的动作/光线会压掉
+  // 当前正在变化的候选值（实测：原句有"奔跑"，sitting 候选也画成奔跑）。
+  if (includeSentence) {
+    const sentence = tree.meta?.sentence?.trim();
+    if (sentence) parts.push(`(original scene: ${sentence})`);
+  }
 
   return parts.join(", ");
 }

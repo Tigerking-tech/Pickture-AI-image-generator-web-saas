@@ -7,6 +7,8 @@
  * 超额统一返回 HTTP 402（R5 验收要求），余额不足绝不静默成功。
  */
 
+import { isDemoMode } from "@/lib/demo/mode";
+import { getDemoStore } from "@/lib/demo/store";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   CREDITS_PER_WORK,
@@ -52,8 +54,29 @@ function rpc(db: { rpc: RpcFn }, fn: string, args: Record<string, unknown>) {
   return db.rpc(fn, args);
 }
 
-/** 读取用户套餐（未知一律降级 free） */
+/**
+ * 读取用户套餐（未知一律降级 free）。
+ *
+ * Demo 模式：内存 store 里没有 profiles 表，但预置了一张 Pro 订阅
+ * （见 demo/store.ts 的 sub_demo_pro）。这里如实按订阅返回 "pro"，
+ * 否则 demo 用户会被当成免费档（候选数被压到 4），
+ * 而 demo 的用意恰恰是展示付费档完整体验。
+ */
 export async function getPlan(userId: string): Promise<Plan> {
+  if (isDemoMode()) {
+    const store = getDemoStore();
+    const sub = [...store.subscriptions.values()].find(
+      (s) => s.user_id === userId && s.status === "active",
+    );
+    // 只有命中 demo 预置订阅的用户才按订阅返回；
+    // 其余用户（例如单测构造的 id）仍走下面的 profiles 读取，不改变原有语义。
+    if (sub) {
+      return /pro|enterprise/i.test(sub.product_name ?? sub.creem_product_id ?? "")
+        ? "pro"
+        : "starter";
+    }
+  }
+
   const db = getSupabaseAdmin();
   const { data } = await db.from("profiles").select("plan").eq("id", userId).maybeSingle();
   // admin 客户端在 demo 模式下返回 mock 客户端，类型不统一，此处做窄化断言

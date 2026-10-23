@@ -1,8 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { ensureVisualCandidates, withDefaultModes } from "@/lib/elementConfig";
-import { normalizePlan } from "@/lib/modelRouter";
+import { getPlan } from "@/lib/credits";
+import { CANDIDATE_DEFAULT, ensureVisualCandidates, withDefaultModes } from "@/lib/elementConfig";
+import { completeJob, createJob, failJob, getJob, updateJob } from "@/lib/jobs";
+import { candidatesForPlan, normalizePlan } from "@/lib/modelRouter";
+import { getTextProvider } from "@/lib/providers/text";
+import { buildSchemaHint } from "@/lib/providers/text/schemaHint";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { friendlyUpstreamMessage } from "@/lib/upstream-error";
 import {
   emptyVistaTree,
   normalizeOrientation,
@@ -10,8 +15,6 @@ import {
   type VistaTree,
   validateVistaTree,
 } from "@/lib/vista";
-import { getTextProvider } from "@/lib/providers/text";
-import { buildSchemaHint } from "@/lib/providers/text/schemaHint";
 
 /**
  * R1 拆句：句子（+ 可选参考图）→ VISTA 要素 JSON
@@ -51,6 +54,10 @@ function mergedCoversAllBatches(merged: Record<string, unknown>): boolean {
 
 /**
  * 拆批：每批只请求一组要素，输出量约为全量的 1/3，三批并行发出。
+ *
+ * ⚠️ 不要改成 6 批全并行（2026-10-23 实测过）：
+ *   6 批并发会把免费档打限流、还更容易触发"缺组补拆"再跑一轮，
+ *   实测同一句话从 ~45s 恶化到 83s / 124s。3 批是实测最优。
  * 分组依据 VISTA 的 group；camera 组已被 schemaHint 跳过。
  */
 const DECOMPOSE_BATCHES: string[][] = [
@@ -74,6 +81,8 @@ export async function POST(request: NextRequest) {
     plan?: string;
     sessionId?: string;
     stream?: boolean;
+    /** 异步模式：立即返回 jobId，后台拆解，前端短轮询取结果 */
+    async?: boolean;
   };
   try {
     body = await request.json();
@@ -89,11 +98,52 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "sentence_too_long" }, { status: 400 });
   }
 
-  const plan = normalizePlan(body.plan);
+  // 套餐：已登录用户一律以服务端数据库为准 —— 不信任前端传的 plan，
+  // 否则免费用户可以自己传 "pro" 把候选数放开到 9、白烧额度。
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const plan = user ? await getPlan(user.id) : normalizePlan(body.plan);
+  /** 该套餐每节点候选数（免费 4 / 付费 9），贯穿 schema 提示与补齐逻辑 */
+  const perNode = candidatesForPlan(plan);
+
   // 免费档 GPT-4o-mini；付费档 GPT-4o（PRD §10.5），可用 env 覆盖
   const baseModel = plan === "free" ? "gpt-4o-mini" : "gpt-4o";
   const model = resolveModel(plan, baseModel);
   const imageUrl = typeof body.imageUrl === "string" ? body.imageUrl : undefined;
+
+  // ── 异步模式（移动端必备）──
+  // 保留思维链才能保证抽取质量（关掉它"背对着镜头"会被错抽成 facing camera），
+  // 但带思维链拆一句中文长句要 40~70s，而手机 WebView / 代理常在 30s 掐断连接。
+  // 这里改成：短请求提交任务 → 后台慢慢拆 → 前端用短请求轮询结果，
+  // 每个 HTTP 都在 1s 内返回，彻底不受连接超时影响。
+  if (body.async === true) {
+    const jobId = createJob();
+    updateJob(jobId, { progress: "Decomposing…" });
+    void (async () => {
+      try {
+        const cached = await findCachedTree(sentence, model, imageUrl);
+        if (cached) {
+          completeJob(jobId, cached);
+          return;
+        }
+        const r = await decomposeOnce(text, {
+          sentence,
+          imageUrl,
+          model,
+          perNode,
+          sessionId: body.sessionId,
+          onProgress: (p) => updateJob(jobId, { progress: p }),
+        });
+        if (r.ok) completeJob(jobId, r.tree);
+        else failJob(jobId, r.message);
+      } catch (e) {
+        failJob(jobId, e instanceof Error ? e.message : String(e));
+      }
+    })();
+    return NextResponse.json({ jobId, status: "pending" });
+  }
 
   // ── 拆解缓存（PRD §9.4.1 缓存命中）：同一句子直接复用，0 等待 ──
   const cachedTree = await findCachedTree(sentence, model, imageUrl);
@@ -116,7 +166,7 @@ export async function POST(request: NextRequest) {
               sentence,
               imageUrl,
               model,
-              schemaHint: buildSchemaHint(groups),
+              schemaHint: buildSchemaHint(groups, perNode),
             },
             (delta) => send("delta", { batch: index, text: delta }),
           ),
@@ -149,7 +199,8 @@ export async function POST(request: NextRequest) {
         );
         if (!fallback?.ok) {
           send("error", {
-            message: fallback?.detail ?? "decomposition failed",
+            message: friendlyUpstreamMessage(fallback?.status ?? 502, fallback?.detail, "text"),
+            detail: fallback?.detail,
             status: fallback?.status ?? 502,
           });
           return;
@@ -162,7 +213,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const finalized = await finalizeTree(parsed, sentence, model, imageUrl, body.sessionId);
+      const finalized = await finalizeTree(
+        parsed,
+        sentence,
+        model,
+        imageUrl,
+        body.sessionId,
+        perNode,
+      );
       if (!finalized.ok) {
         send("error", { message: finalized.error, errors: finalized.errors, status: 502 });
         return;
@@ -171,13 +229,48 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // ── 普通（非流式）拆解 ──
+  // ── 普通（非流式）拆解：与异步作业共用 decomposeOnce，两条路径结果一致 ──
+  const result = await decomposeOnce(text, {
+    sentence,
+    imageUrl,
+    model,
+    perNode,
+    sessionId: body.sessionId,
+  });
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: "decompose_failed", message: result.message, errors: result.errors },
+      { status: 502 },
+    );
+  }
+  return NextResponse.json(result.tree);
+}
+
+/**
+ * 非流式拆解：分批并行 → 缺组补拆 → 全量兜底 → finalize。
+ *
+ * 同步接口与异步作业（手机端轮询）共用这一份实现：
+ * 之前两条路径各写一遍，行为容易分叉；现在结果必然一致。
+ */
+async function decomposeOnce(
+  text: ReturnType<typeof getTextProvider>,
+  opts: {
+    sentence: string;
+    imageUrl?: string;
+    model: string;
+    perNode: number;
+    sessionId?: string;
+    onProgress?: (text: string) => void;
+  },
+): Promise<{ ok: true; tree: VistaTree } | { ok: false; message: string; errors?: string[] }> {
+  const { sentence, imageUrl, model, perNode, sessionId, onProgress } = opts;
+
   const runBatch = async (groups: string[]): Promise<Record<string, unknown> | null> => {
     const r = await text.decompose({
       sentence,
       imageUrl,
       model,
-      schemaHint: buildSchemaHint(groups),
+      schemaHint: buildSchemaHint(groups, perNode),
     });
     if (!r.ok) return null;
     try {
@@ -189,9 +282,23 @@ export async function POST(request: NextRequest) {
 
   let parsed: unknown;
   let usedBatches = false;
+  const startedAt = Date.now();
+  /** 带"已等待秒数"的进度：用户能判断"还在动、还要等多久"，而不是干等转圈 */
+  const report = (label: string) => {
+    onProgress?.(`${label} · ${Math.round((Date.now() - startedAt) / 1000)}s`);
+  };
   {
     let merged: Record<string, unknown> = {};
-    const results = await Promise.all(DECOMPOSE_BATCHES.map(runBatch));
+    let doneBatches = 0;
+    const results = await Promise.all(
+      DECOMPOSE_BATCHES.map(async (groups) => {
+        const r = await runBatch(groups);
+        doneBatches += 1;
+        // 每批完成就报一次进度：等待时能看到 1/6 → 2/6 …，而不是干等
+        report(`${doneBatches}/${DECOMPOSE_BATCHES.length} element groups done`);
+        return r;
+      }),
+    );
     results.forEach((r) => {
       if (r) merged = { ...merged, ...r };
     });
@@ -203,6 +310,7 @@ export async function POST(request: NextRequest) {
       return !(sec && typeof sec === "object" && Object.keys(sec as object).length > 0);
     });
     if (missing.length > 0) {
+      report(`retrying ${missing.length} missing group(s)`);
       const extra = await runBatch(missing);
       if (extra) merged = { ...merged, ...extra };
     }
@@ -214,32 +322,42 @@ export async function POST(request: NextRequest) {
   }
 
   if (!usedBatches) {
-    const result = await text.decompose({ sentence, imageUrl, model });
-    if (!result.ok) {
-      const status = result.status >= 400 && result.status < 600 ? result.status : 502;
-      return NextResponse.json(
-        { error: "upstream_error", status: result.status, detail: result.detail },
-        { status },
-      );
+    const res = await text.decompose({ sentence, imageUrl, model });
+    if (!res.ok) {
+      return {
+        ok: false,
+        message: friendlyUpstreamMessage(res.status, res.detail, "text"),
+      };
     }
     try {
-      parsed = JSON.parse(result.content);
+      parsed = JSON.parse(res.content);
     } catch {
-      return NextResponse.json(
-        { error: "invalid_json_from_model", raw: result.content.slice(0, 500) },
-        { status: 502 },
-      );
+      return { ok: false, message: "The model returned invalid JSON. Please try again." };
     }
   }
 
-  const finalized = await finalizeTree(parsed, sentence, model, imageUrl, body.sessionId);
+  report("Finalizing…");
+  const finalized = await finalizeTree(parsed, sentence, model, imageUrl, sessionId, perNode);
   if (!finalized.ok) {
-    return NextResponse.json(
-      { error: "schema_validation_failed", errors: finalized.errors },
-      { status: 502 },
-    );
+    return { ok: false, message: finalized.error, errors: finalized.errors };
   }
-  return NextResponse.json(finalized.tree);
+  return { ok: true, tree: finalized.tree };
+}
+
+/**
+ * 异步作业查询（手机端轮询入口）
+ * GET /api/decompose?job=<jobId>
+ */
+export async function GET(request: NextRequest) {
+  const jobId = new URL(request.url).searchParams.get("job");
+  if (!jobId) {
+    return NextResponse.json({ error: "job_required" }, { status: 400 });
+  }
+  const job = getJob(jobId);
+  if (!job) {
+    return NextResponse.json({ error: "job_not_found" }, { status: 404 });
+  }
+  return NextResponse.json(job);
 }
 
 /** 查同句的拆解缓存；命中的树仍要过校验（老格式缓存直接弃用） */
@@ -282,12 +400,13 @@ async function finalizeTree(
   model: string,
   imageUrl?: string,
   sessionId?: string,
+  perNode = CANDIDATE_DEFAULT,
 ): Promise<{ ok: true; tree: VistaTree } | { ok: false; error: string; errors?: string[] }> {
   const tree: VistaTree = { ...emptyVistaTree(), ...(stripUnknownAttributes(parsed) as object) };
   // 朝向强制归一化（剥掉动作词，避免与 pose 冲突）
   normalizeOrientation(tree);
-  // 兜底：模型不一定给满 9 个候选，不足时用属性池补齐
-  ensureVisualCandidates(tree);
+  // 兜底：模型不一定给满 perNode 个候选，不足时用属性池补齐
+  ensureVisualCandidates(tree, perNode);
   withDefaultModes(tree);
   tree.meta = {
     fromImage: typeof imageUrl === "string" && imageUrl.startsWith("http"),
@@ -332,12 +451,24 @@ function sseStream(run: (send: (event: string, data: unknown) => void) => Promis
       const send = (event: string, data: unknown) => {
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
+      // 心跳：推理模型（hy3 等）拆一句长话要 60-120s，且思维链阶段几乎不吐
+      // 正文 —— 连接长时间无数据会被手机网络/中间代理当空闲掐断
+      // （实测手机端报 "network error"）。每 4s 推一个 ping 保活，前端忽略即可。
+      const heartbeat = setInterval(() => {
+        try {
+          send("ping", { ts: Date.now() });
+        } catch {
+          // 流已被下游关闭，定时器随后在 finally 里清理
+        }
+      }, 4000);
       try {
         await run(send);
       } catch (err) {
         send("error", { message: err instanceof Error ? err.message : String(err), status: 502 });
+      } finally {
+        clearInterval(heartbeat);
+        controller.close();
       }
-      controller.close();
     },
   });
   return new Response(stream, {

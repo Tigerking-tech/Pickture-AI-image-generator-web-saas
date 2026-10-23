@@ -88,6 +88,10 @@ export const ATTRIBUTE_MODES: Record<string, DecisionMode> = {
  */
 export const DECISION_TREE_ORDER: ReadonlyArray<{ group: VistaGroup; key: string }> = [
   { group: "character", key: "pose" },
+  // 朝向：与姿态同属"主体"层，视觉差异极大，且是"背影"类描述的归属地。
+  // 之前虽标记为 visual 却漏在这里 —— 用户永远选不到/改不了朝向，
+  // 而保真红线最在意的正是它，因此补进决策树（紧跟 pose）。
+  { group: "character", key: "orientation" },
   { group: "lighting", key: "direction" },
   { group: "environment", key: "timeofday" },
   { group: "environment", key: "weather" },
@@ -99,14 +103,20 @@ export const DECISION_TREE_ORDER: ReadonlyArray<{ group: VistaGroup; key: string
 export const CANDIDATE_MIN = 2;
 export const CANDIDATE_MAX = 9;
 /**
- * 默认每个出图节点出 9 个候选（与网格上限一致）。
+ * 默认每个出图节点出 4 个候选。
  *
- * 成本说明：网格出候选后，候选数与 API 调用次数解耦 ——
- * 9 个候选 = 1 次调用画 3x3 网格 + 本地切割，
- * 所以 6 个节点 × 9 候选 ≈ 6 次调用，反而比旧方案（6 × 3 张 = 18 次调用）更便宜，
- * 而用户的选择面从 3 个扩到 9 个。
+ * 为什么从 9 改回 4（2026-10-23 真实模型实测后修正）：
+ *   1) 与对外承诺一致：落地页写的是 "each element shows 2–4 candidate images"，
+ *      而 9 候选与文案自相矛盾。
+ *   2) 与成本约束一致：PRD §9.4 的预算是"约 18 张预览 = 6 节点 × 3"；
+ *      9 候选在网格失败回退串行时会变成 6 × 9 = 54 次真实出图调用，
+ *      实测直接把免费额度烧光、终图反而出不来。
+ *   3) 4 个候选正好走 2x2 网格（满格、无需补空），且所有出图属性的
+ *      候选池都 ≥ 4，因此不再需要任何"凑数"逻辑。
+ *
+ * 网格模式下 4 候选仍是 1 次调用（2x2 网格 + 本地切割），选择面与成本兼顾。
  */
-export const CANDIDATE_DEFAULT = 9;
+export const CANDIDATE_DEFAULT = 4;
 
 export function getAttributeMode(group: VistaGroup, key: string): DecisionMode {
   return ATTRIBUTE_MODES[`${group}.${key}`] ?? "auto";
@@ -144,18 +154,6 @@ function clampCandidates(list: string[], limit: number): string[] {
   return list.slice(0, max);
 }
 
-/** pool 用尽后的兜底修饰词：与候选组合生成视觉上有差异的变体 */
-const QUALIFIERS = [
-  "playful",
-  "energetic",
-  "graceful",
-  "dramatic",
-  "serene",
-  "dynamic",
-  "bold",
-  "gentle",
-];
-
 /**
  * 保证"出图选"（visual）属性恰好有 min 个候选。
  *
@@ -181,20 +179,15 @@ export function ensureVisualCandidates(tree: VistaTree, min = CANDIDATE_DEFAULT)
     tree[a.group] = section;
     if (!Array.isArray(attr.candidates)) attr.candidates = [];
 
-    // 第二层兜底：候选不足 min 个时，pool 优先、修饰变体兜底，统一到 9
+    // 第二层兜底：候选不足时用属性池补齐（只补真实存在的可选值）。
+    // 注意：这里**不再**用修饰词（playful/energetic/…）拼凑变体。
+    // 实测（2026-10-23 真实模型）那样会产生 "playful clear"（天气）、
+    // "graceful backlight"（光线）、"playful sunset"（时段）这种毫无语义、
+    // 用户一看就觉得产品有 bug 的假候选。宁可少几个候选，也不编造。
     const merged = [...attr.candidates];
     for (const p of pool) {
       if (merged.length >= min) break;
       if (!merged.includes(p)) merged.push(p);
-    }
-    if (merged.length < min && merged.length > 0) {
-      const bases = [...merged];
-      let qi = 0;
-      while (merged.length < min && qi < QUALIFIERS.length * bases.length) {
-        const variant = `${QUALIFIERS[qi % QUALIFIERS.length]} ${bases[qi % bases.length]}`;
-        if (!merged.includes(variant)) merged.push(variant);
-        qi++;
-      }
     }
     attr.candidates = merged;
   }

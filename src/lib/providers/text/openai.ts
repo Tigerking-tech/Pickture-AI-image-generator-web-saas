@@ -20,6 +20,16 @@ export interface OpenAIConfig {
   extraHeaders?: Record<string, string>;
   /** 强制使用的模型名，覆盖请求里带来的模型标识（如接入 Tencent 时锁定免费模型） */
   defaultModel?: string;
+  /**
+   * 关闭"先思考再作答"（OpenAI 兼容写法：thinking:{type:"disabled"}）。
+   *
+   * 为什么要关（2026-10-23 实测）：腾讯 hy3 是推理模型，拆一句中文长句要 37~110s，
+   * 其中绝大部分时间在吐 reasoning_content，正文最后才出来 —— 手机端 WebView
+   * 常在 30s 左右掐断连接，用户看到 "Failed to fetch"。
+   * 关闭后同一请求 1~2s 返回（reasoning_tokens=0），结构化抽取质量不受影响
+   * （实测"背对着镜头"仍正确落到 character.orientation）。
+   */
+  disableThinking?: boolean;
 }
 
 const SYSTEM_PROMPT_HEAD = `You are a visual element decomposer for an AI image tool.
@@ -39,6 +49,7 @@ Rules:
 6. Beyond the explicit constraints from Rule 0, do not invent facts the sentence does not support — pick the most reasonable default and list alternatives in candidates.
 7. Do NOT invent attributes outside the schema. Only output the group/attribute names listed in "Available schema" — any unknown key (e.g. "place", "prop", "elements") will be discarded, which loses information instead of adding it.
 8. Leave out attributes you cannot reasonably determine.
+9. ALWAYS fill "environment.location" (a concrete place type, e.g. "urban street", "forest", "beach", "mountain", "indoor studio") and "info.description" (ONE English sentence summarizing the scene). If the sentence does not state them, choose the most reasonable default instead of leaving them empty — otherwise the image model guesses randomly (a "running at sunset" scene may end up on a highway).
 
 Available schema:
 @@SCHEMA@@
@@ -92,6 +103,7 @@ export function createOpenAIProvider(config: OpenAIConfig): TextProvider {
               model: config.defaultModel ?? req.model,
               temperature: 0.4,
               response_format: { type: "json_object" },
+              ...(config.disableThinking ? { thinking: { type: "disabled" } } : {}),
               messages: [
                 { role: "system", content: buildSystemPrompt(req.schemaHint ?? buildSchemaHint()) },
                 { role: "user", content: userContent },
@@ -152,6 +164,7 @@ export function createOpenAIProvider(config: OpenAIConfig): TextProvider {
           model: config.defaultModel ?? req.model,
           temperature: 0.4,
           stream: true,
+          ...(config.disableThinking ? { thinking: { type: "disabled" } } : {}),
           messages: [
             { role: "system", content: buildSystemPrompt(req.schemaHint ?? buildSchemaHint()) },
             { role: "user", content: userContent },
@@ -185,12 +198,23 @@ export function createOpenAIProvider(config: OpenAIConfig): TextProvider {
             if (payload === "" || payload === "[DONE]") continue;
             try {
               const chunk = JSON.parse(payload) as {
-                choices?: Array<{ delta?: { content?: string } }>;
+                choices?: Array<{ delta?: { content?: string; reasoning_content?: string } }>;
               };
-              const delta = chunk.choices?.[0]?.delta?.content;
-              if (typeof delta === "string" && delta !== "") {
-                content += delta;
-                onDelta(delta);
+              const choice = chunk.choices?.[0]?.delta;
+              const delta = choice?.content;
+              // 推理模型的思维链（reasoning_content）同样推给前端当进度：
+              // hy3 拆一句长话 60-120s 里绝大部分时间在吐思维链，正文最后才来。
+              // 不推的话 SSE 长时间无数据，会被手机网络/代理当空闲连接掐断。
+              const reasoning = choice?.reasoning_content;
+              const piece =
+                typeof delta === "string" && delta !== ""
+                  ? delta
+                  : typeof reasoning === "string" && reasoning !== ""
+                    ? reasoning
+                    : "";
+              if (piece !== "") {
+                if (typeof delta === "string" && delta !== "") content += delta;
+                onDelta(piece);
               }
             } catch {
               // 单行解析失败（偶发分片），忽略即可

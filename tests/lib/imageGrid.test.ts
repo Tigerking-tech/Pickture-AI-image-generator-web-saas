@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildGridPrompt,
-  gridLayoutFor,
-  sharedConstraintOf,
-} from "@/lib/imageGrid";
+import { buildGridPrompt, gridLayoutFor, sharedConstraintOf } from "@/lib/imageGrid";
 
 describe("grid prompt builder", () => {
   it("2~4 个候选用 2x2，5~9 个用 3x3（满格方阵遵循最好）", () => {
@@ -42,10 +38,10 @@ describe("grid prompt builder", () => {
   });
 
   it("无朝向约束时不加负面约束", () => {
-    const p = buildGridPrompt(
-      ["a red apple on a table", "a green apple on a table"],
-      { rows: 2, cols: 2 },
-    );
+    const p = buildGridPrompt(["a red apple on a table", "a green apple on a table"], {
+      rows: 2,
+      cols: 2,
+    });
     expect(p).not.toContain("NEGATIVE CONSTRAINT");
     expect(p).toContain("a red apple on a table");
   });

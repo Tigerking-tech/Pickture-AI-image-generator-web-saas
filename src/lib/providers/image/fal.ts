@@ -51,6 +51,6 @@ export const falImageProvider: ImageProvider = {
     if (urls.length === 0) {
       return { ok: false, status: 502, detail: "fal.ai returned no image URLs" };
     }
-    return { ok: true, urls };
+    return { ok: true, urls, model: req.model };
   },
 };

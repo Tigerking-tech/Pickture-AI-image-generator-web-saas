@@ -2,8 +2,9 @@
 
 import { ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildDecisionTree, type DecisionNode } from "@/lib/elementConfig";
+import { candidatesForPlan } from "@/lib/modelRouter";
 import type { VistaAttributeMap, VistaGroup, VistaTree } from "@/lib/vista";
 
 /**
@@ -38,8 +39,36 @@ export default function CreatePage() {
   const [sessionId, setSessionId] = useState("");
   // 每个节点被"重出"的次数，用于识别负信号（PRD §9.5.2：重出 > 3 次）
   const [regenCount, setRegenCount] = useState<Record<string, number>>({});
+  // 套餐（服务端判定，前端不得自行声明）：决定每节点候选数 —— 免费 4 / 付费 9
+  const [plan, setPlan] = useState("free");
+  // 句子输入框：textarea 随内容自动长高，长句光标始终可见（不再需要在框里挪来挪去）。
+  // 用 input 事件而不是依赖 state：粘贴/自动填充同样生效，也避免多余的重渲染。
+  const sentenceRef = useRef<HTMLTextAreaElement | null>(null);
+  useEffect(() => {
+    const el = sentenceRef.current;
+    if (!el) return;
+    const grow = () => {
+      el.style.height = "auto";
+      el.style.height = `${Math.min(el.scrollHeight, 208)}px`;
+    };
+    grow();
+    el.addEventListener("input", grow);
+    return () => el.removeEventListener("input", grow);
+  }, []);
   // 用户最近选中的候选图 —— 后续节点的"主体锚"（控制变量：小猫不变，只变其他要素）
   const [pickedImageUrl, setPickedImageUrl] = useState<string | null>(null);
+
+  // 取套餐：失败一律降级 free（成本保守），绝不因取不到就放开到 9
+  useEffect(() => {
+    void fetch("/api/credits")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j && typeof j.plan === "string") setPlan(j.plan);
+      })
+      .catch(() => {
+        // 静默：取不到套餐就按免费档走，不影响主流程
+      });
+  }, []);
 
   useEffect(() => {
     setSessionId(
@@ -55,30 +84,59 @@ export default function CreatePage() {
     if (q) setSentence(q);
   }, []);
 
-  const nodes: DecisionNode[] = useMemo(() => (tree ? buildDecisionTree(tree) : []), [tree]);
+  const nodes: DecisionNode[] = useMemo(
+    () => (tree ? buildDecisionTree(tree, { candidatesPerNode: candidatesForPlan(plan) }) : []),
+    [tree, plan],
+  );
   const active: DecisionNode | undefined = nodes.find((n) => n.id === activeId) ?? nodes[0];
   const pickedCount = useMemo(() => nodes.filter((n) => picked[n.id]).length, [nodes, picked]);
 
-  const callApi = useCallback(async (url: string, body: unknown, retries = 0) => {
-    let res: Response;
-    try {
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    } catch {
-      // 浏览器级网络错误（如 "Failed to fetch"）：长请求经代理偶发超时，自动重试
-      if (retries > 0) return callApi(url, body, retries - 1);
-      throw new Error(
-        "Network hiccup — the request took too long or the connection dropped. Please try again (repeat sentences return instantly from cache).",
-      );
+  /**
+   * 生图走「提交任务 + 短轮询」。
+   *
+   * 为什么：出 4~9 张候选要 15~25s，线上外网代理约 15s 就会以 HTTP 524 掐断
+   * （实测过）。改成短请求后，提交 <1s、每次轮询 <1s，不会再超时；
+   * 等待期间右栏/顶部仍显示 loading。
+   */
+  const generateViaJob = useCallback(async (body: unknown): Promise<Record<string, unknown>> => {
+    const start = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...(body as object), async: true }),
+    });
+    const sj = (await start.json().catch(() => ({}))) as {
+      jobId?: string;
+      message?: string;
+      error?: string;
+    };
+    if (!start.ok) {
+      throw new Error(sj.message ?? sj.error ?? `Request failed (HTTP ${start.status})`);
     }
-    const json = (await res.json().catch(() => ({}))) as ApiError & Record<string, unknown>;
-    if (!res.ok) {
-      throw new Error(json.message ?? json.error ?? `Request failed (HTTP ${res.status})`);
+    const jobId = sj.jobId;
+    if (!jobId) throw new Error("Generation failed: no job id returned");
+
+    const deadline = Date.now() + 180_000;
+    let misses = 0;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 1500));
+      try {
+        const res = await fetch(`/api/generate?job=${encodeURIComponent(jobId)}`);
+        const j = (await res.json().catch(() => ({}))) as {
+          status?: string;
+          result?: Record<string, unknown>;
+          message?: string;
+        };
+        if (j.status === "done" && j.result) return j.result;
+        if (j.status === "error") throw new Error(j.message ?? "Generation failed");
+        misses = 0;
+      } catch (err) {
+        if (err instanceof Error && /Generation failed/.test(err.message)) throw err;
+        // 轮询偶发抖动：继续问（任务已提交，重跑太浪费额度）
+        misses += 1;
+        if (misses > 5) throw new Error("Lost connection while generating. Please try again.");
+      }
     }
-    return json;
+    throw new Error("Generation took too long. Please try again.");
   }, []);
 
   /**
@@ -109,9 +167,7 @@ export default function CreatePage() {
     [sessionId],
   );
 
-  async function handleDecompose(e: React.FormEvent) {
-    e.preventDefault();
-    if (sentence.trim() === "") return;
+  async function runDecompose(): Promise<void> {
     setError(null);
     setProgress("");
     setLoading("decompose");
@@ -120,17 +176,32 @@ export default function CreatePage() {
     setPicked({});
     setPickedImageUrl(null);
     setActiveId("");
-    try {
-      // 流式拆解：边生成边推送，避免长请求被中间代理判为超时
-      const json = await decomposeStreaming(sentence.trim(), sessionId, setProgress);
-      setTree(json);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setTree(null);
-    } finally {
-      setLoading("");
-      setProgress("");
+    let lastMessage = "";
+    // 网络层失败自动重试一次：移动网络/代理可能掐断长连接（实测手机端 network error）。
+    // 只有 fetch 抛出的 TypeError（网络层）才重试；服务端业务报错直接展示，不浪费 tokens。
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const json = await decomposeViaJob(sentence.trim(), sessionId, plan, setProgress);
+        setTree(json);
+        return;
+      } catch (err) {
+        lastMessage = err instanceof Error ? err.message : String(err);
+        setProgress("");
+        if (!(err instanceof TypeError)) break;
+      }
     }
+    setError(
+      `${lastMessage} — Decomposing a long sentence can take up to a minute. ` +
+        "If this keeps happening, check your network and tap Decompose again " +
+        "(repeat sentences return from cache instantly).",
+    );
+    setTree(null);
+  }
+
+  async function handleDecompose(e: React.SyntheticEvent) {
+    e.preventDefault();
+    if (sentence.trim() === "") return;
+    await runDecompose();
   }
 
   async function handlePreview(node: DecisionNode) {
@@ -152,7 +223,7 @@ export default function CreatePage() {
       // 关键：把整棵树 + 当前属性一起传给后端 —— 后端会把"树里其他要素 +
       // 本节点的每个候选值"组装成完整提示词。否则只发一个 "running"，
       // 猫/场景全丢，生图模型只能默认画人。
-      const json = (await callApi("/api/generate", {
+      const json = (await generateViaJob({
         mode: "preview",
         candidates: node.candidates,
         tree,
@@ -206,7 +277,7 @@ export default function CreatePage() {
     setError(null);
     setLoading("final");
     try {
-      const json = (await callApi("/api/generate", { mode: "final", tree })) as { image?: string };
+      const json = (await generateViaJob({ mode: "final", tree })) as { image?: string };
       setFinalImage(json.image ?? null);
       // 强正信号：会话走完并产出终图（PRD §9.5.2）
       track({
@@ -238,13 +309,26 @@ export default function CreatePage() {
       <div className="mx-auto max-w-[1400px] px-4 pb-28 pt-6 md:px-6 lg:pb-12">
         {/* ── 顶部：一句话入口 ── */}
         <form onSubmit={handleDecompose} className="flex flex-col gap-2 sm:flex-row">
-          <input
+          <textarea
+            ref={sentenceRef}
             value={sentence}
             onChange={(e) => setSentence(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter 直接拆解（与原单行输入习惯一致）；Shift+Enter 换行写长句
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void handleDecompose(e);
+              }
+            }}
+            rows={1}
             placeholder="a girl and a dog running at sunset"
             aria-label="Describe the image you want"
-            className="h-12 flex-1 rounded-full border border-hairline-strong bg-surface-elevated px-5 text-sm text-ink outline-none transition placeholder:text-ink-dim focus:border-accent"
+            className="max-h-52 flex-1 resize-none rounded-2xl border border-hairline-strong bg-surface-elevated px-5 py-3 text-sm leading-relaxed text-ink outline-none transition placeholder:text-ink-dim focus:border-accent"
           />
+          {/* 耗时预期：拆解带思维链要 30~60s，先说清楚，免得用户以为卡死 */}
+          <p className="font-mono text-[11px] text-ink-dim sm:hidden">
+            Decomposing usually takes 30–60s (longer for complex scenes).
+          </p>
           <button
             type="submit"
             disabled={loading === "decompose"}
@@ -493,81 +577,67 @@ export default function CreatePage() {
 }
 
 /**
- * 流式拆解：读 SSE 事件流，实时回调进度，拿到 done 事件里的完整树。
+ * 拆解走「提交任务 + 短轮询」，不再用长连接 SSE。
  *
- * 为什么走流式：长句拆解要 30-45s，一次性等待容易被中间代理判为超时
- * （浏览器报 "Failed to fetch"）。流式让连接持续有数据，既不会超时，
- * 也能让用户在等待时看到进度而不是干等一个转圈。
- *
- * 服务端不支持流式（返回非 SSE）时自动回退为一次性 JSON。
+ * 为什么改（2026-10-23 实测）：为保证抽取质量必须保留 hy3 思维链
+ * （关掉它「背对着镜头」会被错抽成 facing camera），但带思维链拆一句
+ * 中文长句要 40~70s；手机 WebView / 代理常在 30s 掐断连接，即使有 SSE
+ * 心跳也会报 "Failed to fetch"。改成短请求：提交 <1s，之后每 1.5s 用
+ * 一个 <1s 的请求问结果，任何一次都不会超时。
  */
-async function decomposeStreaming(
+async function decomposeViaJob(
   sentence: string,
   sessionId: string,
+  plan: string,
   onProgress: (text: string) => void,
 ): Promise<VistaTree> {
-  const res = await fetch("/api/decompose", {
+  // ① 提交：立刻拿到 jobId
+  const start = await fetch("/api/decompose", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sentence, sessionId, stream: true }),
+    body: JSON.stringify({ sentence, sessionId, plan, async: true }),
   });
-
-  const contentType = res.headers.get("content-type") ?? "";
-  if (!res.ok || !contentType.includes("text/event-stream")) {
-    const json = (await res.json().catch(() => ({}))) as ApiError & Record<string, unknown>;
-    if (!res.ok) {
-      throw new Error(json.message ?? json.error ?? "Decompose failed");
-    }
-    return json as unknown as VistaTree;
+  const startJson = (await start.json().catch(() => ({}))) as {
+    jobId?: string;
+    message?: string;
+    error?: string;
+  };
+  if (!start.ok) {
+    throw new Error(
+      startJson.message ?? startJson.error ?? `Decompose failed (HTTP ${start.status})`,
+    );
   }
+  const jobId = startJson.jobId;
+  if (!jobId) throw new Error("Decompose failed: no job id returned");
 
-  const reader = res.body?.getReader();
-  if (!reader) throw new Error("Failed to read the response stream");
-
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let chars = 0;
-  let tree: VistaTree | null = null;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const blocks = buffer.split("\n\n");
-    buffer = blocks.pop() ?? "";
-    for (const block of blocks) {
-      const lines = block.split("\n");
-      const eventLine = lines.find((l) => l.startsWith("event:"));
-      const dataLine = lines.find((l) => l.startsWith("data:"));
-      if (!dataLine) continue;
-      const event = eventLine?.slice(6).trim();
-      let data: {
-        text?: string;
-        done?: number;
-        total?: number;
-        tree?: VistaTree;
+  // ② 轮询：每次都是短请求
+  const startedAt = Date.now();
+  const deadline = startedAt + 240_000;
+  let pollFailures = 0;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const waited = Math.round((Date.now() - startedAt) / 1000);
+    try {
+      const res = await fetch(`/api/decompose?job=${encodeURIComponent(jobId)}`);
+      const j = (await res.json().catch(() => ({}))) as {
+        status?: string;
+        result?: VistaTree;
         message?: string;
-        cached?: boolean;
+        progress?: string;
       };
-      try {
-        data = JSON.parse(dataLine.slice(5).trim());
-      } catch {
-        continue;
-      }
-      if (event === "delta") {
-        chars += data.text?.length ?? 0;
-        onProgress(`Decomposing… ${chars} characters received`);
-      } else if (event === "batch") {
-        onProgress(`Decomposing… ${data.done ?? 0}/${data.total ?? 0} element groups done`);
-      } else if (event === "done") {
-        onProgress(data.cached ? "Loaded from cache" : "Finalizing…");
-        tree = (data.tree ?? null) as VistaTree | null;
-      } else if (event === "error") {
-        throw new Error(data.message ?? "Decompose failed");
-      }
+      if (j.status === "done" && j.result) return j.result;
+      if (j.status === "error") throw new Error(j.message ?? "Decompose failed");
+      // 进度带上已等待秒数：让用户知道"还在动"，而不是对着转圈干着急
+      onProgress(j.progress ? `${j.progress} (waited ${waited}s)` : `Decomposing… ${waited}s`);
+      pollFailures = 0;
+    } catch (err) {
+      if (err instanceof Error && /Decompose failed/.test(err.message)) throw err;
+      // 轮询偶发网络抖动：忽略继续问（任务已提交，重跑整句太浪费）
+      pollFailures += 1;
+      if (pollFailures > 5) throw new Error("Lost connection while waiting. Please try again.");
     }
   }
-
-  if (!tree) throw new Error("Decomposition stream ended without a result");
-  return tree;
+  throw new Error(
+    "Decompose took longer than 4 minutes. Please try again — or try a shorter sentence (repeat sentences return from cache instantly).",
+  );
 }

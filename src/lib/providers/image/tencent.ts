@@ -48,6 +48,7 @@ export function createTencentImageProvider(cfg: TencentImageConfig): ImageProvid
         return { ok: false, status: 503, detail: this.missingKeyMessage() };
       }
 
+      const model = cfg.model ?? req.model ?? "hy-image-v3";
       const res = await fetch(TOKENHUB_IMAGES, {
         method: "POST",
         headers: {
@@ -55,7 +56,7 @@ export function createTencentImageProvider(cfg: TencentImageConfig): ImageProvid
           Authorization: `Bearer ${cfg.apiKey}`,
         },
         body: JSON.stringify({
-          model: cfg.model ?? req.model ?? "hy-image-v3",
+          model,
           prompt: req.prompt,
           size: toSize(req.size),
           // 我们已自带英文 prompt，关闭平台自动扩写，保证可控
@@ -73,7 +74,7 @@ export function createTencentImageProvider(cfg: TencentImageConfig): ImageProvid
       if (urls.length === 0) {
         return { ok: false, status: 502, detail: "Tencent returned no image URLs" };
       }
-      return { ok: true, urls };
+      return { ok: true, urls, model };
     },
   };
 }

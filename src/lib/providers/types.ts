@@ -24,8 +24,14 @@ export interface ImageGenRequest {
   referenceUrl?: string;
 }
 
+/**
+ * 出图结果。
+ * `model` 由 provider 回填**实际使用的模型** —— 不能沿用 modelRouter 里写死的
+ * fal 模型名：实测（2026-10-23）切到阿里后，响应仍报 fal-ai/flux-pro/v1.1，
+ * 而图其实是 qwen/wan 生成的，C2PA 溯源（R10）会因此失真。
+ */
 export type ImageGenResult =
-  | { ok: true; urls: string[] }
+  | { ok: true; urls: string[]; model?: string }
   | { ok: false; status: number; detail: string };
 
 export interface ImageProvider {

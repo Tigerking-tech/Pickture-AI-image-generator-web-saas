@@ -5,6 +5,7 @@
  * 默认 openai。
  */
 import type { TextProvider } from "../types";
+import { mockTextProvider } from "./mock";
 import { createOpenAIProvider } from "./openai";
 import { openRouterTextProvider } from "./openrouter";
 import { tencentTextProvider } from "./tencent";
@@ -25,6 +26,8 @@ export function getTextProvider(): TextProvider {
     case "tencent":
     case "hunyuan":
       return tencentTextProvider;
+    case "mock":
+      return mockTextProvider;
     case "openai":
     default:
       return openaiTextProvider;

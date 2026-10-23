@@ -5,21 +5,23 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  buildDecisionTree,
   CANDIDATE_DEFAULT,
   CANDIDATE_MAX,
   CANDIDATE_MIN,
   DECISION_TREE_ORDER,
-  buildDecisionTree,
+  ensureVisualCandidates,
   estimatePreviewCount,
   getAttributeMode,
   markChanged,
   withDefaultModes,
 } from "@/lib/elementConfig";
 import {
-  type VistaTree,
   cloneVistaTree,
   emptyVistaTree,
+  getAttributeMeta,
   toPrompt,
+  type VistaTree,
   validateVistaTree,
 } from "@/lib/vista";
 
@@ -161,12 +163,19 @@ describe("决策树配置（产品灵魂）", () => {
     );
   });
 
-  it("出图节点（visual）数量受控，避免预览成本失控（PRD §9.4 约 6 节点）", () => {
+  it("出图节点（visual）数量受控，避免预览成本失控（含朝向，共 7 节点）", () => {
     const visualCount = DECISION_TREE_ORDER.filter(
       (n) => getAttributeMode(n.group, n.key) === "visual",
     ).length;
     expect(visualCount).toBeGreaterThanOrEqual(4);
-    expect(visualCount).toBeLessThanOrEqual(6);
+    expect(visualCount).toBeLessThanOrEqual(8);
+  });
+
+  it("朝向必须出现在决策树中（背影类描述的归属地，用户要能选能改）", () => {
+    const order = DECISION_TREE_ORDER.map((n) => `${n.group}.${n.key}`);
+    expect(order).toContain("character.orientation");
+    // 朝向紧跟姿态：同属"主体"层，先钉死主体再看光线
+    expect(order.indexOf("character.orientation")).toBe(order.indexOf("character.pose") + 1);
   });
 
   it("每个出图节点候选数落在 2–4 之间（R2 / R3）", () => {
@@ -179,7 +188,37 @@ describe("决策树配置（产品灵魂）", () => {
     }
   });
 
-  it("默认每节点出 9 个候选（网格模式下 9 候选仍是 1 次调用）", () => {
+  it("候选不足时只用真实属性池补齐，绝不拼凑修饰词（回归：playful clear 之类）", () => {
+    const tree = sampleTree();
+    // 模拟模型只吐 1 个候选，且强行要求补齐到上限
+    tree.environment.weather!.candidates = ["clear"];
+    ensureVisualCandidates(tree, CANDIDATE_MAX);
+
+    const cands = tree.environment.weather!.candidates;
+    const FILLER = [
+      "playful",
+      "energetic",
+      "graceful",
+      "dramatic",
+      "serene",
+      "dynamic",
+      "bold",
+      "gentle",
+    ];
+    for (const c of cands) {
+      for (const q of FILLER) {
+        expect(c.toLowerCase()).not.toContain(q);
+      }
+    }
+    // 每个候选都必须是真实存在的可选值（来自属性池），不是编造出来的变体
+    const pool = getAttributeMeta("environment", "weather")!.pool;
+    expect(cands.length).toBeGreaterThan(1);
+    for (const c of cands) {
+      expect(pool).toContain(c);
+    }
+  });
+
+  it(`默认每节点出 ${CANDIDATE_DEFAULT} 个候选（网格模式下仍是 1 次调用）`, () => {
     const tree = sampleTree();
     tree.environment.weather!.candidates = [
       "clear",

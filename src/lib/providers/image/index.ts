@@ -7,6 +7,7 @@
 import type { ImageProvider } from "../types";
 import { aliyunImageProvider } from "./aliyun";
 import { falImageProvider } from "./fal";
+import { mockImageProvider } from "./mock";
 import { tencentImageProvider } from "./tencent";
 import { volcanoImageProvider } from "./volcano";
 
@@ -23,11 +24,12 @@ export function getImageProvider(): ImageProvider {
     case "alibaba":
     case "qwen":
       return aliyunImageProvider;
+    case "mock":
+      return mockImageProvider;
     case "fal":
     default:
       return falImageProvider;
   }
 }
 
-export type { ImageProvider } from "../types";
-export type { ImageGenResult } from "../types";
+export type { ImageGenResult, ImageProvider } from "../types";

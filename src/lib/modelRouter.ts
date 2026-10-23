@@ -24,6 +24,16 @@ export interface ModelRoute {
   watermark: boolean;
   /** 月度积分额度（PRD §10.2） */
   monthlyCredits: number;
+  /**
+   * 单个出图节点的候选图数量（套餐差异化）。
+   *
+   * 为什么免费档只给 4 张（2026-10-23 真实模型实测）：
+   *   9 候选在网格失败回退串行时会变成 9 次真实出图调用，
+   *   实测把一个节点的额度直接烧掉大半，用户熬到最后一步反而出不了终图。
+   *   免费档 4 张（2x2 网格）既守住成本，又足够做选择；
+   *   付费档放开到 9 张（3x3 网格），网格模式下同样只占 1 次调用。
+   */
+  candidatesPerNode: number;
   /** 参考图上传：月度 / 每日硬上限（PRD §10.2.1） */
   refUploadMonthlyLimit: number;
   refUploadDailyLimit: number;
@@ -37,6 +47,8 @@ const FREE: ModelRoute = {
   priority: false,
   watermark: true,
   monthlyCredits: 60,
+  // 免费档：每节点 4 个候选（2x2 网格）—— 守住免费额度，避免烧光
+  candidatesPerNode: 4,
   refUploadMonthlyLimit: 8,
   refUploadDailyLimit: 3,
 };
@@ -49,6 +61,8 @@ const STARTER: ModelRoute = {
   priority: false,
   watermark: false,
   monthlyCredits: 600,
+  // 付费档：每节点 9 个候选（3x3 网格），网格模式下仍是 1 次调用
+  candidatesPerNode: 9,
   refUploadMonthlyLimit: 50,
   refUploadDailyLimit: 20,
 };
@@ -61,6 +75,7 @@ const PRO: ModelRoute = {
   priority: true,
   watermark: false,
   monthlyCredits: 2400,
+  candidatesPerNode: 9,
   // Pro 参考图上传不限（PRD §10.2.1），用极大值表示"不限"
   refUploadMonthlyLimit: Number.MAX_SAFE_INTEGER,
   refUploadDailyLimit: Number.MAX_SAFE_INTEGER,
@@ -84,6 +99,14 @@ export function normalizePlan(input: unknown): Plan {
 
 export function routeForPlan(plan: unknown): ModelRoute {
   return ROUTES[normalizePlan(plan)];
+}
+
+/**
+ * 该套餐每个出图节点的候选图数量（免费 4 / 付费 9）。
+ * 未知套餐一律降级为 free —— 绝不因参数异常就把成本放开到 9。
+ */
+export function candidatesForPlan(plan: unknown): number {
+  return routeForPlan(plan).candidatesPerNode;
 }
 
 /**

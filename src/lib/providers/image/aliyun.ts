@@ -181,7 +181,7 @@ async function callOnce(
   if (urls.length === 0) {
     return { ok: false, status: 502, detail: "Alibaba Bailian returned no image URLs" };
   }
-  return { ok: true, urls };
+  return { ok: true, urls, model };
 }
 
 /** fal 风格的 "square_hd" 转成阿里原生接口的 `宽*高` 格式（星号分隔） */

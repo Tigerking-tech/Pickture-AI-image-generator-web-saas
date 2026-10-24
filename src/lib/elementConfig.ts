@@ -8,6 +8,7 @@
  * 成本控制（PRD §9.4）：单个作品约 18 张预览图 = 6 个出图节点 × 3 张候选。
  */
 
+import { diversifyFill } from "./diversity";
 import {
   type DecisionMode,
   getAttributeMeta,
@@ -184,12 +185,11 @@ export function ensureVisualCandidates(tree: VistaTree, min = CANDIDATE_DEFAULT)
     // 实测（2026-10-23 真实模型）那样会产生 "playful clear"（天气）、
     // "graceful backlight"（光线）、"playful sunset"（时段）这种毫无语义、
     // 用户一看就觉得产品有 bug 的假候选。宁可少几个候选，也不编造。
-    const merged = [...attr.candidates];
-    for (const p of pool) {
-      if (merged.length >= min) break;
-      if (!merged.includes(p)) merged.push(p);
-    }
-    attr.candidates = merged;
+    //
+    // 同时不做顺序填充：LLM 给了 running，顺序补会把 standing/walking
+    // 这类同词族顶进来，4 张候选图看起来一样、用户等于没选。
+    // 改用贪心 max-min（diversity.ts）保证候选间的视觉差异。
+    attr.candidates = diversifyFill(attr.candidates, pool, min);
   }
 }
 

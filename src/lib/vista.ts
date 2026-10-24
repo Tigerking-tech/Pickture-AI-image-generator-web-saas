@@ -582,6 +582,9 @@ export function toPrompt(tree: VistaTree, opts?: { includeSentence?: boolean }):
   const push = (group: VistaGroup, keys?: string[]) => {
     const section = tree[group] ?? {};
     const entries = Object.entries(section).filter(([k]) => !keys || keys.includes(k));
+    // 用户显式选择的要素排在组内最前：扩散模型对 prompt 前段 token 注意力更高，
+    // 用户花真金白银点数选的东西必须最影响画面
+    entries.sort(([, a], [, b]) => Number(b?.source === "user") - Number(a?.source === "user"));
     for (const [, v] of entries) {
       if (typeof v?.value === "string" && v.value.trim() !== "") {
         parts.push(v.value.trim());

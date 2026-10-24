@@ -1,8 +1,15 @@
 "use client";
 
-import { ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Download, Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Lightbox } from "@/components/lightbox";
+import {
+  CREATE_SESSION_KEY,
+  type CreateSessionSnapshot,
+  parseSession,
+  serializeSession,
+} from "@/lib/createSession";
 import { buildDecisionTree, type DecisionNode } from "@/lib/elementConfig";
 import { candidatesForPlan } from "@/lib/modelRouter";
 import type { VistaAttributeMap, VistaGroup, VistaTree } from "@/lib/vista";
@@ -19,9 +26,17 @@ import type { VistaAttributeMap, VistaGroup, VistaTree } from "@/lib/vista";
  * 不提供"一键生成"捷径，也不在后端替用户做决定。
  */
 
-interface ApiError {
-  error?: string;
-  message?: string;
+/** 大图查看状态：pick 存在时说明是候选图（大图里可"Use this"），否则纯查看（终图） */
+interface LightboxState {
+  url: string;
+  title: string;
+  pick?: { nodeId: string; group: VistaGroup; key: string; value: string; index: number };
+}
+
+function newSessionId(): string {
+  return typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 export default function CreatePage() {
@@ -57,6 +72,12 @@ export default function CreatePage() {
   }, []);
   // 用户最近选中的候选图 —— 后续节点的"主体锚"（控制变量：小猫不变，只变其他要素）
   const [pickedImageUrl, setPickedImageUrl] = useState<string | null>(null);
+  // 大图查看（P0-2）：点击候选图先放大看细节，确认后才选中
+  const [lightbox, setLightbox] = useState<LightboxState | null>(null);
+  // 终图下载进行中（P0-4）
+  const [downloading, setDownloading] = useState(false);
+  // 会话恢复完成前不回写 sessionStorage，避免用初始空值覆盖有效存档（P0-3）
+  const [hydrated, setHydrated] = useState(false);
 
   // 取套餐：失败一律降级 free（成本保守），绝不因取不到就放开到 9
   useEffect(() => {
@@ -70,13 +91,59 @@ export default function CreatePage() {
       });
   }, []);
 
+  // 会话恢复（P0-3）：刷新后把上次的句子/树/候选图/已选/终图全恢复回来。
+  // 存档损坏或版本不符 → parseSession 返回 null，静默降级为新会话。
   useEffect(() => {
-    setSessionId(
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    );
+    let snap: CreateSessionSnapshot | null = null;
+    try {
+      snap = parseSession(sessionStorage.getItem(CREATE_SESSION_KEY));
+    } catch {
+      snap = null; // 隐私模式下 sessionStorage 可能直接抛异常
+    }
+    if (snap) {
+      setSentence(snap.sentence);
+      setTree(snap.tree);
+      setNodeImages(snap.nodeImages);
+      setPicked(snap.picked);
+      setPickedImageUrl(snap.pickedImageUrl);
+      setFinalImage(snap.finalImage);
+      setSessionId(snap.sessionId);
+      setRegenCount(snap.regenCount);
+    } else {
+      setSessionId(newSessionId());
+    }
+    setHydrated(true);
   }, []);
+
+  // 会话回写：任一持久状态变化即存档。hydrated 前不写，sessionId 空不写。
+  useEffect(() => {
+    if (!hydrated || sessionId === "") return;
+    const snap: CreateSessionSnapshot = {
+      sentence,
+      tree,
+      nodeImages,
+      picked,
+      pickedImageUrl,
+      finalImage,
+      sessionId,
+      regenCount,
+    };
+    try {
+      sessionStorage.setItem(CREATE_SESSION_KEY, serializeSession(snap));
+    } catch {
+      // 静默：存储满/隐私模式不阻断创作主流程
+    }
+  }, [
+    hydrated,
+    sessionId,
+    sentence,
+    tree,
+    nodeImages,
+    picked,
+    pickedImageUrl,
+    finalImage,
+    regenCount,
+  ]);
 
   // 从 Landing 的入口框带过来的句子（/create?q=...）
   useEffect(() => {
@@ -293,6 +360,30 @@ export default function CreatePage() {
     }
   }
 
+  /**
+   * 终图下载（P0-4）：fetch 成 blob 再走 a[download]，避免浏览器直接
+   * 导航到 CDN 地址。跨域/网络失败降级为新标签打开，用户可长按保存。
+   */
+  async function handleDownload() {
+    if (!finalImage || downloading) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(finalImage);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `pictory-${Date.now()}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(finalImage, "_blank");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-canvas text-ink">
       <header className="sticky top-0 z-20 border-b border-hairline bg-canvas/80 backdrop-blur">
@@ -445,17 +536,20 @@ export default function CreatePage() {
                             key={url}
                             type="button"
                             onClick={() =>
-                              handlePick(
-                                active.id,
-                                active.group,
-                                active.key,
-                                value,
-                                idx,
-                                nodeImages[active.id]?.[idx],
-                              )
+                              setLightbox({
+                                url,
+                                title: value,
+                                pick: {
+                                  nodeId: active.id,
+                                  group: active.group,
+                                  key: active.key,
+                                  value,
+                                  index: idx,
+                                },
+                              })
                             }
                             aria-pressed={isPicked}
-                            aria-label={`Pick ${value}`}
+                            aria-label={`View ${value}`}
                             className="group relative overflow-hidden rounded-md"
                           >
                             {/* biome-ignore lint/performance/noImgElement: 生图 CDN 域名不固定，且已由 CDN 优化 */}
@@ -466,6 +560,10 @@ export default function CreatePage() {
                                 isPicked ? "" : "opacity-80 group-hover:opacity-100"
                               }`}
                             />
+                            {/* 候选值角标：图上看不出值是什么，必须标出来（P0-1） */}
+                            <span className="pointer-events-none absolute bottom-1 left-1 max-w-[calc(100%-0.5rem)] truncate rounded bg-canvas/80 px-1.5 py-0.5 font-mono text-[10px] text-ink">
+                              {value}
+                            </span>
                             {isPicked && (
                               <span className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-accent ring-inset" />
                             )}
@@ -507,8 +605,28 @@ export default function CreatePage() {
                       <h3 className="font-display text-lg font-bold tracking-tight">
                         Final result
                       </h3>
-                      {/* biome-ignore lint/performance/noImgElement: 生图 CDN 域名不固定，且已由 CDN 优化 */}
-                      <img src={finalImage} alt="Final result" className="mt-3 w-full rounded-lg" />
+                      <button
+                        type="button"
+                        onClick={() => setLightbox({ url: finalImage, title: "Final result" })}
+                        aria-label="View final result"
+                        className="mt-3 block w-full cursor-zoom-in"
+                      >
+                        {/* biome-ignore lint/performance/noImgElement: 生图 CDN 域名不固定，且已由 CDN 优化 */}
+                        <img src={finalImage} alt="Final result" className="w-full rounded-lg" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDownload}
+                        disabled={downloading}
+                        className="btn-ghost mt-3 inline-flex h-10 items-center gap-2 px-4 text-xs disabled:opacity-50"
+                      >
+                        {downloading ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Download className="h-3.5 w-3.5" />
+                        )}
+                        Download
+                      </button>
                     </section>
                   )}
                 </>
@@ -571,6 +689,26 @@ export default function CreatePage() {
             Generate final image · 10 credits
           </button>
         </div>
+      )}
+
+      {/* 大图查看：候选图带 "Use this"（确认后才算选中）；终图纯查看 */}
+      {lightbox && (
+        <Lightbox
+          imageUrl={lightbox.url}
+          title={lightbox.title}
+          onClose={() => setLightbox(null)}
+          actionLabel={lightbox.pick ? "Use this" : undefined}
+          onAction={
+            lightbox.pick
+              ? () => {
+                  const p = lightbox.pick;
+                  if (!p) return;
+                  handlePick(p.nodeId, p.group, p.key, p.value, p.index, lightbox.url);
+                  setLightbox(null);
+                }
+              : undefined
+          }
+        />
       )}
     </div>
   );

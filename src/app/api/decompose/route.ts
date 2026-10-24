@@ -1,6 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { applyAttributeDeps } from "@/lib/attributeDeps";
 import { getPlan } from "@/lib/credits";
-import { CANDIDATE_DEFAULT, ensureVisualCandidates, withDefaultModes } from "@/lib/elementConfig";
+import {
+  CANDIDATE_DEFAULT,
+  DECISION_TREE_ORDER,
+  ensureVisualCandidates,
+  withDefaultModes,
+} from "@/lib/elementConfig";
+import { applyGlobalRerank, fetchPickStats, type PickStats } from "@/lib/flywheel";
 import { completeJob, createJob, failJob, getJob, updateJob } from "@/lib/jobs";
 import { candidatesForPlan, normalizePlan } from "@/lib/modelRouter";
 import { getTextProvider } from "@/lib/providers/text";
@@ -66,6 +73,9 @@ const DECOMPOSE_BATCHES: string[][] = [
   ["style", "effects"],
 ];
 
+/** 决策树出图属性的 id 列表：飞轮统计只关心这几个属性的历史选择 */
+const DECISION_TREE_ATTR_IDS = DECISION_TREE_ORDER.map((n) => `${n.group}.${n.key}`);
+
 export async function POST(request: NextRequest) {
   const text = getTextProvider();
   if (!text.isConfigured()) {
@@ -108,6 +118,10 @@ export async function POST(request: NextRequest) {
   /** 该套餐每节点候选数（免费 4 / 付费 9），贯穿 schema 提示与补齐逻辑 */
   const perNode = candidatesForPlan(plan);
 
+  // 飞轮统计（学习点 B）与拆句并行发起：拆解要几十秒，统计查询早完了，
+  // 不增加用户等待。任何失败在 fetchPickStats 内部静默兜底为空。
+  const pickStats = fetchPickStats(getSupabaseAdmin(), DECISION_TREE_ATTR_IDS);
+
   // 免费档 GPT-4o-mini；付费档 GPT-4o（PRD §10.5），可用 env 覆盖
   const baseModel = plan === "free" ? "gpt-4o-mini" : "gpt-4o";
   const model = resolveModel(plan, baseModel);
@@ -125,6 +139,8 @@ export async function POST(request: NextRequest) {
       try {
         const cached = await findCachedTree(sentence, model, imageUrl);
         if (cached) {
+          // 缓存命中也要过一遍飞轮重排：缓存是旧的，统计是新的
+          applyGlobalRerank(cached, await pickStats);
           completeJob(jobId, cached);
           return;
         }
@@ -134,6 +150,7 @@ export async function POST(request: NextRequest) {
           model,
           perNode,
           sessionId: body.sessionId,
+          pickStats,
           onProgress: (p) => updateJob(jobId, { progress: p }),
         });
         if (r.ok) completeJob(jobId, r.tree);
@@ -148,6 +165,8 @@ export async function POST(request: NextRequest) {
   // ── 拆解缓存（PRD §9.4.1 缓存命中）：同一句子直接复用，0 等待 ──
   const cachedTree = await findCachedTree(sentence, model, imageUrl);
   if (cachedTree) {
+    // 缓存命中也要过一遍飞轮重排：缓存是旧的，统计是新的
+    applyGlobalRerank(cachedTree, await pickStats);
     if (body.stream === true) {
       return sseStream(async (send) => {
         send("done", { tree: cachedTree, cached: true });
@@ -220,6 +239,7 @@ export async function POST(request: NextRequest) {
         imageUrl,
         body.sessionId,
         perNode,
+        pickStats,
       );
       if (!finalized.ok) {
         send("error", { message: finalized.error, errors: finalized.errors, status: 502 });
@@ -236,6 +256,7 @@ export async function POST(request: NextRequest) {
     model,
     perNode,
     sessionId: body.sessionId,
+    pickStats,
   });
   if (!result.ok) {
     return NextResponse.json(
@@ -260,10 +281,11 @@ async function decomposeOnce(
     model: string;
     perNode: number;
     sessionId?: string;
+    pickStats?: Promise<PickStats>;
     onProgress?: (text: string) => void;
   },
 ): Promise<{ ok: true; tree: VistaTree } | { ok: false; message: string; errors?: string[] }> {
-  const { sentence, imageUrl, model, perNode, sessionId, onProgress } = opts;
+  const { sentence, imageUrl, model, perNode, sessionId, pickStats, onProgress } = opts;
 
   const runBatch = async (groups: string[]): Promise<Record<string, unknown> | null> => {
     const r = await text.decompose({
@@ -337,7 +359,15 @@ async function decomposeOnce(
   }
 
   report("Finalizing…");
-  const finalized = await finalizeTree(parsed, sentence, model, imageUrl, sessionId, perNode);
+  const finalized = await finalizeTree(
+    parsed,
+    sentence,
+    model,
+    imageUrl,
+    sessionId,
+    perNode,
+    pickStats,
+  );
   if (!finalized.ok) {
     return { ok: false, message: finalized.error, errors: finalized.errors };
   }
@@ -391,7 +421,8 @@ async function findCachedTree(
 }
 
 /**
- * 把模型输出整理成可用树：丢未知键 → 补齐候选 → 补默认模式 → 校验 → 留档。
+ * 把模型输出整理成可用树：丢未知键 → 朝向归一化 → 补齐候选 → 依赖推理
+ * → 补默认模式 → 飞轮重排 → 校验 → 留档。
  * 流式与非流式共用，保证两条路径的结果完全一致。
  */
 async function finalizeTree(
@@ -401,12 +432,16 @@ async function finalizeTree(
   imageUrl?: string,
   sessionId?: string,
   perNode = CANDIDATE_DEFAULT,
+  pickStats?: Promise<PickStats>,
 ): Promise<{ ok: true; tree: VistaTree } | { ok: false; error: string; errors?: string[] }> {
   const tree: VistaTree = { ...emptyVistaTree(), ...(stripUnknownAttributes(parsed) as object) };
   // 朝向强制归一化（剥掉动作词，避免与 pose 冲突）
   normalizeOrientation(tree);
-  // 兜底：模型不一定给满 perNode 个候选，不足时用属性池补齐
+  // 兜底：模型不一定给满 perNode 个候选，不足时用属性池补齐（贪心 max-min 保多样性）
   ensureVisualCandidates(tree, perNode);
+  // 属性依赖推理（attributeDeps.ts）：sunset→暖色温等摄影常识。
+  // 只重排候选顺序 + 补空 value，绝不动用户已选。
+  applyAttributeDeps(tree);
   withDefaultModes(tree);
   tree.meta = {
     fromImage: typeof imageUrl === "string" && imageUrl.startsWith("http"),
@@ -414,6 +449,11 @@ async function finalizeTree(
     sentence,
     model,
   };
+
+  // 飞轮·学习点 B：历史选中频次全局重排（样本不足自动跳过；只动候选顺序不动 value）
+  if (pickStats) {
+    applyGlobalRerank(tree, await pickStats);
+  }
 
   const validation = validateVistaTree(tree);
   if (!validation.ok) {

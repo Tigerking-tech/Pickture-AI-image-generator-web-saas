@@ -253,6 +253,10 @@ interface AsyncJob {
 |------|------|
 | [vista.ts](file:///workspace/src/lib/vista.ts) | VISTA schema 定义、属性元数据、校验、序列化、归一化 |
 | [elementConfig.ts](file:///workspace/src/lib/elementConfig.ts) | 决策树配置：属性决策方式、节点顺序、候选数策略 |
+| [diversity.ts](file:///workspace/src/lib/diversity.ts) | 候选多样性补齐：Jaccard + 词缀形态学相似度，贪心 max-min 填充 |
+| [attributeDeps.ts](file:///workspace/src/lib/attributeDeps.ts) | 属性依赖推理引擎：摄影常识规则（如 sunset→暖色温）重排候选 |
+| [flywheel.ts](file:///workspace/src/lib/flywheel.ts) | 数据飞轮学习点 B：历史选中统计驱动全局候选重排 |
+| [createSession.ts](file:///workspace/src/lib/createSession.ts) | 创作会话 sessionStorage 持久化：序列化与防御性解析 |
 | [imageGrid.ts](file:///workspace/src/lib/imageGrid.ts) | 网格出候选：提示词构造、公共约束提取、网格切割 |
 | [modelRouter.ts](file:///workspace/src/lib/modelRouter.ts) | 套餐→模型路由、积分额度、候选数、参考图配额 |
 | [credits.ts](file:///workspace/src/lib/credits.ts) | 积分钱包：读余额、原子扣减、参考图配额、月度补齐 |

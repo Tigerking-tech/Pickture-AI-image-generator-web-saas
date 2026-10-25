@@ -152,6 +152,10 @@ verify.js 断言覆盖：SEO（title/description/canonical/OG/Twitter/JSON-LD×2
 8. **CSS 编辑破坏结构**：v3 改 globals.css 时曾把 @media 块截断导致孤儿规则——改完后用括号平衡脚本校验（depth 必须为 0）
 9. **演示/截图整页空白**：`.reveal` 未触发时 opacity:0，全页截图前必须先渐进滚动
 10. **Photoroom 官网直连超时**：竞品数据用 WebFetch 通道获取
+11. **github.com git 主机不可达**（本沙箱网络只放行 api.github.com）：`git push` 报 TLS/connect 错误，但 REST API 正常。降级方案：经 Git Data API 推送——逐文件 POST `/git/blobs`（base64）→ POST `/git/trees` → POST `/git/commits`（传 author/committer/date 可复现 SHA）→ PATCH `/git/refs/heads/main`（force:true）。脚本在 artifact 目录 push-via-api.js
+12. **`.github/workflows/*` 推送返回 404**：GitHub 要求 PAT 带 `workflow` scope 才能建/改 workflow 文件，否则 tree API 和 contents API 都返回迷惑性 404（其他路径同批次却成功）。解法：换带 workflow scope 的 PAT，或接受暂缺该文件
+13. **API 建 commit 的 SHA 复现规则**（字节级对齐本地 git 用）：① 时间戳**保留原始时区偏移**（发 `+08:00` 就存 `+0800`，不转 UTC；但 JSON 回显归一成 `Z`，别信回显）；② 消息**原样存储**（含尾部换行，不做 git cleanup）；③ `git log --format=%B` 会在消息后多输一个记录分隔 `\n`，发给 API 前要心里有数；④ 用 `git hash-object -t commit --stdin` 手工构造对象即可在本地精确复现远端 SHA
+14. **`git reset --hard` 会吞掉未提交编辑**（本会话踩了两次）：对准历史提交前，先 commit 或 stash；用 `git read-tree`+`write-tree` 从提交取 tree 时同理——工作区未提交改动不进去
 
 ## 10. 当前状态与待办
 
@@ -160,12 +164,13 @@ verify.js 断言覆盖：SEO（title/description/canonical/OG/Twitter/JSON-LD×2
 - [x] 客户视角全流程走查 + 8 项修复：OAuth 卡死、移动端汉堡菜单、定价页移动端溢出、登录/注册模板文案、仪表盘深色粗野主义换肤、计划价格对齐（$0/$12/$29）、demo 邮箱/积分数据、.env.example 修正
 - [x] 闭环验证 34/34 + 3/3，控制台零错误，移动端 4 页零溢出
 - [x] README.md 重写为入口文档（醒目指向本 PRD）
-- [x] git 仓库初始化：`.gitignore` 扩充排除 vendor/(67M)/video-proofs/(24M)/docs/(旧模板)/damage_*.png，首次提交 88f170a（135 文件 1.3M，remote 指向 Pickture 仓库）
+- [x] git 仓库初始化：`.gitignore` 扩充排除 vendor/(67M)/video-proofs/(24M)/docs/(旧模板)/damage_*.png，首次提交 60f6294（135 文件 1.3M，remote 指向 Pickture 仓库）
+- [x] **推送到 GitHub 完成**（2026-10-25）：`Tigerking-tech/Pickture-AI-image-generator-web-saas` main = `f9d65f1f`（134 文件；`.github/workflows/ci.yml` 因 PAT 缺 `workflow` scope 被 GitHub API 拦截未推送）。旧 Pickture 历史存档于 `pickture-archive` 分支（41af11ad）可随时恢复。因 github.com 不可达，推送经 api.github.com REST API 完成，本地 main 与远端 SHA 逐字节一致（§9 坑 11–14）
 
 ### 待办（按优先级）
 1. **仪表盘产品化重构**（用户已提兴趣）：目前是 SaaSKit 计费后台换肤。可把 "Credits" 改为 "Verified edits"、许可证页融入品牌 manifest 概念、加编辑历史/质量报告视图
 2. **字体换装布局抖动**：可加 `<link rel="preload">` 或 @font-face size-adjust 兜底
-3. **推送到 GitHub 被阻塞**：本地已就绪（commit 88f170a），但连接器 OAuth Token 为**只读**（无 scope，建仓/建 ref/git push 全 403）。需用户在 CodeBuddy 设置→连接器→GitHub **重新授权（授予 repo 写权限）**。用户已选定目标：`Tigerking-tech/Pickture-AI-image-generator-web-saas` main（将覆盖其旧 Pickture 历史，tarball 备份在 `/workspace/pickture-github-backup/`）。授权后一条 `git push -f origin main` 即可完成
+3. **补推 `.github/workflows/ci.yml`**：需用户提供带 `workflow` scope 的 PAT（或 GitHub 网页手动上传该文件），之后经 Contents API 推送即可与本地对齐
 4. **真实 Supabase + Creem 密钥接入**：目前全程 demo 模式；上线前需建 Supabase 项目（schema 来自 SaaSKit）、Creem 产品（prod_pro/prod_scale）、配置 webhook
 5. **SEO 增强**：og-cover.svg 可升级为真实产品图封面；sitemap 已含 /demo
 6. **竞品复测**：Photoroom/Claid/Pixelcut 改版时重新取计算样式，保持对标

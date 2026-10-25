@@ -1,0 +1,60 @@
+{
+  "width": 1200,
+  "height": 900,
+  "elements": {
+    "brand_logo": {
+      "bbox": [
+        60,
+        55,
+        420,
+        125
+      ],
+      "hash": "3e5f3f4758b92fb1"
+    },
+    "product_body": {
+      "bbox": [
+        345,
+        200,
+        855,
+        700
+      ],
+      "hash": "ff293c5a754197f8"
+    },
+    "product_label": {
+      "bbox": [
+        355,
+        618,
+        505,
+        662
+      ],
+      "hash": "07d2a9c2fd0628e4"
+    },
+    "product_logo": {
+      "bbox": [
+        740,
+        610,
+        800,
+        670
+      ],
+      "hash": "2fab73a295b2c721"
+    },
+    "text_small": {
+      "bbox": [
+        345,
+        622,
+        855,
+        658
+      ],
+      "hash": "727b99cf3e426f68"
+    },
+    "price_tag": {
+      "bbox": [
+        900,
+        750,
+        1140,
+        840
+      ],
+      "hash": "2a06eac5b8cf57f5"
+    }
+  }
+}

@@ -1,0 +1,73 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# dev utilities
+/screenshots/
+/screenshot.mjs
+
+# omc state
+.omc/
+
+# beast-plan
+.beast-plan/
+
+# Video proof scripts
+video-proofs/*.mjs
+
+# Old SaaSKit video proofs (24MB webm, pre-v2 design)
+/video-proofs/
+
+# PhotoCraft binary (67MB, MIT — download separately)
+/vendor/
+
+# Old SaaSKit template assets (screenshots show pre-v2 design)
+/docs/
+
+# damage-test.js outputs (regenerated on each run)
+/damage_*.png
+
+# temp build artifacts
+/.tmp-fidelity-cjs/

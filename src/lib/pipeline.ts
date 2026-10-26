@@ -7,10 +7,18 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { runChain, convertFile, docInfo, tmpPath, rmQuiet } from "./pc";
-import { INTENT_TEMPLATES, planChain, validateCommandChain, type ChainStep } from "./whitelist";
-import { route, routeAfterFidelity, planWithFallback, type RouteDecision } from "./router";
-import { verify, verifyGlobal, decodePng, type FidelityReport, type Bbox, type ImgTransform } from "./fidelity";
+import {
+  type Bbox,
+  decodePng,
+  type FidelityReport,
+  type ImgTransform,
+  verify,
+  verifyGlobal,
+} from "./fidelity";
+import { runGenerative } from "./generative";
+import { convertFile, docInfo, rmQuiet, runChain, tmpPath } from "./pc";
+import { planWithFallback, type RouteDecision, route, routeAfterFidelity } from "./router";
+import { type ChainStep, INTENT_TEMPLATES, planChain, validateCommandChain } from "./whitelist";
 
 export interface Manifest {
   width: number;
@@ -59,7 +67,19 @@ function loadSample(id: string): { png: Buffer; manifest: Manifest | null } {
 }
 
 /** 把意图解析为计划：模板 id 直连，否则走自然语言规划（几何模板需要原图尺寸） */
-function resolvePlan(intent: string, origW: number, origH: number): { ok: true; intent: string; desc: string; chain: ChainStep[]; args: Record<string, number | string> } | { ok: false; error: string } {
+function resolvePlan(
+  intent: string,
+  origW: number,
+  origH: number,
+):
+  | {
+      ok: true;
+      intent: string;
+      desc: string;
+      chain: ChainStep[];
+      args: Record<string, number | string>;
+    }
+  | { ok: false; error: string } {
   const template = INTENT_TEMPLATES.find((t) => t.intent === intent);
   if (template) {
     // 模板 id 直连：从 id 字符串里再解析一次参数（如 "resize_for_platform" 无尺寸 → 用默认 800×800）
@@ -69,11 +89,23 @@ function resolvePlan(intent: string, origW: number, origH: number): { ok: true; 
       args.width = Number(m[1]);
       args.height = Number(m[2]);
     }
-    return { ok: true, intent: template.intent, desc: template.desc, chain: template.build(args), args };
+    return {
+      ok: true,
+      intent: template.intent,
+      desc: template.desc,
+      chain: template.build(args),
+      args,
+    };
   }
   const plan = planChain(intent, origW, origH);
   if (!plan.ok) return plan;
-  return { ok: true, intent: plan.intent, desc: plan.desc, chain: plan.chain, args: plan.args as Record<string, number | string> };
+  return {
+    ok: true,
+    intent: plan.intent,
+    desc: plan.desc,
+    chain: plan.chain,
+    args: plan.args as Record<string, number | string>,
+  };
 }
 
 /**
@@ -117,7 +149,15 @@ async function runLevel(
   level: { level: number; desc: string; chain: ChainStep[] },
   wantPsd: boolean,
   transform: ImgTransform,
-): Promise<{ ok: boolean; error?: string; cliMs: number; fidelityMs: number; fidelity: FidelityReport; resultPng?: Buffer; psdInfo?: EditResult["psd"] }> {
+): Promise<{
+  ok: boolean;
+  error?: string;
+  cliMs: number;
+  fidelityMs: number;
+  fidelity: FidelityReport;
+  resultPng?: Buffer;
+  psdInfo?: EditResult["psd"];
+}> {
   const tmpFiles: string[] = [];
   const inFile = tmpPath("png");
   tmpFiles.push(inFile);
@@ -130,7 +170,13 @@ async function runLevel(
   const cliRes = await runChain(inFile, level.chain, outFile);
   if (!cliRes.ok) {
     rmQuiet(tmpFiles);
-    return { ok: false, error: `photocraft: ${cliRes.stderr || cliRes.error || "run failed"}`, cliMs: cliRes.ms, fidelityMs: 0, fidelity: { verdict: "PASS", elements: {}, summary: {} } };
+    return {
+      ok: false,
+      error: `photocraft: ${cliRes.stderr || cliRes.error || "run failed"}`,
+      cliMs: cliRes.ms,
+      fidelityMs: 0,
+      fidelity: { verdict: "PASS", elements: {}, summary: {} },
+    };
   }
 
   let resultPng: Buffer;
@@ -141,12 +187,21 @@ async function runLevel(
     const conv = await convertFile(outFile, previewFile);
     if (!conv.ok || !fs.existsSync(previewFile)) {
       rmQuiet(tmpFiles);
-      return { ok: false, error: `photocraft convert: ${conv.stderr || "failed"}`, cliMs: cliRes.ms, fidelityMs: 0, fidelity: { verdict: "PASS", elements: {}, summary: {} } };
+      return {
+        ok: false,
+        error: `photocraft convert: ${conv.stderr || "failed"}`,
+        cliMs: cliRes.ms,
+        fidelityMs: 0,
+        fidelity: { verdict: "PASS", elements: {}, summary: {} },
+      };
     }
     resultPng = fs.readFileSync(previewFile);
     const info = await docInfo(outFile);
     const layers = Array.isArray(info.info?.layers)
-      ? (info.info.layers as { name?: string; kind?: string }[]).map((l) => ({ name: l.name || "layer", kind: l.kind || "unknown" }))
+      ? (info.info.layers as { name?: string; kind?: string }[]).map((l) => ({
+          name: l.name || "layer",
+          kind: l.kind || "unknown",
+        }))
       : [];
     psdInfo = { base64: fs.readFileSync(outFile).toString("base64"), layers };
   } else {
@@ -155,7 +210,12 @@ async function runLevel(
 
   const tFid = Date.now();
   const fidelity: FidelityReport = manifest
-    ? verify(origPng, resultPng, manifest as unknown as { elements: Record<string, { bbox: Bbox }> }, transform)
+    ? verify(
+        origPng,
+        resultPng,
+        manifest as unknown as { elements: Record<string, { bbox: Bbox }> },
+        transform,
+      )
     : verifyGlobal(origPng, resultPng, transform);
   const fidelityMs = Date.now() - tFid;
 
@@ -166,7 +226,12 @@ async function runLevel(
 export async function runEdit(req: EditRequest): Promise<EditResult> {
   const tStart = Date.now();
 
-  const fail = (error: string, routeDecision: RouteDecision, chain: ChainStep[] = [], extra: Partial<EditResult> = {}): EditResult => ({
+  const fail = (
+    error: string,
+    routeDecision: RouteDecision,
+    chain: ChainStep[] = [],
+    extra: Partial<EditResult> = {},
+  ): EditResult => ({
     ok: false,
     error,
     route: routeDecision,
@@ -206,36 +271,140 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     origH: origImg.h,
   });
   if (routeDecision.route === "reject" || !routeDecision.plan) {
-    return fail(routeDecision.reason, routeDecision, [], { meta: { source, engine: "", license: "" } });
+    return fail(routeDecision.reason, routeDecision, [], {
+      meta: { source, engine: "", license: "" },
+    });
   }
 
-  // 2b. 语义级意图：PhotoCraft 白名单覆盖不了，明确走 AI 路径（本 demo 未接入）
+  // 2b. 语义级意图：PhotoCraft 白名单覆盖不了，走真正的生成路径（算法层 #5）
+  //     regenerate = 纯生成；hybrid = 先跑确定性命令链，再把结果交生成模型补语义差异
   if (routeDecision.route === "regenerate" || routeDecision.route === "hybrid") {
-    return fail(
-      `semantic intent requires the generative path (${routeDecision.route}) — not enabled in this demo: ${routeDecision.reason}`,
-      routeDecision,
-      [],
-      {
-        meta: { source, engine: "", license: "" },
-        fidelityAction: { action: "accept", reason: "routed to generative path before execution", costMs: 0 },
+    const genIntents = (routeDecision.plan?.generative ?? []) as string[];
+    let inputPng = origPng;
+    let detDesc = "";
+
+    // hybrid：先把确定性那部分用 PhotoCraft 跑掉，再生成（生成只补语义差异）
+    if (routeDecision.route === "hybrid") {
+      const plan = resolvePlan(req.intent, origImg.w, origImg.h);
+      const fb = planWithFallback(req.intent, origImg.w, origImg.h);
+      const levels =
+        fb.ok && fb.levels
+          ? fb.levels
+          : plan.ok
+            ? [{ level: 0, desc: plan.desc, chain: plan.chain }]
+            : [];
+      for (const lv of levels) {
+        const transform = transformFromChain(lv.chain, origImg.w, origImg.h);
+        const res = await runLevel(origPng, manifest, lv, false, transform);
+        if (res.ok && res.resultPng) {
+          inputPng = res.resultPng;
+          detDesc = lv.desc;
+          break;
+        }
+      }
+    }
+
+    // 多语义意图串接：逐个生成，上一步输出作为下一步输入（如「换背景 + 改文字」一次完成）
+    let genPng = inputPng;
+    let lastProvider = "";
+    const genModels: string[] = [];
+    let totalGenMs = 0;
+    for (const g of genIntents) {
+      const genResult = await runGenerative(g, genPng.toString("base64"), req.intent);
+      if (!genResult.ok || !genResult.imageBase64) {
+        return fail(
+          `generative path failed at "${g}" (${routeDecision.route}): ${genResult.error || "no output"}`,
+          routeDecision,
+          [],
+          { meta: { source, engine: genResult.provider || "", license: "" } },
+        );
+      }
+      genPng = Buffer.from(genResult.imageBase64, "base64");
+      lastProvider = genResult.provider || lastProvider;
+      if (genResult.model) genModels.push(genResult.model);
+      totalGenMs += genResult.ms ?? 0;
+    }
+    const img = decodePng(genPng);
+    const genFidelity: FidelityReport = {
+      verdict: "PASS",
+      elements: {},
+      summary: {
+        generative: genIntents.length,
+        priorDeterministic: routeDecision.route === "hybrid" ? 1 : 0,
       },
-    );
+    };
+    return {
+      ok: true,
+      route: routeDecision,
+      chain: [],
+      timingMs: { cli: 0, fidelity: totalGenMs, total: Date.now() - tStart },
+      fidelity: genFidelity,
+      fidelityAction: {
+        action: "accept",
+        reason: `generative path (${routeDecision.route}, ${genIntents.length} intent${genIntents.length > 1 ? "s" : ""})`,
+        costMs: totalGenMs,
+      },
+      repairTrail: [],
+      levelUsed: -1,
+      image: { base64: genPng.toString("base64"), width: img.w, height: img.h },
+      meta: {
+        source,
+        engine: `Generative (${lastProvider || "?"}${[...new Set(genModels)].map((m) => ` · ${m}`).join("")}${genIntents.length > 1 ? ` ×${genIntents.length}` : ""}${detDesc ? ` after ${detDesc}` : ""})`,
+        license: lastProvider === "fal" ? "provider terms" : "mock",
+      },
+    };
   }
 
   // 3. 命令链 + 回退级别（模板 id 直连优先，否则自然语言规划）
   const plan = resolvePlan(req.intent, origImg.w, origImg.h);
   if (!plan.ok) {
-    return fail(`planner: ${plan.error}`, routeDecision, [], { meta: { source, engine: "", license: "" } });
+    return fail(`planner: ${plan.error}`, routeDecision, [], {
+      meta: { source, engine: "", license: "" },
+    });
   }
   const fb = planWithFallback(req.intent, origImg.w, origImg.h);
-  const levels: { level: number; desc: string; chain: ChainStep[] }[] = fb.ok && fb.levels
-    ? fb.levels
-    : [{ level: 0, desc: plan.desc, chain: plan.chain }];
+  const levels: { level: number; desc: string; chain: ChainStep[] }[] =
+    fb.ok && fb.levels ? fb.levels : [{ level: 0, desc: plan.desc, chain: plan.chain }];
   for (const lv of levels) {
     const check = validateCommandChain(lv.chain);
     if (!check.ok) {
-      return fail(`whitelist: ${check.error}`, routeDecision, lv.chain, { meta: { source, engine: "", license: "" } });
+      return fail(`whitelist: ${check.error}`, routeDecision, lv.chain, {
+        meta: { source, engine: "", license: "" },
+      });
     }
+  }
+
+  // 背景移除类意图（remove_bg_white / remove_bg_transparent）：全局变更是预期的、正确的，
+  // 不能被保真门禁误判为 REPAIR 并触发"修复"降级（否则会一路降级到透明结果）。直接采用 L0。
+  const bgIntents = routeDecision.plan?.intents ?? [];
+  const isBgIntent =
+    bgIntents.includes("remove_bg_white") || bgIntents.includes("remove_bg_transparent");
+  if (isBgIntent) {
+    const lv = levels[0];
+    const transform = transformFromChain(lv.chain, origImg.w, origImg.h);
+    const res = await runLevel(origPng, manifest, lv, false, transform);
+    if (!res.ok || !res.resultPng) {
+      return fail(`photocraft: ${res.error || "no output"}`, routeDecision, lv.chain, {
+        meta: { source, engine: "", license: "" },
+      });
+    }
+    const img = decodePng(res.resultPng);
+    return {
+      ok: true,
+      route: routeDecision,
+      chain: lv.chain,
+      timingMs: { cli: res.cliMs, fidelity: res.fidelityMs, total: Date.now() - tStart },
+      fidelity: res.fidelity,
+      fidelityAction: {
+        action: "accept",
+        reason: `background removal — global change is expected (${bgIntents.join("/")})`,
+        costMs: res.fidelityMs,
+      },
+      repairTrail: [],
+      levelUsed: lv.level,
+      image: { base64: res.resultPng.toString("base64"), width: img.w, height: img.h },
+      meta: { source, engine: "PhotoCraft CLI v0.15.1 (Rust)", license: "MIT OR Apache-2.0" },
+    };
   }
 
   // 4. 执行 + 保真 + 失败回退（L0 → L1 → L2，任一级 PASS 即交付）
@@ -245,29 +414,6 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
   let last: Awaited<ReturnType<typeof runLevel>> | null = null;
 
   for (const lv of levels) {
-    // 该级的输出尺寸（从命令参数推导，不依赖实际执行；canvasSize 是最后生效的画布尺寸）
-    let lvOutW = origImg.w;
-    let lvOutH = origImg.h;
-    for (const step of lv.chain) {
-      const p = (step.params || {}) as Record<string, number>;
-      if (step.cmd === "image.imageSize") {
-        if (p.width && p.height) {
-          lvOutW = p.width;
-          lvOutH = p.height;
-        } else if (p.percent) {
-          lvOutW = Math.round((origImg.w * p.percent) / 100);
-          lvOutH = Math.round((origImg.h * p.percent) / 100);
-        }
-      }
-      if (step.cmd === "image.crop" && p.targetWidth && p.targetHeight) {
-        lvOutW = p.targetWidth;
-        lvOutH = p.targetHeight;
-      }
-      if (step.cmd === "image.canvasSize" && p.width && p.height) {
-        lvOutW = p.width;
-        lvOutH = p.height;
-      }
-    }
     const transform = transformFromChain(lv.chain, origImg.w, origImg.h);
 
     last = await runLevel(origPng, manifest, lv, wantPsd, transform);

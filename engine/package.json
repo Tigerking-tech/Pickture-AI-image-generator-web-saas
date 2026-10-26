@@ -1,0 +1,14 @@
+{
+  "name": "surepix-engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Surepix 引擎微服务：常驻运行 photocraft-cli，供 Vercel 前端通过 HTTP 调用（方案 A 引擎侧）",
+  "scripts": {
+    "start": "node server.mjs",
+    "postinstall": "node ../scripts/fetch-photocraft.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

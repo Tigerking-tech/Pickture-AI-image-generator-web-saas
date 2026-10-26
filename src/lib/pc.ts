@@ -12,6 +12,11 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { remoteConfigured, remoteConvertFile, remoteDocInfo, remoteRunChain } from "./pc-http";
+
+// 远程引擎模式（方案 A）：设置 PC_API 后，所有引擎调用改走 HTTP，引擎常驻在 Render 等主机
+const PC_API = (process.env.PC_API || "").replace(/\/+$/, "");
+const USE_REMOTE = PC_API.length > 0;
 
 const PC_CLI =
   process.env.PC_CLI || path.join(process.cwd(), "vendor", "photocraft", "photocraft-cli");
@@ -34,6 +39,7 @@ export function cliPath(): string {
 }
 
 export function cliAvailable(): boolean {
+  if (USE_REMOTE) return remoteConfigured();
   try {
     fs.accessSync(PC_CLI, fs.constants.X_OK);
     return true;
@@ -43,7 +49,10 @@ export function cliAvailable(): boolean {
 }
 
 /** 执行一条 CLI 子命令（convert/run/batch/info/commands），返回结构化结果 */
-export function execCli(args: string[], opts: { timeoutMs?: number; fullOutput?: boolean } = {}): Promise<CliResult> {
+export function execCli(
+  args: string[],
+  opts: { timeoutMs?: number; fullOutput?: boolean } = {},
+): Promise<CliResult> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, fullOutput = false } = opts;
   return new Promise((resolve) => {
     const t0 = Date.now();
@@ -97,6 +106,7 @@ export async function runChain(
   outFile: string,
   opts: { timeoutMs?: number } = {},
 ): Promise<CliResult> {
+  if (USE_REMOTE) return remoteRunChain(inputFile, chain, outFile, opts);
   const args = ["run", inputFile];
   for (const step of chain) {
     args.push("--cmd", step.cmd);
@@ -110,11 +120,15 @@ export async function runChain(
 
 /** 格式转换（PSD 往返等） */
 export async function convertFile(inFile: string, outFile: string): Promise<CliResult> {
+  if (USE_REMOTE) return remoteConvertFile(inFile, outFile);
   return execCli(["convert", inFile, outFile]);
 }
 
 /** 文档检视：返回 JSON（尺寸、模式、图层树）。info 子命令不接受 --json，默认即输出 JSON */
-export async function docInfo(file: string): Promise<CliResult & { info?: Record<string, unknown> }> {
+export async function docInfo(
+  file: string,
+): Promise<CliResult & { info?: Record<string, unknown> }> {
+  if (USE_REMOTE) return remoteDocInfo(file);
   const r = await execCli(["info", file]);
   if (r.ok) {
     try {
@@ -137,7 +151,10 @@ export async function docInfo(file: string): Promise<CliResult & { info?: Record
 
 /** 临时文件工具（服务端 /tmp 或系统临时目录） */
 export function tmpPath(ext: string): string {
-  return path.join(os.tmpdir(), `surepix-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`);
+  return path.join(
+    os.tmpdir(),
+    `surepix-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`,
+  );
 }
 
 export function rmQuiet(files: string[]): void {

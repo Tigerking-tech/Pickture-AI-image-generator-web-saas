@@ -1,0 +1,29 @@
+# Surepix 引擎微服务部署清单（方案 A 的"引擎侧"，部署到 Render）
+#
+# 这是什么：在 Render 上常驻运行 photocraft-cli，对外暴露 /api/pc/* （Bearer 鉴权）。
+# 前端（Next.js）仍部署在 Vercel，并在环境变量里设：
+#   PC_API=https://<本服务地址>.onrender.com
+#   PC_API_TOKEN=<与下方 PC_TOKEN 完全相同的密钥>
+#
+# 为什么单独一个服务而不是塞进 Next.js：
+#   - Render 常驻进程才能跑 photocraft-cli（Vercel serverless 跑不了本地二进制）；
+#   - 引擎服务极轻，冷启动快，独立于前端扩缩容。
+
+services:
+  - type: web
+    name: surepix-engine
+    rootDir: engine                # 仅用 engine/ 目录构建
+    runtime: node
+    plan: starter                  # free 档会休眠（冷启动慢）；生产建议 starter 及以上常驻
+    buildCommand: npm install      # postinstall 会自动下载 photocraft-cli v0.15.1 到 vendor/
+    startCommand: npm start        # 即 node engine/server.mjs
+    healthCheckPath: /api/pc/healthz
+    envVars:
+      - key: PC_TOKEN              # 引擎访问令牌（Vercel 的 PC_API_TOKEN 必须与之相同）
+        sync: false                # 在 Render 后台手动填一段随机密钥
+      - key: PC_VERSION
+        value: "0.15.1"
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        sync: false                # Render 自动注入

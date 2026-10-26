@@ -33,9 +33,7 @@ interface EditResult {
   meta: { source: string; engine: string; license: string };
 }
 
-type Input =
-  | { kind: "sample"; id: string }
-  | { kind: "b64"; data: string };
+type Input = { kind: "sample"; id: string } | { kind: "b64"; data: string };
 
 const SAMPLES = [
   { id: "serum", name: "Serum bottle" },
@@ -44,12 +42,37 @@ const SAMPLES = [
 ];
 
 const ACTIONS = [
-  { id: "warm_up", label: "Warm it up", hint: "curves · deterministic", instruction: "make it warmer" },
-  { id: "brighten", label: "Brighten", hint: "brightness / contrast", instruction: "brighten the photo" },
-  { id: "boost_saturation", label: "Vivid colours", hint: "hue / saturation", instruction: "make colours more vivid" },
-  { id: "resize_for_platform", label: "Resize 800×800", hint: "fit + pad · no crop", instruction: "resize to 800x800" },
+  {
+    id: "warm_up",
+    label: "Warm it up",
+    hint: "curves · deterministic",
+    instruction: "make it warmer",
+  },
+  {
+    id: "brighten",
+    label: "Brighten",
+    hint: "brightness / contrast",
+    instruction: "brighten the photo",
+  },
+  {
+    id: "boost_saturation",
+    label: "Vivid colours",
+    hint: "hue / saturation",
+    instruction: "make colours more vivid",
+  },
+  {
+    id: "resize_for_platform",
+    label: "Resize 800×800",
+    hint: "fit + pad · no crop",
+    instruction: "resize to 800x800",
+  },
   { id: "sharpen", label: "Sharpen", hint: "smart sharpen", instruction: "sharpen the image" },
-  { id: "watermark", label: "Add watermark", hint: "editable text layer", instruction: "add a SUREPIX watermark" },
+  {
+    id: "watermark",
+    label: "Add watermark",
+    hint: "editable text layer",
+    instruction: "add a SUREPIX watermark",
+  },
 ];
 
 interface HistoryEntry {
@@ -67,7 +90,8 @@ export default function DemoClient() {
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const inputSrc = input.kind === "b64" ? `data:image/png;base64,${input.data}` : `/samples/${input.id}.png`;
+  const inputSrc =
+    input.kind === "b64" ? `data:image/png;base64,${input.data}` : `/samples/${input.id}.png`;
 
   const run = useCallback(async () => {
     setLoading(true);
@@ -133,14 +157,30 @@ export default function DemoClient() {
     reader.readAsDataURL(file);
   };
 
-  const routeClass = result?.route.route === "photocraft" ? "photocraft" : result?.route.route === "reject" ? "reject" : "regenerate";
+  const routeClass =
+    result?.route.route === "photocraft"
+      ? "photocraft"
+      : result?.route.route === "reject"
+        ? "reject"
+        : "regenerate";
 
   return (
     <div className="wrap demo-shell">
-      <header className="nav" style={{ position: "static", background: "transparent", border: "none", backdropFilter: "none", marginBottom: 8 }}>
+      <header
+        className="nav"
+        style={{
+          position: "static",
+          background: "transparent",
+          border: "none",
+          backdropFilter: "none",
+          marginBottom: 8,
+        }}
+      >
         <div className="nav-inner" style={{ height: 48 }}>
           <a href="/" className="logo">
-            <span className="logo-mark" aria-hidden="true">S</span>
+            <span className="logo-mark" aria-hidden="true">
+              S
+            </span>
             Surepix
           </a>
           <nav className="nav-links">
@@ -152,9 +192,9 @@ export default function DemoClient() {
       <div style={{ marginBottom: 22 }}>
         <h1 style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em" }}>Live demo</h1>
         <p style={{ color: "var(--ink-2)", margin: "8px 0 0", maxWidth: "56em", fontSize: 15.5 }}>
-          The real pipeline, running now: intent routing → whitelist validation →
-          PhotoCraft CLI → per-element fidelity verification. Sample photos carry a
-          6-element brand manifest; your uploads get a whole-image check.
+          The real pipeline, running now: intent routing → whitelist validation → PhotoCraft CLI →
+          per-element fidelity verification. Sample photos carry a 6-element brand manifest; your
+          uploads get a whole-image check.
         </p>
       </div>
 
@@ -164,7 +204,9 @@ export default function DemoClient() {
           <div className="panel-head">
             <span>Canvas</span>
             <span className="hint">
-              {result ? `${result.image.width}×${result.image.height}px · ${result.timingMs.total.toFixed(0)}ms end-to-end` : "no edit yet"}
+              {result
+                ? `${result.image.width}×${result.image.height}px · ${result.timingMs.total.toFixed(0)}ms end-to-end`
+                : "no edit yet"}
             </span>
           </div>
           <div className="panel-body">
@@ -239,12 +281,24 @@ export default function DemoClient() {
                 <button className="chain-btn" onClick={useResultAsInput}>
                   Use result as input →
                 </button>
-                <a className="chain-btn" style={{ textDecoration: "none" }} href={`data:image/png;base64,${result.image.base64}`} download="surepix-result.png">
+                <a
+                  className="chain-btn"
+                  style={{ textDecoration: "none" }}
+                  href={`data:image/png;base64,${result.image.base64}`}
+                  download="surepix-result.png"
+                >
                   Download PNG
                 </a>
                 {result.psd && (
-                  <a className="chain-btn" style={{ textDecoration: "none" }} href={`data:image/octet-stream;base64,${result.psd.base64}`} download="surepix-master.psd">
-                    Download PSD ({result.psd.layers.filter((l) => l.kind === "Type").length} text layer{result.psd.layers.filter((l) => l.kind === "Type").length === 1 ? "" : "s"})
+                  <a
+                    className="chain-btn"
+                    style={{ textDecoration: "none" }}
+                    href={`data:image/octet-stream;base64,${result.psd.base64}`}
+                    download="surepix-master.psd"
+                  >
+                    Download PSD ({result.psd.layers.filter((l) => l.kind === "Type").length} text
+                    layer
+                    {result.psd.layers.filter((l) => l.kind === "Type").length === 1 ? "" : "s"})
                   </a>
                 )}
               </div>
@@ -278,8 +332,9 @@ export default function DemoClient() {
                 </button>
               </div>
               <p className="demo-note">
-                Semantic requests (“change the background”) are detected by the router and would
-                escalate to a generative model — that path is intentionally not wired in this demo.
+                Semantic requests (“change the background”) are detected by the router and routed to
+                the generative path. In demo mode it runs through the mock provider; set
+                GENERATIVE_PROVIDER=fal + FAL_KEY to use a real model.
               </p>
             </div>
           </div>
@@ -302,29 +357,69 @@ export default function DemoClient() {
                   <div className="result-meta">
                     <div className="metric">
                       <div className="k">CLI</div>
-                      <div className="v">{result.timingMs.cli}<small> ms</small></div>
+                      <div className="v">
+                        {result.timingMs.cli}
+                        <small> ms</small>
+                      </div>
                     </div>
                     <div className="metric">
                       <div className="k">Fidelity</div>
-                      <div className="v">{result.timingMs.fidelity}<small> ms</small></div>
+                      <div className="v">
+                        {result.timingMs.fidelity}
+                        <small> ms</small>
+                      </div>
                     </div>
                     <div className="metric">
                       <div className="k">Total</div>
-                      <div className="v">{result.timingMs.total}<small> ms</small></div>
+                      <div className="v">
+                        {result.timingMs.total}
+                        <small> ms</small>
+                      </div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--ink-3)", fontFamily: "var(--mono)", wordBreak: "break-all" }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--ink-3)",
+                      fontFamily: "var(--mono)",
+                      wordBreak: "break-all",
+                    }}
+                  >
                     chain: {result.chain.map((c) => c.cmd).join(" → ")}
                   </div>
                   {result.repairTrail.length > 0 && (
-                    <div style={{ marginTop: 10, background: "var(--warn-bg)", border: "1px solid #fde68a", color: "var(--warn)", borderRadius: 10, padding: "10px 12px", fontSize: 13 }}>
-                      <b>Auto-repaired:</b> level {result.repairTrail.map((r) => `L${r.level} (${r.verdict})`).join(" → ")} → retried with gentler parameters → delivered at L{result.levelUsed}
+                    <div
+                      style={{
+                        marginTop: 10,
+                        background: "var(--warn-bg)",
+                        border: "1px solid #fde68a",
+                        color: "var(--warn)",
+                        borderRadius: 10,
+                        padding: "10px 12px",
+                        fontSize: 13,
+                      }}
+                    >
+                      <b>Auto-repaired:</b> level{" "}
+                      {result.repairTrail.map((r) => `L${r.level} (${r.verdict})`).join(" → ")} →
+                      retried with gentler parameters → delivered at L{result.levelUsed}
                     </div>
                   )}
                   {result.fidelityAction.action !== "accept" && result.repairTrail.length === 0 && (
-                    <div style={{ marginTop: 10, background: "var(--bad-bg)", border: "1px solid #fecaca", color: "var(--bad)", borderRadius: 10, padding: "10px 12px", fontSize: 13 }}>
+                    <div
+                      style={{
+                        marginTop: 10,
+                        background: "var(--bad-bg)",
+                        border: "1px solid #fecaca",
+                        color: "var(--bad)",
+                        borderRadius: 10,
+                        padding: "10px 12px",
+                        fontSize: 13,
+                      }}
+                    >
                       <b>Escalation needed:</b> {result.fidelityAction.reason}
-                      {result.fidelityAction.scope ? ` · scope: ${result.fidelityAction.scope.join(", ")}` : ""}
+                      {result.fidelityAction.scope
+                        ? ` · scope: ${result.fidelityAction.scope.join(", ")}`
+                        : ""}
                     </div>
                   )}
                 </div>
@@ -334,35 +429,40 @@ export default function DemoClient() {
                 <div className="panel-head">
                   <span>Fidelity verification</span>
                   <span className="hint">
-                    overall <span className={`badge ${result.fidelity.verdict}`}>{result.fidelity.verdict}</span>
+                    overall{" "}
+                    <span className={`badge ${result.fidelity.verdict}`}>
+                      {result.fidelity.verdict}
+                    </span>
                   </span>
                 </div>
                 <div className="panel-body">
                   <div className="fid-scroll">
-                  <table className="fid-table">
-                    <thead>
-                      <tr>
-                        <th>Element</th>
-                        <th>Verdict</th>
-                        <th>MAE</th>
-                        <th>MS-SSIM</th>
-                        <th>Edge recall</th>
-                        <th>Contrast</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(result.fidelity.elements).map(([name, el]) => (
-                        <tr key={name}>
-                          <td>{name}</td>
-                          <td><span className={`badge ${el.verdict}`}>{el.verdict}</span></td>
-                          <td>{el.mae.toFixed(1)}</td>
-                          <td>{el.ms_ssim.toFixed(3)}</td>
-                          <td>{el.edge_recall.toFixed(3)}</td>
-                          <td>{el.contrast_retention.toFixed(3)}</td>
+                    <table className="fid-table">
+                      <thead>
+                        <tr>
+                          <th>Element</th>
+                          <th>Verdict</th>
+                          <th>MAE</th>
+                          <th>MS-SSIM</th>
+                          <th>Edge recall</th>
+                          <th>Contrast</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {Object.entries(result.fidelity.elements).map(([name, el]) => (
+                          <tr key={name}>
+                            <td>{name}</td>
+                            <td>
+                              <span className={`badge ${el.verdict}`}>{el.verdict}</span>
+                            </td>
+                            <td>{el.mae.toFixed(1)}</td>
+                            <td>{el.ms_ssim.toFixed(3)}</td>
+                            <td>{el.edge_recall.toFixed(3)}</td>
+                            <td>{el.contrast_retention.toFixed(3)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                   <div style={{ marginTop: 12, fontSize: 13, color: "var(--ink-2)" }}>
                     <b>Decision:</b> {result.fidelityAction.reason}
@@ -371,9 +471,9 @@ export default function DemoClient() {
                     )}
                   </div>
                   <p className="demo-note">
-                    Thresholds adapt per element type: logos &amp; text require MS-SSIM ≥ 0.95, edge recall ≥ 0.75;
-                    product bodies ≥ 0.85 / 0.60. REPAIR retries with gentler parameters; REGENERATE escalates
-                    to AI on the damaged region only.
+                    Thresholds adapt per element type: logos &amp; text require MS-SSIM ≥ 0.95, edge
+                    recall ≥ 0.75; product bodies ≥ 0.85 / 0.60. REPAIR retries with gentler
+                    parameters; REGENERATE escalates to AI on the damaged region only.
                   </p>
                 </div>
               </div>

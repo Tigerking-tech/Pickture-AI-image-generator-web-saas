@@ -1,1 +1,713 @@
-LyoqCiAqIHdoaXRlbGlzdC50cyDigJQgTExNIOKGkiBQaG90b0NyYWZ0IOWRveS7pOeahOeZveWQjeWNleaYoOWwhO+8iFN1cmVwaXgg54us5pyJ566X5rOV5bGCICMzIOeahOWRveS7pOinhOWIkuWfuuehgO+8iQogKgogKiDmoKHlh4bmnaXmupDvvJpwaG90b2NyYWZ0LWNsaSAwLjE1LjEg5ZG95Luk5rOo5YaM6KGo77yIOTM1IOadoe+8ie+8jOWPguaVsOiMg+WbtOeFp+azqOWGjOihqOagoeWHhuOAggogKiDljp/liJnvvJoKICogIDEuIOWPquiDveS7jueZveWQjeWNlemHjOmAieWRveS7pO+8jOemgeatouW5u+inieWHuuS4jeWtmOWcqOeahOWRveS7pAogKiAgMi4g5q+P5Liq5ZG95Luk5bim5Y+C5pWwIHNjaGVtYSArIOWPluWAvOiMg+WbtOagoemqjAogKiAgMy4g6K+t5LmJ5Yqo5L2c77yI5a6i5oi355qE5Lq66K+d77yJ4oaSIOWRveS7pOmTvuaooeadvyDnmoTmmKDlsITmmK8gU3VyZXBpeCDoh6rmnInotYTkuqcKICovCgp0eXBlIFZhbGlkYXRvciA9ICh2OiB1bmtub3duLCByYW5nZT86IFtudW1iZXIsIG51bWJlcl0gfCBzdHJpbmdbXSkgPT4gYm9vbGVhbjsKCmNvbnN0IHZhbGlkYXRvcnM6IFJlY29yZDxzdHJpbmcsIFZhbGlkYXRvcj4gPSB7CiAgaW50OiAodiwgcmFuZ2UpID0+IHsKICAgIGNvbnN0IFtsbywgaGldID0gKHJhbmdlIGFzIFtudW1iZXIsIG51bWJlcl0pID8/IFstSW5maW5pdHksIEluZmluaXR5XTsKICAgIHJldHVybiB0eXBlb2YgdiA9PT0gIm51bWJlciIgJiYgTnVtYmVyLmlzSW50ZWdlcih2KSAmJiB2ID49IGxvICYmIHYgPD0gaGk7CiAgfSwKICBudW06ICh2LCByYW5nZSkgPT4gewogICAgY29uc3QgW2xvLCBoaV0gPSAocmFuZ2UgYXMgW251bWJlciwgbnVtYmVyXSkgPz8gWy1JbmZpbml0eSwgSW5maW5pdHldOwogICAgcmV0dXJuIHR5cGVvZiB2ID09PSAibnVtYmVyIiAmJiB2ID49IGxvICYmIHYgPD0gaGk7CiAgfSwKICBzdHI6ICh2KSA9PiB0eXBlb2YgdiA9PT0gInN0cmluZyIgJiYgdi5sZW5ndGggPiAwICYmIHYubGVuZ3RoIDwgNTAwLAogIGJvb2w6ICh2KSA9PiB0eXBlb2YgdiA9PT0gImJvb2xlYW4iLAogIGVudW06ICh2LCByYW5nZSkgPT4KICAgIHR5cGVvZiB2ID09PSAic3RyaW5nIiAmJiBBcnJheS5pc0FycmF5KHJhbmdlKSAmJiAocmFuZ2UgYXMgc3RyaW5nW10pLmluY2x1ZGVzKHYpLAogIHBvaW50czogKHYpID0+CiAgICBBcnJheS5pc0FycmF5KHYpICYmCiAgICB2Lmxlbmd0aCA+PSAyICYmCiAgICB2Lmxlbmd0aCA8PSAxOSAmJgogICAgdi5ldmVyeSgKICAgICAgKHApID0+CiAgICAgICAgQXJyYXkuaXNBcnJheShwKSAmJgogICAgICAgIHAubGVuZ3RoID09PSAyICYmCiAgICAgICAgcC5ldmVyeSgobikgPT4gdHlwZW9mIG4gPT09ICJudW1iZXIiICYmIE51bWJlci5pc0Zpbml0ZShuKSAmJiBuID49IDAgJiYgbiA8PSAyNTUpLAogICAgKSwKfTsKCmV4cG9ydCBpbnRlcmZhY2UgUGFyYW1TcGVjIHsKICB0eXBlOiBzdHJpbmc7CiAgcmFuZ2U/OiBbbnVtYmVyLCBudW1iZXJdIHwgc3RyaW5nW107CiAgcmVxdWlyZWQ/OiBib29sZWFuOwp9CgpleHBvcnQgaW50ZXJmYWNlIENvbW1hbmRTcGVjIHsKICByaXNrOiAic2FmZSIgfCAiZ3VhcmRlZCI7CiAgcGFyYW1zOiBSZWNvcmQ8c3RyaW5nLCBQYXJhbVNwZWM+OwogIGRlc2M6IHN0cmluZzsKfQoKLyoqIOeZveWQjeWNleWRveS7pOihqO+8iOWFqOmDqOe7j+azqOWGjOihqOaguOWunuWtmOWcqO+8iSAqLwpleHBvcnQgY29uc3QgQUxMT1dFRDogUmVjb3JkPHN0cmluZywgQ29tbWFuZFNwZWM+ID0gewogICJsYXllci5uZXdBZGp1c3RtZW50TGF5ZXIuY3VydmVzIjogewogICAgcmlzazogInNhZmUiLAogICAgcGFyYW1zOiB7IHBvaW50czogeyB0eXBlOiAicG9pbnRzIiwgcmVxdWlyZWQ6IHRydWUgfSB9LAogICAgZGVzYzogIkN1cnZlcyBhZGp1c3RtZW50IGxheWVyIChjb2xvdXIgLyBjb250cmFzdCAvIHRvbmUpIiwKICB9LAogICJsYXllci5uZXdBZGp1c3RtZW50TGF5ZXIubGV2ZWxzIjogewogICAgcmlzazogInNhZmUiLAogICAgcGFyYW1zOiB7CiAgICAgIGluQmxhY2s6IHsgdHlwZTogImludCIsIHJhbmdlOiBbMCwgMjUzXSB9LAogICAgICBpbldoaXRlOiB7IHR5cGU6ICJpbnQiLCByYW5nZTogWzIsIDI1NV0gfSwKICAgICAgZ2FtbWE6IHsgdHlwZTogIm51bSIsIHJhbmdlOiBbMC4wMSwgOS45OV0gfSwKICAgIH0sCiAgICBkZXNjOiAiTGV2ZWxzIGFkanVzdG1lbnQgbGF5ZXIiLAogIH0sCiAgImxheWVyLm5ld0FkanVzdG1lbnRMYXllci5odWVTYXR1cmF0aW9uIjogewogICAgcmlzazogInNhZmUiLAogICAgcGFyYW1zOiB7CiAgICAgIGh1ZTogeyB0eXBlOiAiaW50IiwgcmFuZ2U6IFstMTgwLCAxODBdIH0sCiAgICAgIHNhdHVyYXRpb246IHsgdHlwZTogImludCIsIHJhbmdlOiBbLTEwMCwgMTAwXSB9LAogICAgICBsaWdodG5lc3M6IHsgdHlwZTogImludCIsIHJhbmdlOiBbLTEwMCwgMTAwXSB9LAogICAgfSwKICAgIGRlc2M6ICJIdWUgLyBzYXR1cmF0aW9uIGFkanVzdG1lbnQgbGF5ZXIiLAogIH0sCiAgImxheWVyLm5ld0FkanVzdG1lbnRMYXllci5icmlnaHRuZXNzQ29udHJhc3QiOiB7CiAgICByaXNrOiAic2FmZSIsCiAgICBwYXJhbXM6IHsKICAgICAgYnJpZ2h0bmVzczogeyB0eXBlOiAiaW50IiwgcmFuZ2U6IFstMTUwLCAxNTBdIH0sCiAgICAgIGNvbnRyYXN0OiB7IHR5cGU6ICJpbnQiLCByYW5nZTogWy01MCwgMTAwXSB9LAogICAgfSwKICAgIGRlc2M6ICJCcmlnaHRuZXNzIC8gY29udHJhc3QgYWRqdXN0bWVudCBsYXllciIsCiAgfSwKICAiaW1hZ2UuaW1hZ2VTaXplIjogewogICAgcmlzazogImd1YXJkZWQiLAogICAgcGFyYW1zOiB7CiAgICAgIHdpZHRoOiB7IHR5cGU6ICJpbnQiLCByYW5nZTogWzE2LCA4MDAwXSB9LAogICAgICBoZWlnaHQ6IHsgdHlwZTogImludCIsIHJhbmdlOiBbMTYsIDgwMDBdIH0sCiAgICAgIHBlcmNlbnQ6IHsgdHlwZTogImludCIsIHJhbmdlOiBbMSwgMTAwMF0gfSwKICAgICAgcmVzYW1wbGU6IHsKICAgICAgICB0eXBlOiAiZW51bSIsCiAgICAgICAgcmFuZ2U6IFsKICAgICAgICAgICJhdXRvbWF0aWMiLAogICAgICAgICAgInByZXNlcnZlRGV0YWlscyIsCiAgICAgICAgICAiYmljdWJpY1Ntb290aGVyIiwKICAgICAgICAgICJiaWN1YmljU2hhcnBlciIsCiAgICAgICAgICAiYmljdWJpY0F1dG9tYXRpYyIsCiAgICAgICAgICAiYmljdWJpYyIsCiAgICAgICAgICAibmVhcmVzdCIsCiAgICAgICAgICAiYmlsaW5lYXIiLAogICAgICAgICAgImxhbmN6b3MiLAogICAgICAgICAgIm5vbmUiLAogICAgICAgIF0sCiAgICAgIH0sCiAgICB9LAogICAgZGVzYzogIkltYWdlIHNpemUgKHdpZHRoL2hlaWdodCBvciBwZXJjZW50KSIsCiAgfSwKICAiaW1hZ2UuY2FudmFzU2l6ZSI6IHsKICAgIHJpc2s6ICJndWFyZGVkIiwKICAgIHBhcmFtczogewogICAgICB3aWR0aDogeyB0eXBlOiAiaW50IiwgcmFuZ2U6IFsxNiwgODAwMF0sIHJlcXVpcmVkOiB0cnVlIH0sCiAgICAgIGhlaWdodDogeyB0eXBlOiAiaW50IiwgcmFuZ2U6IFsxNiwgODAwMF0sIHJlcXVpcmVkOiB0cnVlIH0sCiAgICAgIGFuY2hvcjogewogICAgICAgIHR5cGU6ICJlbnVtIiwKICAgICAgICByYW5nZTogWwogICAgICAgICAgInRvcExlZnQiLAogICAgICAgICAgInRvcCIsCiAgICAgICAgICAidG9wUmlnaHQiLAogICAgICAgICAgImxlZnQiLAogICAgICAgICAgImNlbnRlciIsCiAgICAgICAgICAicmlnaHQiLAogICAgICAgICAgImJvdHRvbUxlZnQiLAogICAgICAgICAgImJvdHRvbSIsCiAgICAgICAgICAiYm90dG9tUmlnaHQiLAogICAgICAgIF0sCiAgICAgIH0sCiAgICAgIGV4dGVuc2lvbkNvbG9yOiB7CiAgICAgICAgdHlwZTogImVudW0iLAogICAgICAgIHJhbmdlOiBbImJhY2tncm91bmQiLCAiZm9yZWdyb3VuZCIsICJ3aGl0ZSIsICJibGFjayIsICJ0cmFuc3BhcmVudCJdLAogICAgICB9LAogICAgfSwKICAgIGRlc2M6ICJDYW52YXMgc2l6ZSAoZXh0ZW5kL3NocmluazsgYW5jaG9yIHBvc2l0aW9ucyBjb250ZW50LCBleHRlbnNpb25Db2xvciBwYWRzKSIsCiAgfSwKICAiaW1hZ2UuY3JvcCI6IHsKICAgIHJpc2s6ICJndWFyZGVkIiwKICAgIHBhcmFtczogewogICAgICB4OiB7IHR5cGU6ICJpbnQiLCByYW5nZTogWzAsIDc5OTldIH0sCiAgICAgIHk6IHsgdHlwZTogImludCIsIHJhbmdlOiBbMCwgNzk5OV0gfSwKICAgICAgd2lkdGg6IHsgdHlwZTogImludCIsIHJhbmdlOiBbMTYsIDgwMDBdIH0sCiAgICAgIGhlaWdodDogeyB0eXBlOiAiaW50IiwgcmFuZ2U6IFsxNiwgODAwMF0gfSwKICAgICAgdGFyZ2V0V2lkdGg6IHsgdHlwZTogImludCIsIHJhbmdlOiBbMTYsIDgwMDBdIH0sCiAgICAgIHRhcmdldEhlaWdodDogeyB0eXBlOiAiaW50IiwgcmFuZ2U6IFsxNiwgODAwMF0gfSwKICAgICAgcmVzYW1wbGU6IHsKICAgICAgICB0eXBlOiAiZW51bSIsCiAgICAgICAgcmFuZ2U6IFsiYmljdWJpYyIsICJiaWxpbmVhciIsICJuZWFyZXN0IiwgImxhbmN6b3MiLCAicHJlc2VydmVEZXRhaWxzIl0sCiAgICAgIH0sCiAgICB9LAogICAgZGVzYzogIkNyb3AgKG9wdGlvbmFsbHkgcmVzYW1wbGUgdG8gdGFyZ2V0V2lkdGjDl3RhcmdldEhlaWdodCkiLAogIH0sCiAgInR5cGUuY3JlYXRlIjogewogICAgcmlzazogImd1YXJkZWQiLAogICAgcGFyYW1zOiB7CiAgICAgIHRleHQ6IHsgdHlwZTogInN0ciIgfSwKICAgICAgeDogeyB0eXBlOiAiaW50IiwgcmFuZ2U6IFswLCA3OTk5XSB9LAogICAgICB5OiB7IHR5cGU6ICJpbnQiLCByYW5nZTogWzAsIDc5OTldIH0sCiAgICAgIHNpemU6IHsgdHlwZTogImludCIsIHJhbmdlOiBbNiwgNDAwXSB9LAogICAgfSwKICAgIGRlc2M6ICJDcmVhdGUgdGV4dCBsYXllciAoZWRpdGFibGUpIiwKICB9LAogICJmaWx0ZXIuc2hhcnBlbi5zbWFydFNoYXJwZW4iOiB7CiAgICByaXNrOiAic2FmZSIsCiAgICBwYXJhbXM6IHsKICAgICAgYW1vdW50OiB7IHR5cGU6ICJpbnQiLCByYW5nZTogWzEsIDUwMF0gfSwKICAgICAgcmFkaXVzOiB7IHR5cGU6ICJudW0iLCByYW5nZTogWzAuMSwgNjRdIH0sCiAgICAgIHJlZHVjZU5vaXNlOiB7IHR5cGU6ICJpbnQiLCByYW5nZTogWzAsIDEwMF0gfSwKICAgIH0sCiAgICBkZXNjOiAiU21hcnQgc2hhcnBlbiIsCiAgfSwKICAic2VsZWN0LnN1YmplY3QiOiB7CiAgICByaXNrOiAic2FmZSIsCiAgICBwYXJhbXM6IHsKICAgICAgc2FtcGxlQWxsTGF5ZXJzOiB7IHR5cGU6ICJib29sIiB9LAogICAgICBtb2RlOiB7IHR5cGU6ICJlbnVtIiwgcmFuZ2U6IFsicmVwbGFjZSIsICJhZGQiLCAic3VidHJhY3QiLCAiaW50ZXJzZWN0Il0gfSwKICAgIH0sCiAgICBkZXNjOiAiQXV0by1zZWxlY3QgdGhlIHN1YmplY3QgKEFJKSIsCiAgfSwKICAic2VsZWN0LmludmVyc2UiOiB7CiAgICByaXNrOiAic2FmZSIsCiAgICBwYXJhbXM6IHt9LAogICAgZGVzYzogIkludmVydCB0aGUgYWN0aXZlIHNlbGVjdGlvbiIsCiAgfSwKICAic2VsZWN0LmRlc2VsZWN0IjogewogICAgcmlzazogInNhZmUiLAogICAgcGFyYW1zOiB7fSwKICAgIGRlc2M6ICJDbGVhciB0aGUgYWN0aXZlIHNlbGVjdGlvbiAoc28gc3Vic2VxdWVudCBhZGp1c3RtZW50IGxheWVycyBhcmVuJ3QgbWFza2VkIHRvIHRoZSBzZWxlY3Rpb24pIiwKICB9LAogICJlZGl0LmZpbGwiOiB7CiAgICByaXNrOiAic2FmZSIsCiAgICBwYXJhbXM6IHsKICAgICAgY29udGVudHM6IHsKICAgICAgICB0eXBlOiAiZW51bSIsCiAgICAgICAgcmFuZ2U6IFsiZm9yZWdyb3VuZCIsICJiYWNrZ3JvdW5kIiwgImNvbG9yIiwgImNvbnRlbnRBd2FyZSIsICJwYXR0ZXJuIiwgImhpc3RvcnkiLCAiYmxhY2siLCAiZ3JheSIsICJ3aGl0ZSJdLAogICAgICB9LAogICAgICBjb2xvcjogeyB0eXBlOiAic3RyIiB9LAogICAgICBvcGFjaXR5OiB7IHR5cGU6ICJpbnQiLCByYW5nZTogWzAsIDEwMF0gfSwKICAgICAgcHJlc2VydmVUcmFuc3BhcmVuY3k6IHsgdHlwZTogImJvb2wiIH0sCiAgICAgIG1vZGU6IHsKICAgICAgICB0eXBlOiAiZW51bSIsCiAgICAgICAgcmFuZ2U6IFsibm9ybWFsIiwgIm11bHRpcGx5IiwgInNjcmVlbiIsICJvdmVybGF5IiwgImRhcmtlbiIsICJsaWdodGVuIiwgImNvbG9yRG9kZ2UiLCAic29mdExpZ2h0IiwgImhhcmRMaWdodCIsICJkaWZmZXJlbmNlIiwgImV4Y2x1c2lvbiIsICJodWUiLCAic2F0dXJhdGlvbiIsICJjb2xvciIsICJsdW1pbm9zaXR5Il0sCiAgICAgIH0sCiAgICB9LAogICAgZGVzYzogIkZpbGwgdGhlIHNlbGVjdGlvbiAod2hpdGUg4oaSIHdoaXRlIGJhY2tncm91bmQpIiwKICB9LAogICJsYXllci5yZW1vdmVCYWNrZ3JvdW5kIjogewogICAgcmlzazogImd1YXJkZWQiLAogICAgcGFyYW1zOiB7CiAgICAgIGxheWVyOiB7IHR5cGU6ICJzdHIiIH0sCiAgICAgIHNhbXBsZUFsbExheWVyczogeyB0eXBlOiAiYm9vbCIgfSwKICAgICAgcmVmaW5lOiB7IHR5cGU6ICJib29sIiB9LAogICAgfSwKICAgIGRlc2M6ICJSZW1vdmUgYmFja2dyb3VuZCB0byB0cmFuc3BhcmVuY3kgKGxheWVyIG1hc2sgZnJvbSBTZWxlY3QgU3ViamVjdCkiLAogIH0sCn07CgovKiog5qih5p2/IGJ1aWxkIOeahOWFpeWPgu+8muaMh+S7pOino+aekOWHuueahOWPguaVsCArIOWOn+WbvuWwuuWvuO+8iOeuoee6v+azqOWFpe+8jOWHoOS9leexu+aooeadv+mcgOimge+8iSAqLwpleHBvcnQgaW50ZXJmYWNlIEJ1aWxkQXJncyB7CiAgd2lkdGg/OiBudW1iZXI7CiAgaGVpZ2h0PzogbnVtYmVyOwogIHBlcmNlbnQ/OiBudW1iZXI7CiAgYW1vdW50PzogbnVtYmVyOwogIGJyaWdodG5lc3M/OiBudW1iZXI7CiAgY29udHJhc3Q/OiBudW1iZXI7CiAgc2F0dXJhdGlvbj86IG51bWJlcjsKICB0ZXh0Pzogc3RyaW5nOwogIGZvbnRTaXplPzogbnVtYmVyOwogIHg/OiBudW1iZXI7CiAgeT86IG51bWJlcjsKICBvcmlnVz86IG51bWJlcjsKICBvcmlnSD86IG51bWJlcjsKfQoKZXhwb3J0IGludGVyZmFjZSBJbnRlbnRUZW1wbGF0ZSB7CiAgaW50ZW50OiBzdHJpbmc7CiAgcGF0dGVybnM6IFJlZ0V4cFtdOwogIGRlc2M6IHN0cmluZzsKICBidWlsZDogKGE/OiBCdWlsZEFyZ3MpID0+IHsgY21kOiBzdHJpbmc7IHBhcmFtcz86IFJlY29yZDxzdHJpbmcsIHVua25vd24+IH1bXTsKICBmYWxsYmFja3M6IHsKICAgIGxldmVsOiBudW1iZXI7CiAgICBkZXNjOiBzdHJpbmc7CiAgICBidWlsZDogKGE/OiBCdWlsZEFyZ3MpID0+IHsgY21kOiBzdHJpbmc7IHBhcmFtcz86IFJlY29yZDxzdHJpbmcsIHVua25vd24+IH1bXTsKICB9W107Cn0KCi8qKiDor63kuYnliqjkvZwg4oaSIOWRveS7pOmTvuaooeadv++8iFN1cmVwaXgg6Ieq5pyJ5pig5bCE6LWE5Lqn77yM5ZCr6ZmN57qn6ZO+77yJICovCmV4cG9ydCBjb25zdCBJTlRFTlRfVEVNUExBVEVTOiBJbnRlbnRUZW1wbGF0ZVtdID0gWwogIHsKICAgIGludGVudDogIndhcm1fdXAiLAogICAgcGF0dGVybnM6IFsv5pqWfHdhcm185rip5pqWfOaaluiJsi9pXSwKICAgIGRlc2M6ICJXYXJtIGdyYWRlIChsaWZ0IHJlZCBjaGFubmVsKSIsCiAgICBidWlsZDogKCkgPT4gWwogICAgICB7CiAgICAgICAgY21kOiAibGF5ZXIubmV3QWRqdXN0bWVudExheWVyLmN1cnZlcyIsCiAgICAgICAgcGFyYW1zOiB7CiAgICAgICAgICBwb2ludHM6IFsKICAgICAgICAgICAgWzAsIDE4XSwKICAgICAgICAgICAgWzEyOCwgMTQyXSwKICAgICAgICAgICAgWzI1NSwgMjQ4XSwKICAgICAgICAgIF0sCiAgICAgICAgfSwKICAgICAgfSwKICAgIF0sCiAgICBmYWxsYmFja3M6IFsKICAgICAgewogICAgICAgIGxldmVsOiAxLAogICAgICAgIGRlc2M6ICJHZW50bGVyIHdhcm0gZ3JhZGUgKGhhbHZlZCBjdXJ2ZSBvZmZzZXQpIiwKICAgICAgICBidWlsZDogKCkgPT4gWwogICAgICAgICAgewogICAgICAgICAgICBjbWQ6ICJsYXllci5uZXdBZGp1c3RtZW50TGF5ZXIuY3VydmVzIiwKICAgICAgICAgICAgcGFyYW1zOiB7CiAgICAgICAgICAgICAgcG9pbnRzOiBbCiAgICAgICAgICAgICAgICBbMCwgOV0sCiAgICAgICAgICAgICAgICBbMTI4LCAxMzRdLAogICAgICAgICAgICAgICAgWzI1NSwgMjQ0XSwKICAgICAgICAgICAgICBdLAogICAgICAgICAgICB9LAogICAgICAgICAgfSwKICAgICAgICBdLAogICAgICB9LAogICAgICB7CiAgICAgICAgbGV2ZWw6IDIsCiAgICAgICAgZGVzYzogIlNsaWdodCByZWQtY2hhbm5lbCBsaWZ0IG9ubHkiLAogICAgICAgIGJ1aWxkOiAoKSA9PiBbCiAgICAgICAgICB7CiAgICAgICAgICAgIGNtZDogImxheWVyLm5ld0FkanVzdG1lbnRMYXllci5icmlnaHRuZXNzQ29udHJhc3QiLAogICAgICAgICAgICBwYXJhbXM6IHsgYnJpZ2h0bmVzczogOCwgY29udHJhc3Q6IDAgfSwKICAgICAgICAgIH0sCiAgICAgICAgXSwKICAgICAgfSwKICAgIF0sCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJjb29sX2Rvd24iLAogICAgcGF0dGVybnM6IFsv5Ya3fGNvb2x85riF5Ya3L2ldLAogICAgZGVzYzogIkNvb2wgZ3JhZGUgKGxpZnQgYmx1ZSBjaGFubmVsKSIsCiAgICBidWlsZDogKCkgPT4gWwogICAgICB7CiAgICAgICAgY21kOiAibGF5ZXIubmV3QWRqdXN0bWVudExheWVyLmN1cnZlcyIsCiAgICAgICAgcGFyYW1zOiB7CiAgICAgICAgICBwb2ludHM6IFsKICAgICAgICAgICAgWzAsIDEwXSwKICAgICAgICAgICAgWzEyOCwgMTI4XSwKICAgICAgICAgICAgWzI1NSwgMjQwXSwKICAgICAgICAgIF0sCiAgICAgICAgfSwKICAgICAgfSwKICAgIF0sCiAgICBmYWxsYmFja3M6IFsKICAgICAgewogICAgICAgIGxldmVsOiAxLAogICAgICAgIGRlc2M6ICJHZW50bGVyIGNvb2wgZ3JhZGUiLAogICAgICAgIGJ1aWxkOiAoKSA9PiBbCiAgICAgICAgICB7CiAgICAgICAgICAgIGNtZDogImxheWVyLm5ld0FkanVzdG1lbnRMYXllci5jdXJ2ZXMiLAogICAgICAgICAgICBwYXJhbXM6IHsKICAgICAgICAgICAgICBwb2ludHM6IFsKICAgICAgICAgICAgICAgIFswLCA1XSwKICAgICAgICAgICAgICAgIFsxMjgsIDEyOF0sCiAgICAgICAgICAgICAgICBbMjU1LCAyMzZdLAogICAgICAgICAgICAgIF0sCiAgICAgICAgICAgIH0sCiAgICAgICAgICB9LAogICAgICAgIF0sCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBsZXZlbDogMiwKICAgICAgICBkZXNjOiAiU2xpZ2h0IGJsdWUtY2hhbm5lbCBsaWZ0IG9ubHkiLAogICAgICAgIGJ1aWxkOiAoKSA9PiBbCiAgICAgICAgICB7CiAgICAgICAgICAgIGNtZDogImxheWVyLm5ld0FkanVzdG1lbnRMYXllci5icmlnaHRuZXNzQ29udHJhc3QiLAogICAgICAgICAgICBwYXJhbXM6IHsgYnJpZ2h0bmVzczogNiwgY29udHJhc3Q6IDAgfSwKICAgICAgICAgIH0sCiAgICAgICAgXSwKICAgICAgfSwKICAgIF0sCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJicmlnaHRlbiIsCiAgICBwYXR0ZXJuczogWy/kuq58YnJpZ2h0fOaPkOS6rnzlpKrmmpd86YCa6YCPfOmAmumAj+aEn3zkuI3lpJ/kuq4vaV0sCiAgICBkZXNjOiAiQnJpZ2h0ZW4iLAogICAgYnVpbGQ6IChhID0ge30pID0+IFsKICAgICAgewogICAgICAgIGNtZDogImxheWVyLm5ld0FkanVzdG1lbnRMYXllci5icmlnaHRuZXNzQ29udHJhc3QiLAogICAgICAgIHBhcmFtczogeyBicmlnaHRuZXNzOiBhLmJyaWdodG5lc3MgPz8gMjAsIGNvbnRyYXN0OiBhLmNvbnRyYXN0ID8/IDUgfSwKICAgICAgfSwKICAgIF0sCiAgICBmYWxsYmFja3M6IFsKICAgICAgewogICAgICAgIGxldmVsOiAxLAogICAgICAgIGRlc2M6ICJIYWx2ZWQgYnJpZ2h0ZW4iLAogICAgICAgIGJ1aWxkOiAoYSA9IHt9KSA9PiBbCiAgICAgICAgICB7CiAgICAgICAgICAgIGNtZDogImxheWVyLm5ld0FkanVzdG1lbnRMYXllci5icmlnaHRuZXNzQ29udHJhc3QiLAogICAgICAgICAgICBwYXJhbXM6IHsgYnJpZ2h0bmVzczogTWF0aC5yb3VuZCgoYS5icmlnaHRuZXNzID8/IDIwKSAvIDIpLCBjb250cmFzdDogMCB9LAogICAgICAgICAgfSwKICAgICAgICBdLAogICAgICB9LAogICAgICB7CiAgICAgICAgbGV2ZWw6IDIsCiAgICAgICAgZGVzYzogIkxldmVscyBpbnN0ZWFkIChzb2Z0ZXIpIiwKICAgICAgICBidWlsZDogKCkgPT4gWwogICAgICAgICAgewogICAgICAgICAgICBjbWQ6ICJsYXllci5uZXdBZGp1c3RtZW50TGF5ZXIubGV2ZWxzIiwKICAgICAgICAgICAgcGFyYW1zOiB7IGluQmxhY2s6IDAsIGluV2hpdGU6IDI1NSwgZ2FtbWE6IDEuMiB9LAogICAgICAgICAgfSwKICAgICAgICBdLAogICAgICB9LAogICAgXSwKICB9LAogIHsKICAgIGludGVudDogImJvb3N0X3NhdHVyYXRpb24iLAogICAgcGF0dGVybnM6IFsv6aWx5ZKMfOmynOiJs3x2aXZpZHzotKjmhJ985pu05pyJ6LSo5oSfL2ldLAogICAgZGVzYzogIkJvb3N0IHNhdHVyYXRpb24iLAogICAgYnVpbGQ6IChhID0ge30pID0+IFsKICAgICAgeyBjbWQ6ICJsYXllci5uZXdBZGp1c3RtZW50TGF5ZXIuaHVlU2F0dXJhdGlvbiIsIHBhcmFtczogeyBzYXR1cmF0aW9uOiBhLnNhdHVyYXRpb24gPz8gMjAgfSB9LAogICAgXSwKICAgIGZhbGxiYWNrczogWwogICAgICB7CiAgICAgICAgbGV2ZWw6IDEsCiAgICAgICAgZGVzYzogIkhhbHZlZCBzYXR1cmF0aW9uIiwKICAgICAgICBidWlsZDogKGEgPSB7fSkgPT4gWwogICAgICAgICAgewogICAgICAgICAgICBjbWQ6ICJsYXllci5uZXdBZGp1c3RtZW50TGF5ZXIuaHVlU2F0dXJhdGlvbiIsCiAgICAgICAgICAgIHBhcmFtczogeyBzYXR1cmF0aW9uOiBNYXRoLnJvdW5kKChhLnNhdHVyYXRpb24gPz8gMjApIC8gMikgfSwKICAgICAgICAgIH0sCiAgICAgICAgXSwKICAgICAgfSwKICAgICAgewogICAgICAgIGxldmVsOiAyLAogICAgICAgIGRlc2M6ICJDb250cmFzdCBvbmx5LCBodWUgdW50b3VjaGVkIiwKICAgICAgICBidWlsZDogKCkgPT4gWwogICAgICAgICAgewogICAgICAgICAgICBjbWQ6ICJsYXllci5uZXdBZGp1c3RtZW50TGF5ZXIuYnJpZ2h0bmVzc0NvbnRyYXN0IiwKICAgICAgICAgICAgcGFyYW1zOiB7IGJyaWdodG5lc3M6IDAsIGNvbnRyYXN0OiAxMCB9LAogICAgICAgICAgfSwKICAgICAgICBdLAogICAgICB9LAogICAgXSwKICB9LAogIHsKICAgIGludGVudDogInJlc2l6ZV9mb3JfcGxhdGZvcm0iLAogICAgcGF0dGVybnM6IFsvKD865pS55oiQfOWIh+aIkHzovazmiJB8cmVzaXplfGNyb3AgdG98cmVzaXplIHRvKVxzKihcZHsyLDR9KVxzKlt4w5cqXVxzKihcZHsyLDR9KS9pXSwKICAgIGRlc2M6ICJQbGF0Zm9ybSBzaXplOiBjb250YWluICsgcGFkIChubyBkaXN0b3J0aW9uLCBubyBjcm9wKSIsCiAgICAvLyBjb250YWluICsgcGFk77ya55S15ZWG5bmz5Y+w5Li75Zu+55qE5qCH5YeG5YGa5rOV4oCU4oCU57yp5pS+5Yiw5a6M5pW05pS+5YWl55uu5qCH5qGG77yM55+t6L656KGl55m944CCCiAgICAvLyDkuLrku4DkuYjkuI3oo4HliIfvvIhjb3Zlcu+8ie+8muijgeaOieeahOS7t+agvOetvi9MT0dPIOaYr+WVhuS4muWFg+e0oO+8jOS4ouS4jeW+l++8mwogICAgLy8g5Li65LuA5LmI5LiN5ouJ5Ly477ya6Z2e562J5q+U57yp5pS+5Lya55W45Y+Y77yM5L+d55yf5qCh6aqM5b+F5oyC44CCCiAgICBidWlsZDogKGEgPSB7fSkgPT4gewogICAgICBjb25zdCBXID0gYS53aWR0aCA/PyA4MDA7CiAgICAgIGNvbnN0IEggPSBhLmhlaWdodCA/PyA4MDA7CiAgICAgIGNvbnN0IG93ID0gYS5vcmlnVyA/PyAxMjAwOwogICAgICBjb25zdCBvaCA9IGEub3JpZ0ggPz8gOTAwOwogICAgICBjb25zdCBzID0gTWF0aC5taW4oVyAvIG93LCBIIC8gb2gsIDEpOyAvLyBjb250YWlu77ya5LiN5pS+5aSnCiAgICAgIGNvbnN0IGZpdFcgPSBNYXRoLm1heCgxNiwgTWF0aC5yb3VuZChvdyAqIHMpKTsKICAgICAgY29uc3QgZml0SCA9IE1hdGgubWF4KDE2LCBNYXRoLnJvdW5kKG9oICogcykpOwogICAgICByZXR1cm4gWwogICAgICAgIHsgY21kOiAiaW1hZ2UuaW1hZ2VTaXplIiwgcGFyYW1zOiB7IHdpZHRoOiBmaXRXLCBoZWlnaHQ6IGZpdEggfSB9LAogICAgICAgIHsKICAgICAgICAgIGNtZDogImltYWdlLmNhbnZhc1NpemUiLAogICAgICAgICAgcGFyYW1zOiB7IHdpZHRoOiBXLCBoZWlnaHQ6IEgsIGFuY2hvcjogImNlbnRlciIsIGV4dGVuc2lvbkNvbG9yOiAid2hpdGUiIH0sCiAgICAgICAgfSwKICAgICAgXTsKICAgIH0sCiAgICBmYWxsYmFja3M6IFsKICAgICAgewogICAgICAgIGxldmVsOiAxLAogICAgICAgIGRlc2M6ICJTYW1lIGdlb21ldHJ5ICsgZmlkZWxpdHktYWxpZ25lZCByZXNhbXBsZSAoYmlsaW5lYXIpIiwKICAgICAgICBidWlsZDogKGEgPSB7fSkgPT4gewogICAgICAgICAgY29uc3QgVyA9IGEud2lkdGggPz8gODAwOwogICAgICAgICAgY29uc3QgSCA9IGEuaGVpZ2h0ID8/IDgwMDsKICAgICAgICAgIGNvbnN0IG93ID0gYS5vcmlnVyA/PyAxMjAwOwogICAgICAgICAgY29uc3Qgb2ggPSBhLm9yaWdIID8/IDkwMDsKICAgICAgICAgIGNvbnN0IHMgPSBNYXRoLm1pbihXIC8gb3csIEggLyBvaCwgMSk7CiAgICAgICAgICBjb25zdCBmaXRXID0gTWF0aC5tYXgoMTYsIE1hdGgucm91bmQob3cgKiBzKSk7CiAgICAgICAgICBjb25zdCBmaXRIID0gTWF0aC5tYXgoMTYsIE1hdGgucm91bmQob2ggKiBzKSk7CiAgICAgICAgICByZXR1cm4gWwogICAgICAgICAgICB7IGNtZDogImltYWdlLmltYWdlU2l6ZSIsIHBhcmFtczogeyB3aWR0aDogZml0VywgaGVpZ2h0OiBmaXRILCByZXNhbXBsZTogImJpbGluZWFyIiB9IH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICBjbWQ6ICJpbWFnZS5jYW52YXNTaXplIiwKICAgICAgICAgICAgICBwYXJhbXM6IHsgd2lkdGg6IFcsIGhlaWdodDogSCwgYW5jaG9yOiAiY2VudGVyIiwgZXh0ZW5zaW9uQ29sb3I6ICJ3aGl0ZSIgfSwKICAgICAgICAgICAgfSwKICAgICAgICAgIF07CiAgICAgICAgfSwKICAgICAgfSwKICAgIF0sCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJzY2FsZV9wZXJjZW50IiwKICAgIHBhdHRlcm5zOiBbLyg/Oue8qeWwj3zmlL7lpKd857yp5pS+KVxzKig/OuWIsCk/XHMqKFxkezEsM30pXHMqJS9dLAogICAgZGVzYzogIlNjYWxlIGJ5IHBlcmNlbnQiLAogICAgYnVpbGQ6IChhID0ge30pID0+IFt7IGNtZDogImltYWdlLmltYWdlU2l6ZSIsIHBhcmFtczogeyBwZXJjZW50OiBhLnBlcmNlbnQgPz8gNTAgfSB9XSwKICAgIGZhbGxiYWNrczogW10sCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJzaGFycGVuIiwKICAgIHBhdHRlcm5zOiBbL+mUkOWMlnxzaGFycGVuL2ldLAogICAgZGVzYzogIlNtYXJ0IHNoYXJwZW4iLAogICAgYnVpbGQ6IChhID0ge30pID0+IFt7IGNtZDogImZpbHRlci5zaGFycGVuLnNtYXJ0U2hhcnBlbiIsIHBhcmFtczogeyBhbW91bnQ6IGEuYW1vdW50ID8/IDgwIH0gfV0sCiAgICBmYWxsYmFja3M6IFsKICAgICAgewogICAgICAgIGxldmVsOiAxLAogICAgICAgIGRlc2M6ICJIYWx2ZWQgc2hhcnBlbiBhbW91bnQiLAogICAgICAgIGJ1aWxkOiAoYSA9IHt9KSA9PiBbCiAgICAgICAgICB7CiAgICAgICAgICAgIGNtZDogImZpbHRlci5zaGFycGVuLnNtYXJ0U2hhcnBlbiIsCiAgICAgICAgICAgIHBhcmFtczogeyBhbW91bnQ6IE1hdGgucm91bmQoKGEuYW1vdW50ID8/IDgwKSAvIDIpLCByYWRpdXM6IDEgfSwKICAgICAgICAgIH0sCiAgICAgICAgXSwKICAgICAgfSwKICAgIF0sCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJ3YXRlcm1hcmsiLAogICAgcGF0dGVybnM6IFsv5rC05Y2wfHdhdGVybWFyay9pXSwKICAgIGRlc2M6ICJBZGQgdGV4dCB3YXRlcm1hcmsgKGVkaXRhYmxlIHRleHQgbGF5ZXIpIiwKICAgIGJ1aWxkOiAoYSA9IHt9KSA9PiBbCiAgICAgIHsKICAgICAgICBjbWQ6ICJ0eXBlLmNyZWF0ZSIsCiAgICAgICAgcGFyYW1zOiB7CiAgICAgICAgICB0ZXh0OiBhLnRleHQgfHwgIlNVUkVQSVgiLAogICAgICAgICAgeDogYS54ID8/IDQwLAogICAgICAgICAgeTogYS55ID8/IDQwLAogICAgICAgICAgc2l6ZTogYS5mb250U2l6ZSA/PyAzNiwKICAgICAgICB9LAogICAgICB9LAogICAgXSwKICAgIGZhbGxiYWNrczogW10sCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJyZW1vdmVfYmdfd2hpdGUiLAogICAgcGF0dGVybnM6IFsv5Y676IOM5pmvfOaKoOWbvnzmiqDlh7rmnaV855m95bqVfOe6r+iJsuiDjOaZr3zog4zmma/mjaLmiJDnmb3lupV85Y675o6J6IOM5pmvfOenu+mZpOiDjOaZr3zljrvpmaTog4zmma986IOM5pmv5o2i5oiQ55m96ImyfOaNouaIkOeZveiJsuiDjOaZr3zog4zmma/lj5jnmb185oqK6IOM5pmvLnswLDZ955m9fHJlbW92ZSAoPzp0aGUgKT9iYWNrZ3JvdW5kfHJlbW92ZSBiZ3xiYWNrZ3JvdW5kIHJlbW92YWx8a25vY2tvdXR8Y3V0b3V0L2ldLAogICAgZGVzYzogIktub2NrIG91dCBiYWNrZ3JvdW5kIHRvIHB1cmUgd2hpdGUgKGUtY29tbWVyY2Ugc3RhbmRhcmQsIGRldGVybWluaXN0aWMpIiwKICAgIGJ1aWxkOiAoKSA9PiBbCiAgICAgIHsgY21kOiAic2VsZWN0LnN1YmplY3QiLCBwYXJhbXM6IHsgc2FtcGxlQWxsTGF5ZXJzOiB0cnVlLCBtb2RlOiAicmVwbGFjZSIgfSB9LAogICAgICB7IGNtZDogInNlbGVjdC5pbnZlcnNlIiB9LAogICAgICB7IGNtZDogImVkaXQuZmlsbCIsIHBhcmFtczogeyBjb250ZW50czogIndoaXRlIiB9IH0sCiAgICBdLAogICAgZmFsbGJhY2tzOiBbCiAgICAgIHsKICAgICAgICBsZXZlbDogMSwKICAgICAgICBkZXNjOiAiU2FtZSBrbm9ja291dCB3aXRob3V0IHNhbXBsaW5nIGFsbCBsYXllcnMiLAogICAgICAgIGJ1aWxkOiAoKSA9PiBbCiAgICAgICAgICB7IGNtZDogInNlbGVjdC5zdWJqZWN0IiwgcGFyYW1zOiB7IHNhbXBsZUFsbExheWVyczogZmFsc2UsIG1vZGU6ICJyZXBsYWNlIiB9IH0sCiAgICAgICAgICB7IGNtZDogInNlbGVjdC5pbnZlcnNlIiB9LAogICAgICAgICAgeyBjbWQ6ICJlZGl0LmZpbGwiLCBwYXJhbXM6IHsgY29udGVudHM6ICJ3aGl0ZSIgfSB9LAogICAgICAgIF0sCiAgICAgIH0sCiAgICBdLAogIH0sCiAgewogICAgaW50ZW50OiAicmVtb3ZlX2JnX3RyYW5zcGFyZW50IiwKICAgIHBhdHRlcm5zOiBbL+mAj+aYjuiDjOaZr3zpgI/mmI7lupV86YCP5piO5bqV5Zu+fOS/neeVmemAj+aYji9pXSwKICAgIGRlc2M6ICJSZW1vdmUgYmFja2dyb3VuZCB0byB0cmFuc3BhcmVuY3kgKGRldGVybWluaXN0aWMpIiwKICAgIGJ1aWxkOiAoKSA9PiBbeyBjbWQ6ICJsYXllci5yZW1vdmVCYWNrZ3JvdW5kIiwgcGFyYW1zOiB7IHJlZmluZTogdHJ1ZSB9IH1dLAogICAgZmFsbGJhY2tzOiBbXSwKICB9LApdOwoKLyoqIOivreS5iee6p+aUueWKqOaEj+Wbvu+8mueZveWQjeWNleimhuebluS4jeS6hu+8jOW/hemhu+i1sCBBSSDph43nlJ/miJAKICogIOato+WImee6puWumu+8mgogKiAgIC0g6YG/5YWN5Y2V5a2X6KO45Yy56YWN77yI5aaC44CM5pyoL+efsy/luIPjgI3kvJror6/kuK3jgIznn7PmprTmsYEv5biD5bGAL+acqOiut+OAje+8ie+8jOe7n+S4gOeUqOWkjeWQiOivjeOAggogKiAgIC0g5Yig6Zmk57G75Yqo6K+N77yI5Y675o6JL+WIoOmZpC/ljrvpmaTvvInlv4XpobvluKblrr7or63kuIrkuIvmlofvvIzlkKbliJnjgIzljrvmjonmsLTljbDjgI3kvJrkuI7noa7lrprmgKfmhI/lm77mt7fmt4bjgIIKICovCmV4cG9ydCBjb25zdCBHRU5FUkFUSVZFX0lOVEVOVFMgPSBbCiAgewogICAgaW50ZW50OiAic3dhcF9iYWNrZ3JvdW5kIiwKICAgIHBhdHRlcm5zOiBbCiAgICAgIC/mjaLog4zmma985o2i5oiQLnsxLDMwfeiDjOaZryg/IeeZvSl85Zy65pmv5Zu+P3zmiorog4zmma8uezAsMTJ9KD865pS55oiQfOaNouaIkHzosIPmiJB85Y+YKSg/IeeZveW6lXznuq/oibJ86YCP5piOfOe6r+eZvXznmb3oibIpfOiDjOaZr+aNouaIkCg/IeeZveW6lXznuq/oibJ86YCP5piOfOe6r+eZvXznmb3oibIpfGNoYW5nZSAoPzp0aGUgKT9iYWNrZ3JvdW5kfHJlcGxhY2UgKD86dGhlICk/YmFja2dyb3VuZHxuZXcgYmFja2dyb3VuZHxiYWNrZ3JvdW5kIHRvL2ksCiAgICBdLAogICAgZGVzYzogIlN3YXAgdG8gYSBzY2VuZS9jb2xvdXJlZCBiYWNrZ3JvdW5kIChzZW1hbnRpYzsgcHVyZSB3aGl0ZS90cmFuc3BhcmVudCBpcyBkZXRlcm1pbmlzdGljKSIsCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJjaGFuZ2VfbWF0ZXJpYWwiLAogICAgcGF0dGVybnM6IFsKICAgICAgL+adkOi0qHzmnKjotKh85pyo57q5fOacqOWItnzmnKjmnZB85Y6f5pyofOmHkeWxnnznn7PmnZB855+z6LSofOWkp+eQhuefs3znn7PlpLR85biD5paZfOW4g+iJunzmo4nluIN857uH54mpfOearumdqXxtYXRlcmlhbHx0ZXh0dXJlL2ksCiAgICBdLAogICAgZGVzYzogIkNoYW5nZSBtYXRlcmlhbCAoc2VtYW50aWMpIiwKICB9LAogIHsKICAgIGludGVudDogInJlbW92ZV9vYmplY3QiLAogICAgcGF0dGVybnM6IFsKICAgICAgL+aKueaOiXzmk6bmjol85pOm6ZmkLywKICAgICAgLyg/OuWOu+mZpHzljrvmjol85Yig6ZmkKS57MCw2fSjniankvZN855GV55a1fOaxoeeCuXzkurp85Lic6KW/fOWFg+e0oHzmsLTmna985p2C54mpfOaxoea4jXzliJLnl5V854Gw5bCYfOaMh+e6uXznkZXnlrV86YGT5YW3fOmFjemlsHznianlk4F85pGG5Lu2KS8sCiAgICAgIC9yZW1vdmUgKD86dGhlICk/KD86YmFja2dyb3VuZCApPyg/Om9iamVjdHxpdGVtfHBlcnNvbnx0aGluZykvLAogICAgICAvZXJhc2UgKD86dGhlICk/KD86b2JqZWN0fGl0ZW0pLywKICAgIF0sCiAgICBkZXNjOiAiUmVtb3ZlIGVsZW1lbnQgKHNlbWFudGljKSIsCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJjaGFuZ2Vfb2JqZWN0X2NvbG9yIiwKICAgIHBhdHRlcm5zOiBbCiAgICAgIC8oPzrnk7bouqt85Lqn5ZOBfOWVhuWTgXzkuLvkvZN86KGj5pyNfOacuui6q3zlpJblo7N86KGo6Z2iKS57MCw4fSg/OuminOiJsnzoibIpL2ksCiAgICAgIC/mioooPzrnk7bouqt85Lqn5ZOBfOWVhuWTgXzkuLvkvZN86KGj5pyNfOacuui6qykuezAsMTJ9KD865pS55oiQfOaNouaIkCkuezAsOH0oPzroibJ86aKc6ImyKS9pLAogICAgXSwKICAgIGRlc2M6ICJSZWNvbG91ciBwcm9kdWN0IGJvZHkgKHNlbWFudGljKSIsCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJzdHlsZV90cmFuc2ZlciIsCiAgICBwYXR0ZXJuczogWy/po47moLx8c3R5bGV85pel57O7fOWkjeWPpHzog7bniYcvaV0sCiAgICBkZXNjOiAiU3R5bGUgdHJhbnNmZXIgKHNlbWFudGljKSIsCiAgfSwKICB7CiAgICBpbnRlbnQ6ICJleHRlbmRfaW1hZ2UiLAogICAgcGF0dGVybnM6IFsv5omp5bGVfOaJqeWbvnzlu7blsZV8b3V0cGFpbnR8ZXh0ZW5kL2ldLAogICAgZGVzYzogIkFJIG91dHBhaW50IChzZW1hbnRpYykiLAogIH0sCiAgewogICAgaW50ZW50OiAidXBzY2FsZSIsCiAgICBwYXR0ZXJuczogWwogICAgICAv6auY5riF5L+u5aSNfOi2heWIhnzotoXliIbovqjnjod85o+Q5Y2H5riF5pmw5bqmfOa4heaZsOWMlnznlLvotKjlop7lvLp85pu05riF5pmwfOWPmOa4heaZsHx1cHNjYWx8c3VwZXIuP3Jlc3xlbmhhbmNlICg/OnF1YWxpdHl8cmVzb2x1dGlvbikvaSwKICAgIF0sCiAgICBkZXNjOiAiVXBzY2FsZSAvIGVuaGFuY2UgcmVzb2x1dGlvbiAoc2VtYW50aWMpIiwKICB9LAogIHsKICAgIGludGVudDogImFkZF9vYmplY3QiLAogICAgcGF0dGVybnM6IFsKICAgICAgL+WKoOS4qijmna/lrZB854mp5ZOBfOeJqeS9k3zoo4XppbB86YWN6aWwfOiKsXznu7/mpI186YGT5YW3fOakjeeJqSkvaSwKICAgICAgL+WKoCg/OuS4gHzov5l86YKjKT8oPzrkuKp856eNfOebhnzmnLV85qCqfOajtXzkupspPyjmna/lrZB854mp5ZOBfOeJqeS9k3zoo4XppbB86YWN6aWwfOiKsXznu7/mpI186YGT5YW3fOakjeeJqSkvaSwKICAgICAgL+WKoCg/OuS4gHzov5l86YKjKT8oPzrkuKp856eNfOebhnzmnLV85qCqfOajtXzkupspPyjmna/lrZB854mp5ZOBfOeJqeS9k3zoo4XppbB86YWN6aWwfOiKsXznu7/mpI186YGT5YW3fOakjeeJqSkuKig/OuWcqHzliLB85LqOKS4qKD865peB6L65fOiDjOaZr3zkuIDkvqd85YmNKS9pLAogICAgICAv5re75YqgKD8h5rC05Y2wKS4qKOeJqeS9k3zlhYPntKB86YWN6aWwfOe7v+akjXzpgZPlhbd85qSN54mpKS9pLAogICAgICAv5ZyoLioo5peB6L65fOiDjOaZrykuKuWKoCg/IeawtOWNsCkvaSwKICAgICAgL2FkZCAoPzphbj8gfHRoZSApPyg/Om9iamVjdHxpdGVtfGN1cHxwbGFudHxwcm9wKS9pLAogICAgXSwKICAgIGRlc2M6ICJBZGQgb2JqZWN0IHRvIHNjZW5lIChzZW1hbnRpYykiLAogIH0sCiAgewogICAgaW50ZW50OiAiY2hhbmdlX3RleHQiLAogICAgcGF0dGVybnM6IFsKICAgICAgLyjmloflrZd85paH5qGIfOagh+etvnzlrZcpLioo5pS5fOaNonzmm7/mjaJ85YaZKS9pLAogICAgICAv5L+u5pS5Lioo5paH5a2XfOagh+etvnzmoIcpL2ksCiAgICAgIC/mioouezAsMTB9KOaWh+Wtl3zmlofmoYh85qCH562+fOWtlykuezAsOH0o5pS55oiQfOaNouaIkHzmm7/mjaLkuLopL2ksCiAgICAgIC9jaGFuZ2UgKD86dGhlICk/KD86dGV4dHxsYWJlbHx3b3JkKS9pLAogICAgICAvcmVwbGFjZSAoPzp0aGUgKT90ZXh0L2ksCiAgICBdLAogICAgZGVzYzogIkNoYW5nZSB0ZXh0L2xhYmVsIGluIGltYWdlIChzZW1hbnRpYykiLAogIH0sCl07CgpleHBvcnQgaW50ZXJmYWNlIENoYWluU3RlcCB7CiAgY21kOiBzdHJpbmc7CiAgcGFyYW1zPzogUmVjb3JkPHN0cmluZywgdW5rbm93bj47Cn0KCi8qKiDmhI/lm77mjqLmtYvvvJrkuIDmnaHmjIfku6Tlj6/og73lkIzml7blkKvnoa7lrprmgKfmhI/lm77lkozor63kuYnnuqfmhI/lm77igJTigJTot6/nlLHnrpfms5XnmoTovpPlhaUgKi8KZXhwb3J0IGZ1bmN0aW9uIGRldGVjdEludGVudHMoaW5zdHJ1Y3Rpb246IHN0cmluZyk6IHsKICBkZXRlcm1pbmlzdGljOiBJbnRlbnRUZW1wbGF0ZVtdOwogIGdlbmVyYXRpdmU6IHR5cGVvZiBHRU5FUkFUSVZFX0lOVEVOVFM7Cn0gewogIGNvbnN0IGRldGVybWluaXN0aWMgPSBJTlRFTlRfVEVNUExBVEVTLmZpbHRlcigodCkgPT4KICAgIHQucGF0dGVybnMuc29tZSgocmUpID0+IHJlLnRlc3QoaW5zdHJ1Y3Rpb24pKSwKICApOwogIGNvbnN0IGdlbmVyYXRpdmUgPSBHRU5FUkFUSVZFX0lOVEVOVFMuZmlsdGVyKChnKSA9PgogICAgZy5wYXR0ZXJucy5zb21lKChyZSkgPT4gcmUudGVzdChpbnN0cnVjdGlvbikpLAogICk7CiAgcmV0dXJuIHsgZGV0ZXJtaW5pc3RpYywgZ2VuZXJhdGl2ZSB9Owp9CgovKiog5aSa5oSP5Zu+5ZCI5bm25pe255qE5omn6KGM6aG65bqP77yI5YWz6ZSu77yaUGhvdG9DcmFmdCDnmoQgYWN0aXZlLWxheWVyIOaYr+eKtuaAgeWMlueahO+8ieOAggogKiAg6ZyA6KaB5YOP57Sg5bGC5rS76LeD55qE5pON5L2c77yI5Y676IOM5pmvL+aUueWwuuWvuC/msLTljbAv6ZSQ5YyW5ruk6ZWc77yJ5b+F6aG75o6S5Zyo5omA5pyJIuiwg+aVtOWxguexuyLmk43kvZzkuYvliY3vvIwKICogIOWQpuWImeWQjue7reeahCBlZGl0LmZpbGwgLyBzbWFydFNoYXJwZW4g5Lya5ZugIGFjdGl2ZSBsYXllciDlj5jmiJAgQWRqdXN0bWVudCBsYXllciDogIzmiqXplJnjgIIKICogIOWIhuWxgu+8mjAg5Y676IOM5pmvIOKGkiAxIOaUueWwuuWvuCDihpIgMiDmsLTljbAg4oaSIDMg6ZSQ5YyW5ruk6ZWcIOKGkiA0IOiwg+iJsuiwg+aVtOWxguOAgiAqLwpjb25zdCBNRVJHRV9QUklPUklUWTogUmVjb3JkPHN0cmluZywgbnVtYmVyPiA9IHsKICByZW1vdmVfYmdfdHJhbnNwYXJlbnQ6IDAsCiAgcmVtb3ZlX2JnX3doaXRlOiAwLAogIHJlc2l6ZV9mb3JfcGxhdGZvcm06IDEsCiAgc2NhbGVfcGVyY2VudDogMSwKICB3YXRlcm1hcms6IDIsCiAgc2hhcnBlbjogMywKICB3YXJtX3VwOiA0LAogIGNvb2xfZG93bjogNCwKICBicmlnaHRlbjogNCwKICBib29zdF9zYXR1cmF0aW9uOiA0LAp9OwpleHBvcnQgY29uc3QgbWVyZ2VSYW5rID0gKGk6IHN0cmluZykgPT4gTUVSR0VfUFJJT1JJVFlbaV0gPz8gNTsKCi8qKiDmiorkuIDmnaHoh6rnhLbor63oqIDkv67lm77mjIfku6TmmKDlsITkuLrlkb3ku6Tpk77vvIhvcmlnVy9vcmlnSCDkvpvlh6DkvZXnsbvmqKHmnb/orqHnrpcgY29udGFpbi9wYWTvvIkKICogIOWkmuehruWumuaAp+aEj+Wbvu+8muWQiOW5tuaJgOacieWRveS4reeahOaooeadv+mTvu+8jOW5tuaMiSBNRVJHRV9QUklPUklUWSDmjpLluo/lkI7mi7zmjqUgKi8KZXhwb3J0IGZ1bmN0aW9uIHBsYW5DaGFpbigKICBpbnN0cnVjdGlvbjogc3RyaW5nLAogIG9yaWdXPzogbnVtYmVyLAogIG9yaWdIPzogbnVtYmVyLAopOgogIHwgeyBvazogdHJ1ZTsgaW50ZW50OiBzdHJpbmc7IGludGVudHM6IHN0cmluZ1tdOyBkZXNjOiBzdHJpbmc7IGNoYWluOiBDaGFpblN0ZXBbXTsgYXJnczogQnVpbGRBcmdzIH0KICB8IHsgb2s6IGZhbHNlOyBlcnJvcjogc3RyaW5nIH0gewogIGNvbnN0IG1hdGNoZWRBbGwgPSBJTlRFTlRfVEVNUExBVEVTLmZpbHRlcigodCkgPT4gdC5wYXR0ZXJucy5zb21lKChyZSkgPT4gcmUudGVzdChpbnN0cnVjdGlvbikpKTsKICBpZiAobWF0Y2hlZEFsbC5sZW5ndGggPT09IDApIHJldHVybiB7IG9rOiBmYWxzZSwgZXJyb3I6ICJubyBpbnRlbnQgbWF0Y2hlZCIgfTsKICBjb25zdCBtYXRjaGVkID0gWy4uLm1hdGNoZWRBbGxdLnNvcnQoKGEsIGIpID0+IG1lcmdlUmFuayhhLmludGVudCkgLSBtZXJnZVJhbmsoYi5pbnRlbnQpKTsKICBjb25zdCBhcmdzOiBCdWlsZEFyZ3MgPSB7fTsKICBjb25zdCBtID0gaW5zdHJ1Y3Rpb24ubWF0Y2goLyhcZHsyLDR9KVxzKlt4w5cqXVxzKihcZHsyLDR9KS9pKTsKICBpZiAobSkgewogICAgYXJncy53aWR0aCA9IE51bWJlcihtWzFdKTsKICAgIGFyZ3MuaGVpZ2h0ID0gTnVtYmVyKG1bMl0pOwogIH0KICBjb25zdCBwID0gaW5zdHJ1Y3Rpb24ubWF0Y2goLyhcZHsxLDN9KVxzKiUvKTsKICBpZiAocCkgYXJncy5wZXJjZW50ID0gTnVtYmVyKHBbMV0pOwogIGlmIChvcmlnVykgYXJncy5vcmlnVyA9IG9yaWdXOwogIGlmIChvcmlnSCkgYXJncy5vcmlnSCA9IG9yaWdIOwogIGNvbnN0IGNoYWluOiBDaGFpblN0ZXBbXSA9IFtdOwogIGxldCBlbWl0dGVkQmcgPSBmYWxzZTsKICBmb3IgKGNvbnN0IHQgb2YgbWF0Y2hlZCkgewogICAgY29uc3QgaXNCZyA9IHQuaW50ZW50ID09PSAicmVtb3ZlX2JnX3doaXRlIiB8fCB0LmludGVudCA9PT0gInJlbW92ZV9iZ190cmFuc3BhcmVudCI7CiAgICAvLyDog4zmma/pgInljLrlnKggZWRpdC5maWxsIOWQjuS7jea/gOa0u++8jOS8muiuqeWQjue7reiwg+aVtOWxguiiqyLpgInljLrokpnniYgi6ZmQ5Yi25Yiw6IOM5pmvIOKGkiDot6jov4fog4zmma/lnZfov5vlhaXosIPmlbTlsYLliY3lhYjlj5bmtojpgInljLoKICAgIGlmIChlbWl0dGVkQmcgJiYgIWlzQmcpIHsKICAgICAgY2hhaW4ucHVzaCh7IGNtZDogInNlbGVjdC5kZXNlbGVjdCIgfSk7CiAgICAgIGVtaXR0ZWRCZyA9IGZhbHNlOwogICAgfQogICAgaWYgKGlzQmcpIGVtaXR0ZWRCZyA9IHRydWU7CiAgICBjaGFpbi5wdXNoKC4uLnQuYnVpbGQoYXJncykpOwogIH0KICBjb25zdCBpbnRlbnRzID0gbWF0Y2hlZC5tYXAoKHQpID0+IHQuaW50ZW50KTsKICByZXR1cm4gewogICAgb2s6IHRydWUsCiAgICBpbnRlbnQ6IGludGVudHMuam9pbigiKyIpLAogICAgaW50ZW50cywKICAgIGRlc2M6IG1hdGNoZWQubWFwKCh0KSA9PiB0LmRlc2MpLmpvaW4oIjsgIiksCiAgICBjaGFpbiwKICAgIGFyZ3MsCiAgfTsKfQoKLyoqIOagoemqjOWRveS7pOmTvu+8muWRveS7pOWcqOeZveWQjeWNlSArIOWPguaVsOi/hyBzY2hlbWHvvIjlm5vlsYLmi6bmiKrvvIkgKi8KZXhwb3J0IGZ1bmN0aW9uIHZhbGlkYXRlQ29tbWFuZENoYWluKGNoYWluOiBDaGFpblN0ZXBbXSk6IHsgb2s6IGJvb2xlYW47IGVycm9yPzogc3RyaW5nIH0gewogIGlmICghQXJyYXkuaXNBcnJheShjaGFpbikgfHwgY2hhaW4ubGVuZ3RoID09PSAwKSB7CiAgICByZXR1cm4geyBvazogZmFsc2UsIGVycm9yOiAiY2hhaW4gbXVzdCBiZSBhIG5vbi1lbXB0eSBhcnJheSIgfTsKICB9CiAgaWYgKGNoYWluLmxlbmd0aCA+IDgpIHsKICAgIHJldHVybiB7IG9rOiBmYWxzZSwgZXJyb3I6ICJjaGFpbiB0b28gbG9uZyAobWF4IDggc3RlcHMpIiB9OwogIH0KICBmb3IgKGNvbnN0IHN0ZXAgb2YgY2hhaW4pIHsKICAgIGNvbnN0IHNwZWMgPSBBTExPV0VEW3N0ZXAuY21kXTsKICAgIGlmICghc3BlYykgewogICAgICByZXR1cm4geyBvazogZmFsc2UsIGVycm9yOiBgY29tbWFuZCBub3QgaW4gd2hpdGVsaXN0OiAke3N0ZXAuY21kfWAgfTsKICAgIH0KICAgIGlmIChzdGVwLnBhcmFtcykgewogICAgICBmb3IgKGNvbnN0IFtrZXksIHZhbF0gb2YgT2JqZWN0LmVudHJpZXMoc3RlcC5wYXJhbXMpKSB7CiAgICAgICAgY29uc3QgcHMgPSBzcGVjLnBhcmFtc1trZXldOwogICAgICAgIGlmICghcHMpIHsKICAgICAgICAgIHJldHVybiB7IG9rOiBmYWxzZSwgZXJyb3I6IGBwYXJhbSBub3QgYWxsb3dlZCBmb3IgJHtzdGVwLmNtZH06ICR7a2V5fWAgfTsKICAgICAgICB9CiAgICAgICAgY29uc3QgY2hlY2sgPSB2YWxpZGF0b3JzW3BzLnR5cGVdOwogICAgICAgIGlmICghY2hlY2sgfHwgIWNoZWNrKHZhbCwgcHMucmFuZ2UpKSB7CiAgICAgICAgICByZXR1cm4gewogICAgICAgICAgICBvazogZmFsc2UsCiAgICAgICAgICAgIGVycm9yOiBgcGFyYW0gb3V0IG9mIHJhbmdlL2ludmFsaWQ6ICR7c3RlcC5jbWR9LiR7a2V5fT0ke0pTT04uc3RyaW5naWZ5KHZhbCl9YCwKICAgICAgICAgIH07CiAgICAgICAgfQogICAgICB9CiAgICB9CiAgICBmb3IgKGNvbnN0IFtrZXksIHBzXSBvZiBPYmplY3QuZW50cmllcyhzcGVjLnBhcmFtcykpIHsKICAgICAgaWYgKHBzLnJlcXVpcmVkICYmICEoc3RlcC5wYXJhbXMgJiYga2V5IGluIHN0ZXAucGFyYW1zKSkgewogICAgICAgIHJldHVybiB7IG9rOiBmYWxzZSwgZXJyb3I6IGBtaXNzaW5nIHJlcXVpcmVkIHBhcmFtOiAke3N0ZXAuY21kfS4ke2tleX1gIH07CiAgICAgIH0KICAgIH0KICB9CiAgcmV0dXJuIHsgb2s6IHRydWUgfTsKfQo=
+/**
+ * whitelist.ts — LLM → PhotoCraft 命令的白名单映射（Surepix 独有算法层 #3 的命令规划基础）
+ *
+ * 校准来源：photocraft-cli 0.15.1 命令注册表（935 条），参数范围照注册表校准。
+ * 原则：
+ *  1. 只能从白名单里选命令，禁止幻觉出不存在的命令
+ *  2. 每个命令带参数 schema + 取值范围校验
+ *  3. 语义动作（客户的人话）→ 命令链模板 的映射是 Surepix 自有资产
+ */
+
+type Validator = (v: unknown, range?: [number, number] | string[]) => boolean;
+
+const validators: Record<string, Validator> = {
+  int: (v, range) => {
+    const [lo, hi] = (range as [number, number]) ?? [-Infinity, Infinity];
+    return typeof v === "number" && Number.isInteger(v) && v >= lo && v <= hi;
+  },
+  num: (v, range) => {
+    const [lo, hi] = (range as [number, number]) ?? [-Infinity, Infinity];
+    return typeof v === "number" && v >= lo && v <= hi;
+  },
+  str: (v) => typeof v === "string" && v.length > 0 && v.length < 500,
+  bool: (v) => typeof v === "boolean",
+  enum: (v, range) =>
+    typeof v === "string" && Array.isArray(range) && (range as string[]).includes(v),
+  points: (v) =>
+    Array.isArray(v) &&
+    v.length >= 2 &&
+    v.length <= 19 &&
+    v.every(
+      (p) =>
+        Array.isArray(p) &&
+        p.length === 2 &&
+        p.every((n) => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 255),
+    ),
+};
+
+export interface ParamSpec {
+  type: string;
+  range?: [number, number] | string[];
+  required?: boolean;
+}
+
+export interface CommandSpec {
+  risk: "safe" | "guarded";
+  params: Record<string, ParamSpec>;
+  desc: string;
+}
+
+/** 白名单命令表（全部经注册表核实存在） */
+export const ALLOWED: Record<string, CommandSpec> = {
+  "layer.newAdjustmentLayer.curves": {
+    risk: "safe",
+    params: { points: { type: "points", required: true } },
+    desc: "Curves adjustment layer (colour / contrast / tone)",
+  },
+  "layer.newAdjustmentLayer.levels": {
+    risk: "safe",
+    params: {
+      inBlack: { type: "int", range: [0, 253] },
+      inWhite: { type: "int", range: [2, 255] },
+      gamma: { type: "num", range: [0.01, 9.99] },
+    },
+    desc: "Levels adjustment layer",
+  },
+  "layer.newAdjustmentLayer.hueSaturation": {
+    risk: "safe",
+    params: {
+      hue: { type: "int", range: [-180, 180] },
+      saturation: { type: "int", range: [-100, 100] },
+      lightness: { type: "int", range: [-100, 100] },
+    },
+    desc: "Hue / saturation adjustment layer",
+  },
+  "layer.newAdjustmentLayer.brightnessContrast": {
+    risk: "safe",
+    params: {
+      brightness: { type: "int", range: [-150, 150] },
+      contrast: { type: "int", range: [-50, 100] },
+    },
+    desc: "Brightness / contrast adjustment layer",
+  },
+  "image.imageSize": {
+    risk: "guarded",
+    params: {
+      width: { type: "int", range: [16, 8000] },
+      height: { type: "int", range: [16, 8000] },
+      percent: { type: "int", range: [1, 1000] },
+      resample: {
+        type: "enum",
+        range: [
+          "automatic",
+          "preserveDetails",
+          "bicubicSmoother",
+          "bicubicSharper",
+          "bicubicAutomatic",
+          "bicubic",
+          "nearest",
+          "bilinear",
+          "lanczos",
+          "none",
+        ],
+      },
+    },
+    desc: "Image size (width/height or percent)",
+  },
+  "image.canvasSize": {
+    risk: "guarded",
+    params: {
+      width: { type: "int", range: [16, 8000], required: true },
+      height: { type: "int", range: [16, 8000], required: true },
+      anchor: {
+        type: "enum",
+        range: [
+          "topLeft",
+          "top",
+          "topRight",
+          "left",
+          "center",
+          "right",
+          "bottomLeft",
+          "bottom",
+          "bottomRight",
+        ],
+      },
+      extensionColor: {
+        type: "enum",
+        range: ["background", "foreground", "white", "black", "transparent"],
+      },
+    },
+    desc: "Canvas size (extend/shrink; anchor positions content, extensionColor pads)",
+  },
+  "image.crop": {
+    risk: "guarded",
+    params: {
+      x: { type: "int", range: [0, 7999] },
+      y: { type: "int", range: [0, 7999] },
+      width: { type: "int", range: [16, 8000] },
+      height: { type: "int", range: [16, 8000] },
+      targetWidth: { type: "int", range: [16, 8000] },
+      targetHeight: { type: "int", range: [16, 8000] },
+      resample: {
+        type: "enum",
+        range: ["bicubic", "bilinear", "nearest", "lanczos", "preserveDetails"],
+      },
+    },
+    desc: "Crop (optionally resample to targetWidth×targetHeight)",
+  },
+  "type.create": {
+    risk: "guarded",
+    params: {
+      text: { type: "str" },
+      x: { type: "int", range: [0, 7999] },
+      y: { type: "int", range: [0, 7999] },
+      size: { type: "int", range: [6, 400] },
+    },
+    desc: "Create text layer (editable)",
+  },
+  "filter.sharpen.smartSharpen": {
+    risk: "safe",
+    params: {
+      amount: { type: "int", range: [1, 500] },
+      radius: { type: "num", range: [0.1, 64] },
+      reduceNoise: { type: "int", range: [0, 100] },
+    },
+    desc: "Smart sharpen",
+  },
+  "select.subject": {
+    risk: "safe",
+    params: {
+      sampleAllLayers: { type: "bool" },
+      mode: { type: "enum", range: ["replace", "add", "subtract", "intersect"] },
+    },
+    desc: "Auto-select the subject (AI)",
+  },
+  "select.inverse": {
+    risk: "safe",
+    params: {},
+    desc: "Invert the active selection",
+  },
+  "select.deselect": {
+    risk: "safe",
+    params: {},
+    desc: "Clear the active selection (so subsequent adjustment layers aren't masked to the selection)",
+  },
+  "edit.fill": {
+    risk: "safe",
+    params: {
+      contents: {
+        type: "enum",
+        range: ["foreground", "background", "color", "contentAware", "pattern", "history", "black", "gray", "white"],
+      },
+      color: { type: "str" },
+      opacity: { type: "int", range: [0, 100] },
+      preserveTransparency: { type: "bool" },
+      mode: {
+        type: "enum",
+        range: ["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "softLight", "hardLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
+      },
+    },
+    desc: "Fill the selection (white → white background)",
+  },
+  "layer.removeBackground": {
+    risk: "guarded",
+    params: {
+      layer: { type: "str" },
+      sampleAllLayers: { type: "bool" },
+      refine: { type: "bool" },
+    },
+    desc: "Remove background to transparency (layer mask from Select Subject)",
+  },
+};
+
+/** 模板 build 的入参：指令解析出的参数 + 原图尺寸（管线注入，几何类模板需要） */
+export interface BuildArgs {
+  width?: number;
+  height?: number;
+  percent?: number;
+  amount?: number;
+  brightness?: number;
+  contrast?: number;
+  saturation?: number;
+  text?: string;
+  fontSize?: number;
+  x?: number;
+  y?: number;
+  origW?: number;
+  origH?: number;
+}
+
+export interface IntentTemplate {
+  intent: string;
+  patterns: RegExp[];
+  desc: string;
+  build: (a?: BuildArgs) => { cmd: string; params?: Record<string, unknown> }[];
+  fallbacks: {
+    level: number;
+    desc: string;
+    build: (a?: BuildArgs) => { cmd: string; params?: Record<string, unknown> }[];
+  }[];
+}
+
+/** 语义动作 → 命令链模板（Surepix 自有映射资产，含降级链） */
+export const INTENT_TEMPLATES: IntentTemplate[] = [
+  {
+    intent: "warm_up",
+    patterns: [/暖|warm|温暖|暖色/i],
+    desc: "Warm grade (lift red channel)",
+    build: () => [
+      {
+        cmd: "layer.newAdjustmentLayer.curves",
+        params: {
+          points: [
+            [0, 18],
+            [128, 142],
+            [255, 248],
+          ],
+        },
+      },
+    ],
+    fallbacks: [
+      {
+        level: 1,
+        desc: "Gentler warm grade (halved curve offset)",
+        build: () => [
+          {
+            cmd: "layer.newAdjustmentLayer.curves",
+            params: {
+              points: [
+                [0, 9],
+                [128, 134],
+                [255, 244],
+              ],
+            },
+          },
+        ],
+      },
+      {
+        level: 2,
+        desc: "Slight red-channel lift only",
+        build: () => [
+          {
+            cmd: "layer.newAdjustmentLayer.brightnessContrast",
+            params: { brightness: 8, contrast: 0 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    intent: "cool_down",
+    patterns: [/冷|cool|清冷/i],
+    desc: "Cool grade (lift blue channel)",
+    build: () => [
+      {
+        cmd: "layer.newAdjustmentLayer.curves",
+        params: {
+          points: [
+            [0, 10],
+            [128, 128],
+            [255, 240],
+          ],
+        },
+      },
+    ],
+    fallbacks: [
+      {
+        level: 1,
+        desc: "Gentler cool grade",
+        build: () => [
+          {
+            cmd: "layer.newAdjustmentLayer.curves",
+            params: {
+              points: [
+                [0, 5],
+                [128, 128],
+                [255, 236],
+              ],
+            },
+          },
+        ],
+      },
+      {
+        level: 2,
+        desc: "Slight blue-channel lift only",
+        build: () => [
+          {
+            cmd: "layer.newAdjustmentLayer.brightnessContrast",
+            params: { brightness: 6, contrast: 0 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    intent: "brighten",
+    patterns: [/亮|bright|提亮|太暗|通透|通透感|不够亮/i],
+    desc: "Brighten",
+    build: (a = {}) => [
+      {
+        cmd: "layer.newAdjustmentLayer.brightnessContrast",
+        params: { brightness: a.brightness ?? 20, contrast: a.contrast ?? 5 },
+      },
+    ],
+    fallbacks: [
+      {
+        level: 1,
+        desc: "Halved brighten",
+        build: (a = {}) => [
+          {
+            cmd: "layer.newAdjustmentLayer.brightnessContrast",
+            params: { brightness: Math.round((a.brightness ?? 20) / 2), contrast: 0 },
+          },
+        ],
+      },
+      {
+        level: 2,
+        desc: "Levels instead (softer)",
+        build: () => [
+          {
+            cmd: "layer.newAdjustmentLayer.levels",
+            params: { inBlack: 0, inWhite: 255, gamma: 1.2 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    intent: "boost_saturation",
+    patterns: [/饱和|鲜艳|vivid|质感|更有质感/i],
+    desc: "Boost saturation",
+    build: (a = {}) => [
+      { cmd: "layer.newAdjustmentLayer.hueSaturation", params: { saturation: a.saturation ?? 20 } },
+    ],
+    fallbacks: [
+      {
+        level: 1,
+        desc: "Halved saturation",
+        build: (a = {}) => [
+          {
+            cmd: "layer.newAdjustmentLayer.hueSaturation",
+            params: { saturation: Math.round((a.saturation ?? 20) / 2) },
+          },
+        ],
+      },
+      {
+        level: 2,
+        desc: "Contrast only, hue untouched",
+        build: () => [
+          {
+            cmd: "layer.newAdjustmentLayer.brightnessContrast",
+            params: { brightness: 0, contrast: 10 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    intent: "resize_for_platform",
+    patterns: [/(?:改成|切成|转成|resize|crop to|resize to)\s*(\d{2,4})\s*[x×*]\s*(\d{2,4})/i],
+    desc: "Platform size: contain + pad (no distortion, no crop)",
+    // contain + pad：电商平台主图的标准做法——缩放到完整放入目标框，短边补白。
+    // 为什么不裁切（cover）：裁掉的价格签/LOGO 是商业元素，丢不得；
+    // 为什么不拉伸：非等比缩放会畸变，保真校验必挂。
+    build: (a = {}) => {
+      const W = a.width ?? 800;
+      const H = a.height ?? 800;
+      const ow = a.origW ?? 1200;
+      const oh = a.origH ?? 900;
+      const s = Math.min(W / ow, H / oh, 1); // contain：不放大
+      const fitW = Math.max(16, Math.round(ow * s));
+      const fitH = Math.max(16, Math.round(oh * s));
+      return [
+        { cmd: "image.imageSize", params: { width: fitW, height: fitH } },
+        {
+          cmd: "image.canvasSize",
+          params: { width: W, height: H, anchor: "center", extensionColor: "white" },
+        },
+      ];
+    },
+    fallbacks: [
+      {
+        level: 1,
+        desc: "Same geometry + fidelity-aligned resample (bilinear)",
+        build: (a = {}) => {
+          const W = a.width ?? 800;
+          const H = a.height ?? 800;
+          const ow = a.origW ?? 1200;
+          const oh = a.origH ?? 900;
+          const s = Math.min(W / ow, H / oh, 1);
+          const fitW = Math.max(16, Math.round(ow * s));
+          const fitH = Math.max(16, Math.round(oh * s));
+          return [
+            { cmd: "image.imageSize", params: { width: fitW, height: fitH, resample: "bilinear" } },
+            {
+              cmd: "image.canvasSize",
+              params: { width: W, height: H, anchor: "center", extensionColor: "white" },
+            },
+          ];
+        },
+      },
+    ],
+  },
+  {
+    intent: "scale_percent",
+    patterns: [/(?:缩小|放大|缩放)\s*(?:到)?\s*(\d{1,3})\s*%/],
+    desc: "Scale by percent",
+    build: (a = {}) => [{ cmd: "image.imageSize", params: { percent: a.percent ?? 50 } }],
+    fallbacks: [],
+  },
+  {
+    intent: "sharpen",
+    patterns: [/锐化|sharpen/i],
+    desc: "Smart sharpen",
+    build: (a = {}) => [{ cmd: "filter.sharpen.smartSharpen", params: { amount: a.amount ?? 80 } }],
+    fallbacks: [
+      {
+        level: 1,
+        desc: "Halved sharpen amount",
+        build: (a = {}) => [
+          {
+            cmd: "filter.sharpen.smartSharpen",
+            params: { amount: Math.round((a.amount ?? 80) / 2), radius: 1 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    intent: "watermark",
+    patterns: [/水印|watermark/i],
+    desc: "Add text watermark (editable text layer)",
+    build: (a = {}) => [
+      {
+        cmd: "type.create",
+        params: {
+          text: a.text || "SUREPIX",
+          x: a.x ?? 40,
+          y: a.y ?? 40,
+          size: a.fontSize ?? 36,
+        },
+      },
+    ],
+    fallbacks: [],
+  },
+  {
+    intent: "remove_bg_white",
+    patterns: [/去背景|抠图|抠出来|白底|纯色背景|背景换成白底|去掉背景|移除背景|去除背景|背景换成白色|换成白色背景|背景变白|把背景.{0,6}白|remove (?:the )?background|remove bg|background removal|knockout|cutout/i],
+    desc: "Knock out background to pure white (e-commerce standard, deterministic)",
+    build: () => [
+      { cmd: "select.subject", params: { sampleAllLayers: true, mode: "replace" } },
+      { cmd: "select.inverse" },
+      { cmd: "edit.fill", params: { contents: "white" } },
+    ],
+    fallbacks: [
+      {
+        level: 1,
+        desc: "Same knockout without sampling all layers",
+        build: () => [
+          { cmd: "select.subject", params: { sampleAllLayers: false, mode: "replace" } },
+          { cmd: "select.inverse" },
+          { cmd: "edit.fill", params: { contents: "white" } },
+        ],
+      },
+    ],
+  },
+  {
+    intent: "remove_bg_transparent",
+    patterns: [/透明背景|透明底|透明底图|保留透明/i],
+    desc: "Remove background to transparency (deterministic)",
+    build: () => [{ cmd: "layer.removeBackground", params: { refine: true } }],
+    fallbacks: [],
+  },
+];
+
+/** 语义级改动意图：白名单覆盖不了，必须走 AI 重生成
+ *  正则约定：
+ *   - 避免单字裸匹配（如「木/石/布」会误中「石榴汁/布局/木讷」），统一用复合词。
+ *   - 删除类动词（去掉/删除/去除）必须带宾语上下文，否则「去掉水印」会与确定性意图混淆。
+ */
+export const GENERATIVE_INTENTS = [
+  {
+    intent: "swap_background",
+    patterns: [
+      /换背景|换成.{1,30}背景(?!白)|场景图?|把背景.{0,12}(?:改成|换成|调成|变)(?!白底|纯色|透明|纯白|白色)|背景换成(?!白底|纯色|透明|纯白|白色)|change (?:the )?background|replace (?:the )?background|new background|background to/i,
+    ],
+    desc: "Swap to a scene/coloured background (semantic; pure white/transparent is deterministic)",
+  },
+  {
+    intent: "change_material",
+    patterns: [
+      /材质|木质|木纹|木制|木材|原木|金属|石材|石质|大理石|石头|布料|布艺|棉布|织物|皮革|material|texture/i,
+    ],
+    desc: "Change material (semantic)",
+  },
+  {
+    intent: "remove_object",
+    patterns: [
+      /抹掉|擦掉|擦除/,
+      /(?:去除|去掉|删除).{0,6}(物体|瑕疵|污点|人|东西|元素|水杯|杂物|污渍|划痕|灰尘|指纹|瑕疵|道具|配饰|物品|摆件)/,
+      /remove (?:the )?(?:background )?(?:object|item|person|thing)/,
+      /erase (?:the )?(?:object|item)/,
+    ],
+    desc: "Remove element (semantic)",
+  },
+  {
+    intent: "change_object_color",
+    patterns: [
+      /(?:瓶身|产品|商品|主体|衣服|机身|外壳|表面).{0,8}(?:颜色|色)/i,
+      /把(?:瓶身|产品|商品|主体|衣服|机身).{0,12}(?:改成|换成).{0,8}(?:色|颜色)/i,
+    ],
+    desc: "Recolour product body (semantic)",
+  },
+  {
+    intent: "style_transfer",
+    patterns: [/风格|style|日系|复古|胶片/i],
+    desc: "Style transfer (semantic)",
+  },
+  {
+    intent: "extend_image",
+    patterns: [/扩展|扩图|延展|outpaint|extend/i],
+    desc: "AI outpaint (semantic)",
+  },
+  {
+    intent: "upscale",
+    patterns: [
+      /高清修复|超分|超分辨率|提升清晰度|清晰化|画质增强|更清晰|变清晰|upscal|super.?res|enhance (?:quality|resolution)/i,
+    ],
+    desc: "Upscale / enhance resolution (semantic)",
+  },
+  {
+    intent: "add_object",
+    patterns: [
+      /加个(杯子|物品|物体|装饰|配饰|花|绿植|道具|植物)/i,
+      /加(?:一|这|那)?(?:个|种|盆|朵|株|棵|些)?(杯子|物品|物体|装饰|配饰|花|绿植|道具|植物)/i,
+      /加(?:一|这|那)?(?:个|种|盆|朵|株|棵|些)?(杯子|物品|物体|装饰|配饰|花|绿植|道具|植物).*(?:在|到|于).*(?:旁边|背景|一侧|前)/i,
+      /添加(?!水印).*(物体|元素|配饰|绿植|道具|植物)/i,
+      /在.*(旁边|背景).*加(?!水印)/i,
+      /add (?:an? |the )?(?:object|item|cup|plant|prop)/i,
+    ],
+    desc: "Add object to scene (semantic)",
+  },
+  {
+    intent: "change_text",
+    patterns: [
+      /(文字|文案|标签|字).*(改|换|替换|写)/i,
+      /修改.*(文字|标签|标)/i,
+      /把.{0,10}(文字|文案|标签|字).{0,8}(改成|换成|替换为)/i,
+      /change (?:the )?(?:text|label|word)/i,
+      /replace (?:the )?text/i,
+    ],
+    desc: "Change text/label in image (semantic)",
+  },
+];
+
+export interface ChainStep {
+  cmd: string;
+  params?: Record<string, unknown>;
+}
+
+/** 意图探测：一条指令可能同时含确定性意图和语义级意图——路由算法的输入 */
+export function detectIntents(instruction: string): {
+  deterministic: IntentTemplate[];
+  generative: typeof GENERATIVE_INTENTS;
+} {
+  const deterministic = INTENT_TEMPLATES.filter((t) =>
+    t.patterns.some((re) => re.test(instruction)),
+  );
+  const generative = GENERATIVE_INTENTS.filter((g) =>
+    g.patterns.some((re) => re.test(instruction)),
+  );
+  return { deterministic, generative };
+}
+
+/** 多意图合并时的执行顺序（关键：PhotoCraft 的 active-layer 是状态化的）。
+ *  需要像素层活跃的操作（去背景/改尺寸/水印/锐化滤镜）必须排在所有"调整层类"操作之前，
+ *  否则后续的 edit.fill / smartSharpen 会因 active layer 变成 Adjustment layer 而报错。
+ *  分层：0 去背景 → 1 改尺寸 → 2 水印 → 3 锐化滤镜 → 4 调色调整层。 */
+const MERGE_PRIORITY: Record<string, number> = {
+  remove_bg_transparent: 0,
+  remove_bg_white: 0,
+  resize_for_platform: 1,
+  scale_percent: 1,
+  watermark: 2,
+  sharpen: 3,
+  warm_up: 4,
+  cool_down: 4,
+  brighten: 4,
+  boost_saturation: 4,
+};
+export const mergeRank = (i: string) => MERGE_PRIORITY[i] ?? 5;
+
+/** 把一条自然语言修图指令映射为命令链（origW/origH 供几何类模板计算 contain/pad）
+ *  多确定性意图：合并所有命中的模板链，并按 MERGE_PRIORITY 排序后拼接 */
+export function planChain(
+  instruction: string,
+  origW?: number,
+  origH?: number,
+):
+  | { ok: true; intent: string; intents: string[]; desc: string; chain: ChainStep[]; args: BuildArgs }
+  | { ok: false; error: string } {
+  const matchedAll = INTENT_TEMPLATES.filter((t) => t.patterns.some((re) => re.test(instruction)));
+  if (matchedAll.length === 0) return { ok: false, error: "no intent matched" };
+  const matched = [...matchedAll].sort((a, b) => mergeRank(a.intent) - mergeRank(b.intent));
+  const args: BuildArgs = {};
+  const m = instruction.match(/(\d{2,4})\s*[x×*]\s*(\d{2,4})/i);
+  if (m) {
+    args.width = Number(m[1]);
+    args.height = Number(m[2]);
+  }
+  const p = instruction.match(/(\d{1,3})\s*%/);
+  if (p) args.percent = Number(p[1]);
+  if (origW) args.origW = origW;
+  if (origH) args.origH = origH;
+  const chain: ChainStep[] = [];
+  let emittedBg = false;
+  for (const t of matched) {
+    const isBg = t.intent === "remove_bg_white" || t.intent === "remove_bg_transparent";
+    // 背景选区在 edit.fill 后仍激活，会让后续调整层被"选区蒙版"限制到背景 → 跨过背景块进入调整层前先取消选区
+    if (emittedBg && !isBg) {
+      chain.push({ cmd: "select.deselect" });
+      emittedBg = false;
+    }
+    if (isBg) emittedBg = true;
+    chain.push(...t.build(args));
+  }
+  const intents = matched.map((t) => t.intent);
+  return {
+    ok: true,
+    intent: intents.join("+"),
+    intents,
+    desc: matched.map((t) => t.desc).join("; "),
+    chain,
+    args,
+  };
+}
+
+/** 校验命令链：命令在白名单 + 参数过 schema（四层拦截） */
+export function validateCommandChain(chain: ChainStep[]): { ok: boolean; error?: string } {
+  if (!Array.isArray(chain) || chain.length === 0) {
+    return { ok: false, error: "chain must be a non-empty array" };
+  }
+  if (chain.length > 8) {
+    return { ok: false, error: "chain too long (max 8 steps)" };
+  }
+  for (const step of chain) {
+    const spec = ALLOWED[step.cmd];
+    if (!spec) {
+      return { ok: false, error: `command not in whitelist: ${step.cmd}` };
+    }
+    if (step.params) {
+      for (const [key, val] of Object.entries(step.params)) {
+        const ps = spec.params[key];
+        if (!ps) {
+          return { ok: false, error: `param not allowed for ${step.cmd}: ${key}` };
+        }
+        const check = validators[ps.type];
+        if (!check || !check(val, ps.range)) {
+          return {
+            ok: false,
+            error: `param out of range/invalid: ${step.cmd}.${key}=${JSON.stringify(val)}`,
+          };
+        }
+      }
+    }
+    for (const [key, ps] of Object.entries(spec.params)) {
+      if (ps.required && !(step.params && key in step.params)) {
+        return { ok: false, error: `missing required param: ${step.cmd}.${key}` };
+      }
+    }
+  }
+  return { ok: true };
+}

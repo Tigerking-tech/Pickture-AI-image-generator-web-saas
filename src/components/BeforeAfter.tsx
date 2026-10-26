@@ -1,1 +1,159 @@
-InVzZSBjbGllbnQiOwoKaW1wb3J0IHsgdXNlQ2FsbGJhY2ssIHVzZUVmZmVjdCwgdXNlUmVmLCB1c2VTdGF0ZSB9IGZyb20gInJlYWN0IjsKCi8qID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQogICBCZWZvcmUgLyBBZnRlciDlr7nmr5Tmu5HlnZcg4oCUIOaLluWKqOWIhuWJsue6v+WvueavlOe8lui+keWJjeWQjuOAggogICBMYW5kaW5nIOS4jiBEZW1vIOWFseeUqOOAguaUr+aMgeaMh+mSiOaLluWKqOS4jumUruebmO+8iOW3puWPs+eureWktO+8ieOAggoKICAg56e75Yqo56uv5Y+v6Z2g5oCn77yI5LiJ6YeN5L+d6Zmp77yJ77yaCiAgIDEuIENTUyBgdG91Y2gtYWN0aW9uOiBub25lYO+8iGdsb2JhbHMuY3Nz77yJ4oCU4oCU6Zi75q2i5rWP6KeI5Zmo5oqKCiAgICAgIOaJi+WKv+aKoui1sOW9k+mhtemdoua7muWKqO+8iOWQpuWImeaJi+aMh+eojeaciee6teWQkeWBj+enu+WwsSBwb2ludGVyY2FuY2Vs77yJ44CCCiAgIDIuIOaMh+mSiOaNleiOt+iuvuWcqOWuueWZqO+8iGN1cnJlbnRUYXJnZXTvvInkuIrvvIxtb3ZlIOWNs+S+v+enu+WHuuWFg+e0oAogICAgICDkuZ/nu6fnu63pgIHovr7vvJvlj6bmjIIgd2luZG93IOe6pyBtb3ZlL3VwIOWFnOW6le+8iGNhcHR1cmUg5LiN5Y+v55So5pe277yJ44CCCiAgIDMuIOWOn+eUn+mdnuiiq+WKqCB0b3VjaCDkuovku7blhZzlupXigJTigJTkuKrliKsgV2ViVmlldyDnmoQgUG9pbnRlcgogICAgICBFdmVudHMg6Kem5pG45pSv5oyB5LiN5a6M5pW05pe25LuN5Y+v5ouW5Yqo77ybcHJldmVudERlZmF1bHQg6ZyA6Z2e6KKr5YqoCiAgICAgIOebkeWQrO+8iFJlYWN0IOWQiOaIkCBvblRvdWNoTW92ZSDmmK/ooqvliqjnmoTvvIzkuI3og73nlKjmnaXpmLvmraLmu5rliqjvvInjgIIKICAgPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09ICovCgppbnRlcmZhY2UgQmVmb3JlQWZ0ZXJQcm9wcyB7CiAgYmVmb3JlOiBzdHJpbmc7CiAgYWZ0ZXI6IHN0cmluZzsKICBhbHRCZWZvcmU/OiBzdHJpbmc7CiAgYWx0QWZ0ZXI/OiBzdHJpbmc7CiAgLyoqIOWIneWni+WIhuWJsue6v+S9jee9ru+8iDAtMTAw77yJICovCiAgaW5pdGlhbD86IG51bWJlcjsKICAvKiog5piv5ZCm5pi+56S65bem5LiLL+WPs+S4i+inkuagh+etviAqLwogIGxhYmVscz86IGJvb2xlYW47CiAgY2xhc3NOYW1lPzogc3RyaW5nOwp9CgpleHBvcnQgZnVuY3Rpb24gQmVmb3JlQWZ0ZXIoewogIGJlZm9yZSwKICBhZnRlciwKICBhbHRCZWZvcmUgPSAiT3JpZ2luYWwiLAogIGFsdEFmdGVyID0gIkVkaXRlZCIsCiAgaW5pdGlhbCA9IDU1LAogIGxhYmVscyA9IHRydWUsCiAgY2xhc3NOYW1lID0gIiIsCn06IEJlZm9yZUFmdGVyUHJvcHMpIHsKICBjb25zdCBbcG9zLCBzZXRQb3NdID0gdXNlU3RhdGUoaW5pdGlhbCk7CiAgY29uc3QgcmVmID0gdXNlUmVmPEhUTUxEaXZFbGVtZW50PihudWxsKTsKICBjb25zdCBkcmFnZ2luZyA9IHVzZVJlZihmYWxzZSk7CgogIGNvbnN0IHNldEZyb21DbGllbnRYID0gdXNlQ2FsbGJhY2soKGNsaWVudFg6IG51bWJlcikgPT4gewogICAgY29uc3QgZWwgPSByZWYuY3VycmVudDsKICAgIGlmICghZWwpIHJldHVybjsKICAgIGNvbnN0IHIgPSBlbC5nZXRCb3VuZGluZ0NsaWVudFJlY3QoKTsKICAgIGNvbnN0IHAgPSAoKGNsaWVudFggLSByLmxlZnQpIC8gci53aWR0aCkgKiAxMDA7CiAgICBzZXRQb3MoTWF0aC5taW4oMTAwLCBNYXRoLm1heCgwLCBwKSkpOwogIH0sIFtdKTsKCiAgLyogLS0tLS0tLS0tLSDljp/nlJ/pnZ7ooqvliqggdG91Y2gg5YWc5bqV77yI5ZyoIGVmZmVjdCDkuK3mjILliLDlrrnlmajvvIkgLS0tLS0tLS0tLSAqLwogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBjb25zdCBlbCA9IHJlZi5jdXJyZW50OwogICAgaWYgKCFlbCkgcmV0dXJuOwogICAgY29uc3QgdHMgPSAoZTogVG91Y2hFdmVudCkgPT4gewogICAgICBkcmFnZ2luZy5jdXJyZW50ID0gdHJ1ZTsKICAgICAgaWYgKGUudG91Y2hlc1swXSkgc2V0RnJvbUNsaWVudFgoZS50b3VjaGVzWzBdLmNsaWVudFgpOwogICAgfTsKICAgIGNvbnN0IHRtID0gKGU6IFRvdWNoRXZlbnQpID0+IHsKICAgICAgaWYgKCFkcmFnZ2luZy5jdXJyZW50KSByZXR1cm47CiAgICAgIGUucHJldmVudERlZmF1bHQoKTsgLy8g6Z2e6KKr5Yqo55uR5ZCs77yM5Y+v5pyJ5pWI6Zi75q2i6aG16Z2i5rua5Yqo5oqi5omL5Yq/CiAgICAgIGlmIChlLnRvdWNoZXNbMF0pIHNldEZyb21DbGllbnRYKGUudG91Y2hlc1swXS5jbGllbnRYKTsKICAgIH07CiAgICBjb25zdCB0ZSA9ICgpID0+IHsKICAgICAgZHJhZ2dpbmcuY3VycmVudCA9IGZhbHNlOwogICAgfTsKICAgIGVsLmFkZEV2ZW50TGlzdGVuZXIoInRvdWNoc3RhcnQiLCB0cywgeyBwYXNzaXZlOiBmYWxzZSB9KTsKICAgIGVsLmFkZEV2ZW50TGlzdGVuZXIoInRvdWNobW92ZSIsIHRtLCB7IHBhc3NpdmU6IGZhbHNlIH0pOwogICAgZWwuYWRkRXZlbnRMaXN0ZW5lcigidG91Y2hlbmQiLCB0ZSk7CiAgICBlbC5hZGRFdmVudExpc3RlbmVyKCJ0b3VjaGNhbmNlbCIsIHRlKTsKICAgIHJldHVybiAoKSA9PiB7CiAgICAgIGVsLnJlbW92ZUV2ZW50TGlzdGVuZXIoInRvdWNoc3RhcnQiLCB0cyk7CiAgICAgIGVsLnJlbW92ZUV2ZW50TGlzdGVuZXIoInRvdWNobW92ZSIsIHRtKTsKICAgICAgZWwucmVtb3ZlRXZlbnRMaXN0ZW5lcigidG91Y2hlbmQiLCB0ZSk7CiAgICAgIGVsLnJlbW92ZUV2ZW50TGlzdGVuZXIoInRvdWNoY2FuY2VsIiwgdGUpOwogICAgfTsKICB9LCBbc2V0RnJvbUNsaWVudFhdKTsKCiAgLyogLS0tLS0tLS0tLSBQb2ludGVyIEV2ZW50cyDkuLvot6/lvoQgLS0tLS0tLS0tLSAqLwogIC8vIHdpbmRvdyDnuqflhZzlupXlpITnkIblv4XpobvnlKjnqLPlrprlvJXnlKjvvJrmi5bliqjkuK0gc2V0UG9zIOS8muinpuWPkemHjea4suafk++8jAogIC8vIOiLpeeUqOavj+asoea4suafk+aWsOW7uueahOWHveaVsO+8jHVwIOaXtiByZW1vdmVFdmVudExpc3RlbmVyIOS8muenu+mZpOmUmeWvueixoeWvvOiHtOazhOa8jwogIGNvbnN0IG9uV2luTW92ZSA9IHVzZUNhbGxiYWNrKAogICAgKGU6IFBvaW50ZXJFdmVudCkgPT4gewogICAgICBpZiAoZHJhZ2dpbmcuY3VycmVudCkgc2V0RnJvbUNsaWVudFgoZS5jbGllbnRYKTsKICAgIH0sCiAgICBbc2V0RnJvbUNsaWVudFhdLAogICk7CiAgY29uc3Qgb25XaW5VcCA9IHVzZUNhbGxiYWNrKCgpID0+IHsKICAgIGRyYWdnaW5nLmN1cnJlbnQgPSBmYWxzZTsKICAgIHdpbmRvdy5yZW1vdmVFdmVudExpc3RlbmVyKCJwb2ludGVybW92ZSIsIG9uV2luTW92ZSk7CiAgICB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcigicG9pbnRlcnVwIiwgb25XaW5VcCk7CiAgICB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcigicG9pbnRlcmNhbmNlbCIsIG9uV2luVXApOwogIH0sIFtvbldpbk1vdmVdKTsKCiAgY29uc3Qgb25Qb2ludGVyRG93biA9IChlOiBSZWFjdC5Qb2ludGVyRXZlbnQpID0+IHsKICAgIGRyYWdnaW5nLmN1cnJlbnQgPSB0cnVlOwogICAgLy8g5o2V6I636K6+5Zyo5a655Zmo5LiK77ya5ouW5Ye65YWD57Sg6L6555WMIG1vdmUg5LuN6YCB6L6+CiAgICB0cnkgewogICAgICAoZS5jdXJyZW50VGFyZ2V0IGFzIEhUTUxFbGVtZW50KS5zZXRQb2ludGVyQ2FwdHVyZT8uKGUucG9pbnRlcklkKTsKICAgIH0gY2F0Y2ggewogICAgICAvKiDogIHnjq/looPkuI3mlK/mjIHliJnnlLEgd2luZG93IOWFnOW6lSAqLwogICAgfQogICAgLy8gd2luZG93IOe6p+WFnOW6le+8mmNhcHR1cmUg5aSx6LSlL+acquinpuWPkeaXtuS7jeiDvei3n+i4qiBtb3ZlIOS4jiB1cAogICAgd2luZG93LmFkZEV2ZW50TGlzdGVuZXIoInBvaW50ZXJtb3ZlIiwgb25XaW5Nb3ZlKTsKICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCJwb2ludGVydXAiLCBvbldpblVwKTsKICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCJwb2ludGVyY2FuY2VsIiwgb25XaW5VcCk7CiAgICBzZXRGcm9tQ2xpZW50WChlLmNsaWVudFgpOwogIH07CiAgY29uc3Qgb25Qb2ludGVyTW92ZSA9IChlOiBSZWFjdC5Qb2ludGVyRXZlbnQpID0+IHsKICAgIGlmIChkcmFnZ2luZy5jdXJyZW50KSBzZXRGcm9tQ2xpZW50WChlLmNsaWVudFgpOwogIH07CiAgY29uc3Qgb25Qb2ludGVyVXAgPSB1c2VDYWxsYmFjaygoKSA9PiB7CiAgICBvbldpblVwKCk7CiAgfSwgW29uV2luVXBdKTsKICBjb25zdCBvbktleSA9IChlOiBSZWFjdC5LZXlib2FyZEV2ZW50KSA9PiB7CiAgICBpZiAoZS5rZXkgPT09ICJBcnJvd0xlZnQiKSB7CiAgICAgIGUucHJldmVudERlZmF1bHQoKTsKICAgICAgc2V0UG9zKChwKSA9PiBNYXRoLm1heCgwLCBwIC0gNCkpOwogICAgfSBlbHNlIGlmIChlLmtleSA9PT0gIkFycm93UmlnaHQiKSB7CiAgICAgIGUucHJldmVudERlZmF1bHQoKTsKICAgICAgc2V0UG9zKChwKSA9PiBNYXRoLm1pbigxMDAsIHAgKyA0KSk7CiAgICB9CiAgfTsKCiAgcmV0dXJuICgKICAgIDxkaXYKICAgICAgcmVmPXtyZWZ9CiAgICAgIGNsYXNzTmFtZT17YGJhICR7Y2xhc3NOYW1lfWB9CiAgICAgIHN0eWxlPXt7ICItLXBvcyI6IGAke3Bvc30lYCB9IGFzIFJlYWN0LkNTU1Byb3BlcnRpZXN9CiAgICAgIG9uUG9pbnRlckRvd249e29uUG9pbnRlckRvd259CiAgICAgIG9uUG9pbnRlck1vdmU9e29uUG9pbnRlck1vdmV9CiAgICAgIG9uUG9pbnRlclVwPXtvblBvaW50ZXJVcH0KICAgICAgb25Qb2ludGVyQ2FuY2VsPXtvblBvaW50ZXJVcH0KICAgID4KICAgICAgPGltZyBzcmM9e2JlZm9yZX0gYWx0PXthbHRCZWZvcmV9IGRyYWdnYWJsZT17ZmFsc2V9IC8+CiAgICAgIDxpbWcgc3JjPXthZnRlcn0gYWx0PXthbHRBZnRlcn0gY2xhc3NOYW1lPSJiYS1hZnRlciIgZHJhZ2dhYmxlPXtmYWxzZX0gLz4KICAgICAge2xhYmVscyAmJiAoCiAgICAgICAgPD4KICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iYmEtbGFiZWwgYmVmb3JlIj5CZWZvcmU8L3NwYW4+CiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9ImJhLWxhYmVsIGFmdGVyIj5BZnRlcjwvc3Bhbj4KICAgICAgICA8Lz4KICAgICAgKX0KICAgICAgPGRpdiBjbGFzc05hbWU9ImJhLWRpdmlkZXIiIGFyaWEtaGlkZGVuPSJ0cnVlIiAvPgogICAgICA8YnV0dG9uCiAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgIGNsYXNzTmFtZT0iYmEtaGFuZGxlIgogICAgICAgIHJvbGU9InNsaWRlciIKICAgICAgICBhcmlhLWxhYmVsPSJDb21wYXJlIGJlZm9yZSBhbmQgYWZ0ZXIiCiAgICAgICAgYXJpYS12YWx1ZW1pbj17MH0KICAgICAgICBhcmlhLXZhbHVlbWF4PXsxMDB9CiAgICAgICAgYXJpYS12YWx1ZW5vdz17TWF0aC5yb3VuZChwb3MpfQogICAgICAgIG9uS2V5RG93bj17b25LZXl9CiAgICAgID4KICAgICAgICDihpQKICAgICAgPC9idXR0b24+CiAgICA8L2Rpdj4KICApOwp9Cg==
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+/* ============================================================
+   Before / After 对比滑块 — 拖动分割线对比编辑前后。
+   Landing 与 Demo 共用。支持指针拖动与键盘（左右箭头）。
+
+   移动端可靠性（三重保险）：
+   1. CSS `touch-action: none`（globals.css）——阻止浏览器把
+      手势抢走当页面滚动（否则手指稍有纵向偏移就 pointercancel）。
+   2. 指针捕获设在容器（currentTarget）上，move 即便移出元素
+      也继续送达；另挂 window 级 move/up 兜底（capture 不可用时）。
+   3. 原生非被动 touch 事件兜底——个别 WebView 的 Pointer
+      Events 触摸支持不完整时仍可拖动；preventDefault 需非被动
+      监听（React 合成 onTouchMove 是被动的，不能用来阻止滚动）。
+   ============================================================ */
+
+interface BeforeAfterProps {
+  before: string;
+  after: string;
+  altBefore?: string;
+  altAfter?: string;
+  /** 初始分割线位置（0-100） */
+  initial?: number;
+  /** 是否显示左下/右下角标签 */
+  labels?: boolean;
+  className?: string;
+}
+
+export function BeforeAfter({
+  before,
+  after,
+  altBefore = "Original",
+  altAfter = "Edited",
+  initial = 55,
+  labels = true,
+  className = "",
+}: BeforeAfterProps) {
+  const [pos, setPos] = useState(initial);
+  const ref = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const setFromClientX = useCallback((clientX: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const p = ((clientX - r.left) / r.width) * 100;
+    setPos(Math.min(100, Math.max(0, p)));
+  }, []);
+
+  /* ---------- 原生非被动 touch 兜底（在 effect 中挂到容器） ---------- */
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ts = (e: TouchEvent) => {
+      dragging.current = true;
+      if (e.touches[0]) setFromClientX(e.touches[0].clientX);
+    };
+    const tm = (e: TouchEvent) => {
+      if (!dragging.current) return;
+      e.preventDefault(); // 非被动监听，可有效阻止页面滚动抢手势
+      if (e.touches[0]) setFromClientX(e.touches[0].clientX);
+    };
+    const te = () => {
+      dragging.current = false;
+    };
+    el.addEventListener("touchstart", ts, { passive: false });
+    el.addEventListener("touchmove", tm, { passive: false });
+    el.addEventListener("touchend", te);
+    el.addEventListener("touchcancel", te);
+    return () => {
+      el.removeEventListener("touchstart", ts);
+      el.removeEventListener("touchmove", tm);
+      el.removeEventListener("touchend", te);
+      el.removeEventListener("touchcancel", te);
+    };
+  }, [setFromClientX]);
+
+  /* ---------- Pointer Events 主路径 ---------- */
+  // window 级兜底处理必须用稳定引用：拖动中 setPos 会触发重渲染，
+  // 若用每次渲染新建的函数，up 时 removeEventListener 会移除错对象导致泄漏
+  const onWinMove = useCallback(
+    (e: PointerEvent) => {
+      if (dragging.current) setFromClientX(e.clientX);
+    },
+    [setFromClientX],
+  );
+  const onWinUp = useCallback(() => {
+    dragging.current = false;
+    window.removeEventListener("pointermove", onWinMove);
+    window.removeEventListener("pointerup", onWinUp);
+    window.removeEventListener("pointercancel", onWinUp);
+  }, [onWinMove]);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    dragging.current = true;
+    // 捕获设在容器上：拖出元素边界 move 仍送达
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    } catch {
+      /* 老环境不支持则由 window 兜底 */
+    }
+    // window 级兜底：capture 失败/未触发时仍能跟踪 move 与 up
+    window.addEventListener("pointermove", onWinMove);
+    window.addEventListener("pointerup", onWinUp);
+    window.addEventListener("pointercancel", onWinUp);
+    setFromClientX(e.clientX);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (dragging.current) setFromClientX(e.clientX);
+  };
+  const onPointerUp = useCallback(() => {
+    onWinUp();
+  }, [onWinUp]);
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      setPos((p) => Math.max(0, p - 4));
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      setPos((p) => Math.min(100, p + 4));
+    }
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={`ba ${className}`}
+      style={{ "--pos": `${pos}%` } as React.CSSProperties}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+    >
+      <img src={before} alt={altBefore} draggable={false} />
+      <img src={after} alt={altAfter} className="ba-after" draggable={false} />
+      {labels && (
+        <>
+          <span className="ba-label before">Before</span>
+          <span className="ba-label after">After</span>
+        </>
+      )}
+      <div className="ba-divider" aria-hidden="true" />
+      <button
+        type="button"
+        className="ba-handle"
+        role="slider"
+        aria-label="Compare before and after"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(pos)}
+        onKeyDown={onKey}
+      >
+        ↔
+      </button>
+    </div>
+  );
+}

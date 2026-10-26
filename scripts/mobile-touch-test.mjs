@@ -1,1 +1,86 @@
-aW1wb3J0IHsgY2hyb21pdW0gfSBmcm9tICdwbGF5d3JpZ2h0JzsKCmNvbnN0IFVSTCA9ICdodHRwOi8vbG9jYWxob3N0OjMwMDAvJzsKY29uc3QgYnJvd3NlciA9IGF3YWl0IGNocm9taXVtLmxhdW5jaCgpOwpjb25zdCBjb250ZXh0ID0gYXdhaXQgYnJvd3Nlci5uZXdDb250ZXh0KHsKICB2aWV3cG9ydDogeyB3aWR0aDogMzkwLCBoZWlnaHQ6IDg0NCB9LAogIGhhc1RvdWNoOiB0cnVlLAogIGlzTW9iaWxlOiB0cnVlLAogIGRldmljZVNjYWxlRmFjdG9yOiAyLAp9KTsKY29uc3QgcGFnZSA9IGF3YWl0IGNvbnRleHQubmV3UGFnZSgpOwpjb25zdCBlcnJvcnMgPSBbXTsKcGFnZS5vbignY29uc29sZScsIChtKSA9PiB7IGlmIChtLnR5cGUoKSA9PT0gJ2Vycm9yJykgZXJyb3JzLnB1c2gobS50ZXh0KCkpOyB9KTsKcGFnZS5vbigncGFnZWVycm9yJywgKGUpID0+IGVycm9ycy5wdXNoKCdQQUdFRVJSOiAnICsgZS5tZXNzYWdlKSk7Cgphd2FpdCBwYWdlLmdvdG8oVVJMLCB7IHdhaXRVbnRpbDogJ25ldHdvcmtpZGxlJyB9KTsKCi8vIC0tLS0gVGVzdCAxOiBoZXJvIGJlZm9yZS9hZnRlciBzbGlkZXIgdmlhIHJlYWwgdG91Y2ggKHdpdGggdmVydGljYWwgZHJpZnQpIC0tLS0KY29uc3Qgc2xpZGVyID0gcGFnZS5sb2NhdG9yKCdbcm9sZT1zbGlkZXJdJykuZmlyc3QoKTsKYXdhaXQgc2xpZGVyLnNjcm9sbEludG9WaWV3SWZOZWVkZWQoKTsKY29uc3QgYm94ID0gYXdhaXQgc2xpZGVyLmJvdW5kaW5nQm94KCk7CmNvbnN0IGN4ID0gYm94LnggKyBib3gud2lkdGggLyAyOwpjb25zdCBjeSA9IGJveC55ICsgYm94LmhlaWdodCAvIDI7CmNvbnN0IGJlZm9yZSA9IGF3YWl0IHNsaWRlci5nZXRBdHRyaWJ1dGUoJ2FyaWEtdmFsdWVub3cnKTsKCmNvbnN0IGNsaWVudCA9IGF3YWl0IGNvbnRleHQubmV3Q0RQU2Vzc2lvbihwYWdlKTsKYXdhaXQgY2xpZW50LnNlbmQoJ0lucHV0LmRpc3BhdGNoVG91Y2hFdmVudCcsIHsgdHlwZTogJ3RvdWNoU3RhcnQnLCB0b3VjaFBvaW50czogW3sgeDogY3gsIHk6IGN5IH1dIH0pOwpjb25zdCB0YXJnZXRYID0gY3ggLSAxNTA7CmZvciAobGV0IGkgPSAxOyBpIDw9IDY7IGkrKykgewogIGNvbnN0IHggPSBjeCArICgodGFyZ2V0WCAtIGN4KSAqIGkpIC8gNjsKICBjb25zdCB5ID0gY3kgKyA0NSAqIE1hdGguc2luKGkgKiAxLjEpOyAvLyB2ZXJ0aWNhbCBmaW5nZXIgZHJpZnQKICBhd2FpdCBjbGllbnQuc2VuZCgnSW5wdXQuZGlzcGF0Y2hUb3VjaEV2ZW50JywgeyB0eXBlOiAndG91Y2hNb3ZlJywgdG91Y2hQb2ludHM6IFt7IHgsIHkgfV0gfSk7Cn0KYXdhaXQgY2xpZW50LnNlbmQoJ0lucHV0LmRpc3BhdGNoVG91Y2hFdmVudCcsIHsgdHlwZTogJ3RvdWNoRW5kJywgdG91Y2hQb2ludHM6IFtdIH0pOwphd2FpdCBwYWdlLndhaXRGb3JUaW1lb3V0KDMwMCk7CmNvbnN0IGFmdGVyVG91Y2ggPSBhd2FpdCBzbGlkZXIuZ2V0QXR0cmlidXRlKCdhcmlhLXZhbHVlbm93Jyk7CmNvbnNvbGUubG9nKGBbSEVSTyB0b3VjaCBkcmFnXSBiZWZvcmU9JHtiZWZvcmV9IGFmdGVyPSR7YWZ0ZXJUb3VjaH0gY2hhbmdlZD0ke2JlZm9yZSAhPT0gYWZ0ZXJUb3VjaH1gKTsKCi8vIHNjcmVlbnNob3QgcHJvb2YKYXdhaXQgcGFnZS5zY3JlZW5zaG90KHsgcGF0aDogJy93b3Jrc3BhY2UvdmVyaWZ5LWV2aWRlbmNlLzE0LW1vYmlsZS1oZXJvLnBuZycgfSk7CgovLyAtLS0tIFRlc3QgMjogY2FwYWJpbGl0eSB0YWIgc3dpdGNoIG9uIG1vYmlsZSAocmVhbCB0YXApIC0tLS0KY29uc3QgdGFiID0gcGFnZS5nZXRCeVJvbGUoJ3RhYicsIHsgbmFtZTogJ0Nyb3AgJiByZXNpemUnIH0pOwppZiAoYXdhaXQgdGFiLmNvdW50KCkpIHsKICBhd2FpdCB0YWIuc2Nyb2xsSW50b1ZpZXdJZk5lZWRlZCgpOwogIGF3YWl0IHRhYi50YXAoKTsKICBhd2FpdCBwYWdlLndhaXRGb3JUaW1lb3V0KDMwMCk7CiAgY29uc3Qgc2VsZWN0ZWQgPSBhd2FpdCBwYWdlLmxvY2F0b3IoJ1tyb2xlPXRhYl1bYXJpYS1zZWxlY3RlZD0idHJ1ZSJdJykuaW5uZXJUZXh0KCk7CiAgY29uc29sZS5sb2coYFtNT0JJTEUgdGFiXSBzZWxlY3RlZCBub3c6ICR7c2VsZWN0ZWQudHJpbSgpfWApOwp9CgovLyAtLS0tIFRlc3QgMzogY29uc29sZSBlcnJvcnMgb24gbGFuZGluZyAtLS0tCmNvbnNvbGUubG9nKGBbTEFORElORyBjb25zb2xlIGVycm9yc10gJHtlcnJvcnMubGVuZ3RoID8gSlNPTi5zdHJpbmdpZnkoZXJyb3JzKSA6ICdub25lJ31gKTsKCi8vIC0tLS0gVGVzdCA0OiBkZW1vIHBhZ2UgY29uc29sZSBlcnJvcnMgKyBydW4gYW4gZWRpdCAtLS0tCmNvbnN0IGRFcnJvcnMgPSBbXTsKY29uc3QgZFBhZ2UgPSBhd2FpdCBjb250ZXh0Lm5ld1BhZ2UoKTsKZFBhZ2Uub24oJ2NvbnNvbGUnLCAobSkgPT4geyBpZiAobS50eXBlKCkgPT09ICdlcnJvcicpIGRFcnJvcnMucHVzaChtLnRleHQoKSk7IH0pOwpkUGFnZS5vbigncGFnZWVycm9yJywgKGUpID0+IGRFcnJvcnMucHVzaCgnUEFHRUVSUjogJyArIGUubWVzc2FnZSkpOwphd2FpdCBkUGFnZS5nb3RvKCdodHRwOi8vbG9jYWxob3N0OjMwMDAvZGVtbycsIHsgd2FpdFVudGlsOiAnbmV0d29ya2lkbGUnIH0pOwovLyB0YXAgIkJyaWdodGVuIiB0aGVuICJSdW4gJiB2ZXJpZnkiCmF3YWl0IGRQYWdlLmdldEJ5Um9sZSgnYnV0dG9uJywgeyBuYW1lOiAvQnJpZ2h0ZW4vIH0pLnRhcCgpOwphd2FpdCBkUGFnZS5nZXRCeVJvbGUoJ2J1dHRvbicsIHsgbmFtZTogL1J1biAmIHZlcmlmeS8gfSkudGFwKCk7CmF3YWl0IGRQYWdlLndhaXRGb3JUaW1lb3V0KDM1MDApOwpjb25zdCBoYXNSZXBvcnQgPSBhd2FpdCBkUGFnZS5nZXRCeVRleHQoJ1BpcGVsaW5lIHJlcG9ydCcpLmNvdW50KCk7CmNvbnNvbGUubG9nKGBbREVNTyBlZGl0XSBwaXBlbGluZSByZXBvcnQgdmlzaWJsZT0ke2hhc1JlcG9ydCA+IDB9YCk7Ci8vIG1vYmlsZSBiZWZvcmUvYWZ0ZXIgYWZ0ZXIgZWRpdApjb25zdCBkU2xpZGVyID0gZFBhZ2UubG9jYXRvcignW3JvbGU9c2xpZGVyXScpLmZpcnN0KCk7CmlmIChhd2FpdCBkU2xpZGVyLmNvdW50KCkpIHsKICBjb25zdCBiMiA9IGF3YWl0IGRTbGlkZXIuYm91bmRpbmdCb3goKTsKICBjb25zdCB4MiA9IGIyLnggKyBiMi53aWR0aCAvIDIsIHkyID0gYjIueSArIGIyLmhlaWdodCAvIDI7CiAgY29uc3QgYmVmb3JlMiA9IGF3YWl0IGRTbGlkZXIuZ2V0QXR0cmlidXRlKCdhcmlhLXZhbHVlbm93Jyk7CiAgY29uc3QgYzIgPSBhd2FpdCBjb250ZXh0Lm5ld0NEUFNlc3Npb24oZFBhZ2UpOwogIGF3YWl0IGMyLnNlbmQoJ0lucHV0LmRpc3BhdGNoVG91Y2hFdmVudCcsIHsgdHlwZTogJ3RvdWNoU3RhcnQnLCB0b3VjaFBvaW50czogW3sgeDogeDIsIHk6IHkyIH1dIH0pOwogIGZvciAobGV0IGkgPSAxOyBpIDw9IDU7IGkrKykgewogICAgYXdhaXQgYzIuc2VuZCgnSW5wdXQuZGlzcGF0Y2hUb3VjaEV2ZW50JywgeyB0eXBlOiAndG91Y2hNb3ZlJywgdG91Y2hQb2ludHM6IFt7IHg6IHgyIC0gMTIwICogKGkgLyA1KSwgeTogeTIgKyAzMCAqIE1hdGguc2luKGkpIH1dIH0pOwogIH0KICBhd2FpdCBjMi5zZW5kKCdJbnB1dC5kaXNwYXRjaFRvdWNoRXZlbnQnLCB7IHR5cGU6ICd0b3VjaEVuZCcsIHRvdWNoUG9pbnRzOiBbXSB9KTsKICBhd2FpdCBkUGFnZS53YWl0Rm9yVGltZW91dCgzMDApOwogIGNvbnN0IGFmdGVyMiA9IGF3YWl0IGRTbGlkZXIuZ2V0QXR0cmlidXRlKCdhcmlhLXZhbHVlbm93Jyk7CiAgY29uc29sZS5sb2coYFtERU1PIHRvdWNoIGRyYWddIGJlZm9yZT0ke2JlZm9yZTJ9IGFmdGVyPSR7YWZ0ZXIyfSBjaGFuZ2VkPSR7YmVmb3JlMiAhPT0gYWZ0ZXIyfWApOwp9CmNvbnNvbGUubG9nKGBbREVNTyBjb25zb2xlIGVycm9yc10gJHtkRXJyb3JzLmxlbmd0aCA/IEpTT04uc3RyaW5naWZ5KGRFcnJvcnMpIDogJ25vbmUnfWApOwoKYXdhaXQgYnJvd3Nlci5jbG9zZSgpOwpjb25zb2xlLmxvZygnTU9CSUxFIFRFU1QgRE9ORScpOwo=
+import { chromium } from 'playwright';
+
+const URL = 'http://localhost:3000/';
+const browser = await chromium.launch();
+const context = await browser.newContext({
+  viewport: { width: 390, height: 844 },
+  hasTouch: true,
+  isMobile: true,
+  deviceScaleFactor: 2,
+});
+const page = await context.newPage();
+const errors = [];
+page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+page.on('pageerror', (e) => errors.push('PAGEERR: ' + e.message));
+
+await page.goto(URL, { waitUntil: 'networkidle' });
+
+// ---- Test 1: hero before/after slider via real touch (with vertical drift) ----
+const slider = page.locator('[role=slider]').first();
+await slider.scrollIntoViewIfNeeded();
+const box = await slider.boundingBox();
+const cx = box.x + box.width / 2;
+const cy = box.y + box.height / 2;
+const before = await slider.getAttribute('aria-valuenow');
+
+const client = await context.newCDPSession(page);
+await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx, y: cy }] });
+const targetX = cx - 150;
+for (let i = 1; i <= 6; i++) {
+  const x = cx + ((targetX - cx) * i) / 6;
+  const y = cy + 45 * Math.sin(i * 1.1); // vertical finger drift
+  await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y }] });
+}
+await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+await page.waitForTimeout(300);
+const afterTouch = await slider.getAttribute('aria-valuenow');
+console.log(`[HERO touch drag] before=${before} after=${afterTouch} changed=${before !== afterTouch}`);
+
+// screenshot proof
+await page.screenshot({ path: '/workspace/verify-evidence/14-mobile-hero.png' });
+
+// ---- Test 2: capability tab switch on mobile (real tap) ----
+const tab = page.getByRole('tab', { name: 'Crop & resize' });
+if (await tab.count()) {
+  await tab.scrollIntoViewIfNeeded();
+  await tab.tap();
+  await page.waitForTimeout(300);
+  const selected = await page.locator('[role=tab][aria-selected="true"]').innerText();
+  console.log(`[MOBILE tab] selected now: ${selected.trim()}`);
+}
+
+// ---- Test 3: console errors on landing ----
+console.log(`[LANDING console errors] ${errors.length ? JSON.stringify(errors) : 'none'}`);
+
+// ---- Test 4: demo page console errors + run an edit ----
+const dErrors = [];
+const dPage = await context.newPage();
+dPage.on('console', (m) => { if (m.type() === 'error') dErrors.push(m.text()); });
+dPage.on('pageerror', (e) => dErrors.push('PAGEERR: ' + e.message));
+await dPage.goto('http://localhost:3000/demo', { waitUntil: 'networkidle' });
+// tap "Brighten" then "Run & verify"
+await dPage.getByRole('button', { name: /Brighten/ }).tap();
+await dPage.getByRole('button', { name: /Run & verify/ }).tap();
+await dPage.waitForTimeout(3500);
+const hasReport = await dPage.getByText('Pipeline report').count();
+console.log(`[DEMO edit] pipeline report visible=${hasReport > 0}`);
+// mobile before/after after edit
+const dSlider = dPage.locator('[role=slider]').first();
+if (await dSlider.count()) {
+  const b2 = await dSlider.boundingBox();
+  const x2 = b2.x + b2.width / 2, y2 = b2.y + b2.height / 2;
+  const before2 = await dSlider.getAttribute('aria-valuenow');
+  const c2 = await context.newCDPSession(dPage);
+  await c2.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x2, y: y2 }] });
+  for (let i = 1; i <= 5; i++) {
+    await c2.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x2 - 120 * (i / 5), y: y2 + 30 * Math.sin(i) }] });
+  }
+  await c2.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await dPage.waitForTimeout(300);
+  const after2 = await dSlider.getAttribute('aria-valuenow');
+  console.log(`[DEMO touch drag] before=${before2} after=${after2} changed=${before2 !== after2}`);
+}
+console.log(`[DEMO console errors] ${dErrors.length ? JSON.stringify(dErrors) : 'none'}`);
+
+await browser.close();
+console.log('MOBILE TEST DONE');

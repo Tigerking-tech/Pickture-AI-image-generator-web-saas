@@ -1,7 +1,7 @@
 # Surepix — 产品需求文档（PRD）
 
 > **文档用途**：本项目（Surepix 电商产品图编辑 SaaS）的完整上下文档案。下次接手前先读本文档，可避免重新踩坑。
-> **最后更新**：2026-10-25 · **当前状态**：v3 已发布（客户视角全流程走查 + 8 项修复完成）
+> **最后更新**：2026-10-26 · **当前状态**：v4 已发布（去 AI 味全面重构：黑白设计系统 + 真实交互组件）
 > **发布链接**：https://af77d736458a2298c.app.workbuddy.host/?sharecode=VRUDWVQGAE
 
 ---
@@ -103,7 +103,32 @@
 
 **注意**：本地 `next start` 也跑 demo 模式（无 .env），与线上发布行为一致。
 
-## 7. 设计系统 v2（对标竞品实测标准）
+## 7. 设计系统 v4（对标竞品实测标准 + 去 AI 味）
+
+> **v4 变更（2026-10-26）**：竞品 top3（Photoroom / Pixelcut / Claid）实测复测后，判定 v2/v3 存在系统性「AI 生成站」观感，做了一轮全面重构。
+> **核心结论**：竞品共同点是**黑白主导 + 单一品牌色 + 首屏即真实产品 UI + 极短文案**；AI 味的来源是紫蓝渐变、标签滥用、指标堆砌、静态卡片。
+>
+> | 维度 | v2/v3（AI 味） | v4（对标后） |
+> |---|---|---|
+> | 主色 | 靛蓝紫 `#4f46e5` 铺满（按钮/eyebrow/kicker/渐变字/紫雾背景） | `--brand` 改为近黑 `#111118`，紫仅作 `--accent` 备用；白底 + 黑 pill 按钮 |
+> | 首屏 | 标题长句 + 紫高亮词 + 4 个 24px 大数字 + 绿色 SSIM 浮层（6 个 pill） | 短标题「Product photos that stay true.」+ 一行小字指标 + **可拖动的 before/after 滑块**（真实管线输出） |
+> | 标签 | eyebrow pill / 6 处 uppercase kicker / cap-tag / platform-chip 边框 | eyebrow 与渐变高亮字全删；kicker 改 13.5px 中性灰；平台条改无框文字 logo 墙 |
+> | 对比区 | 双卡片 ✕（红底）/✓（绿底）彩色圆点列表 | 单张 `.vsx` 对比表，灰 vs 黑文本，无彩色圆点 |
+> | 交互 | 全站静态卡片 + 满屏滚动渐入 | 能力区 tab 切换（`.cap-tab`）+ before/after 滑块（`.ba`）+ demo 链式编辑 |
+> | 字重 | 800（标题）/780（h2） | 700（对标 Pixelcut 600–700）；reveal 位移 26px→14px |
+> | 其他 | 黄色 callout 警告块、"Most popular" 紫 pill | 删除黄色 callout；定价徽章改中性 "Popular" |
+
+**走查发现的真实缺陷（已修）**：
+1. **导航按钮黑底灰字** — `.nav-links a{color:var(--ink-2)}` 优先级压过 `.btn-brand` 的白字，换肤成黑底后对比度崩坏；已加 `.nav-links a.btn-brand{color:#fff}`（现 18.8:1）
+2. **demo 页移动端横向溢出 75→172px** — 保真报告表格 `min-width` 撑开 grid 列（grid 子项默认 `min-width:auto`）；已加 `.demo-grid>*{min-width:0}` + `.fid-scroll{overflow-x:auto}`，现 0px
+3. **PhotoCraft 二进制缺失** — 见 §9 坑 14，已脚本化自动获取
+
+**新增组件（v4）**：
+- `src/components/BeforeAfter.tsx` — before/after 对比滑块（clip-path + pointer 拖动 + 键盘方向键 + `role="slider"`），Landing 与 Demo 共用
+- `src/components/CapTabs.tsx` — 能力区 tab 切换（对标 Photoroom Scale&Automate/Create/Edit、Pixelcut 侧栏 tab），每个 tab 左文右图
+- `.ba` / `.cap-tabs` / `.vsx` / `.chain-btn` / `.history-chip` 样式在 globals.css
+
+**Demo 页交互升级**：结果以 before/after 滑块呈现（非并排小图）、新增「Use result as input →」链式编辑与历史 chip 回溯、下载按钮改 pill。
 
 **字体**：Manrope（正文/标题，400/500/600/700/800）+ JetBrains Mono（数据/指标）。**禁用** Inter/Roboto/Arial/系统字体。
 **色彩**（globals.css `:root`）：
@@ -115,10 +140,10 @@
 **组件**：按钮 `.btn-brand`（实色、radius 8px、**无阴影**）；卡片 1px 边框 + 柔影（`--shadow`）；`.reveal` 滚动渐入（IntersectionObserver + prefers-reduced-motion 降级 + noscript 兜底）。
 **对比度**：全部文本 ≥4.5:1（v3 实测 4.76–18.01）。
 
-**竞品实测基准**（Playwright getComputedStyle，v2 设计依据）：
-- Claid：H2 56px/700/-2px；CTA #7168FA 实色、59px 高、无阴影
-- Pixelcut：H1 60px/600/-1.2px
-- Photoroom：hero "Sell at first sight"、01/02/03 编号块、SOC 2 信任区（官网被墙，数据经 WebFetch 通道获取）
+**竞品实测基准**（Playwright getComputedStyle / 抓站，v2 + v4 设计依据）：
+- Claid：H2 56px/700/-2px；CTA #7168FA 实色、59px 高、无阴影；hero 两翼真实照片拼贴 + 深浅 section 交替 + studio 窗口 mockup
+- Pixelcut：H1 60px/600/-1.2px（"The AI Video and Image Platform"）；H2 48px/600/-0.96px；**纯黑白 + 黑 pill 按钮（radius 全圆、44px 高）**；首屏嵌**可点击切换的产品 UI**（侧栏 Home/Generate/Upload/Batch/Brand Assets + Desktop/Mobile 切换）；logo 墙；Inter 字体
+- Photoroom：hero "Sell at first sight"（4 词）+ 一句话副标；**tab 分组内容**（Scale & Automate / Create / Edit）；"输入商品页 URL 给诊断"的互动工具；真实客户案例带数字（99% cost reduction / Decathlon）；01/02/03 编号块；SOC 2 Type 2 信任区（官网直连超时，数据经 WebFetch 通道获取）
 
 ## 8. 发布与验证机制（重要，勿绕行）
 
@@ -155,7 +180,8 @@ verify.js 断言覆盖：SEO（title/description/canonical/OG/Twitter/JSON-LD×2
 11. **github.com git 主机不可达**（本沙箱网络只放行 api.github.com）：`git push` 报 TLS/connect 错误，但 REST API 正常。降级方案：经 Git Data API 推送——逐文件 POST `/git/blobs`（base64）→ POST `/git/trees` → POST `/git/commits`（传 author/committer/date 可复现 SHA）→ PATCH `/git/refs/heads/main`（force:true）。脚本在 artifact 目录 push-via-api.js
 12. **`.github/workflows/*` 推送返回 404**：GitHub 要求 PAT 带 `workflow` scope 才能建/改 workflow 文件，否则 tree API 和 contents API 都返回迷惑性 404（其他路径同批次却成功）。解法：换带 workflow scope 的 PAT，或接受暂缺该文件
 13. **API 建 commit 的 SHA 复现规则**（字节级对齐本地 git 用）：① 时间戳**保留原始时区偏移**（发 `+08:00` 就存 `+0800`，不转 UTC；但 JSON 回显归一成 `Z`，别信回显）；② 消息**原样存储**（含尾部换行，不做 git cleanup）；③ `git log --format=%B` 会在消息后多输一个记录分隔 `\n`，发给 API 前要心里有数；④ 用 `git hash-object -t commit --stdin` 手工构造对象即可在本地精确复现远端 SHA
-14. **`git reset --hard` 会吞掉未提交编辑**（本会话踩了两次）：对准历史提交前，先 commit 或 stash；用 `git read-tree`+`write-tree` 从提交取 tree 时同理——工作区未提交改动不进去
+14. **`vendor/photocraft/photocraft-cli`（69MB 本体 / 85.8MB 压缩包）被 .gitignore 排除**，clone 后 verify.js 的 CLI 断言会全灭（spawn ENOENT）。**已自动化的解法**：`node scripts/fetch-photocraft.mjs`（= `npm run photocraft`），并挂在 `postinstall` 上——按平台自动选资产 → 下载（优先 github.com 直连，失败自动回退 `api.github.com` 资产接口，沙箱内已实测两条通道）→ SHA256 校验（对照 `vendor-checksums/SHA256SUMS-<ver>.txt`）→ 解压取 `photocraft-cli` → chmod +x → 写 VERSION。幂等：版本匹配即跳过。离线 CI 用 `PHOTOCRAFT_SKIP=1` 跳过（此时编辑 API 不可用，其余功能正常）。手动兜底命令：`curl -L -H "Accept: application/octet-stream" https://api.github.com/repos/storytold/photocraft/releases/assets/670488567`（本项目锁 v0.15.1，勿用 0.16.0）
+15. **`git reset --hard` 会吞掉未提交编辑**（本会话踩了两次）：对准历史提交前，先 commit 或 stash；用 `git read-tree`+`write-tree` 从提交取 tree 时同理——工作区未提交改动不进去
 
 ## 10. 当前状态与待办
 
@@ -166,6 +192,14 @@ verify.js 断言覆盖：SEO（title/description/canonical/OG/Twitter/JSON-LD×2
 - [x] README.md 重写为入口文档（醒目指向本 PRD）
 - [x] git 仓库初始化：`.gitignore` 扩充排除 vendor/(67M)/video-proofs/(24M)/docs/(旧模板)/damage_*.png，首次提交 60f6294（135 文件 1.3M，remote 指向 Pickture 仓库）
 - [x] **推送到 GitHub 完成**（2026-10-25）：`Tigerking-tech/Pickture-AI-image-generator-web-saas` main = `f9d65f1f`（134 文件；`.github/workflows/ci.yml` 因 PAT 缺 `workflow` scope 被 GitHub API 拦截未推送）。旧 Pickture 历史存档于 `pickture-archive` 分支（41af11ad）可随时恢复。因 github.com 不可达，推送经 api.github.com REST API 完成，本地 main 与远端 SHA 逐字节一致（§9 坑 11–14）
+
+### 已完成（v4，2026-10-26）
+- [x] 竞品 top3 复测（Pixelcut / Claid 直连截图 + 计算样式；Photoroom 经 WebFetch）
+- [x] 设计系统 v4：黑白主导 token、删 eyebrow/渐变字/紫雾/黄 callout、字重 800→700、按钮全圆角 pill
+- [x] 落地页重构：短 hero + before/after 滑块首屏、能力区 tab 交互、showcase 滑块卡、VS 双卡改对比表、FAQ 精简
+- [x] Demo 交互重构：before/after 滑块 + 链式编辑（结果作为输入）+ 历史 chips
+- [x] 目检脚本化（audit.py）：交互生效性 / 溢出 / 对比度 / 控制台零错误，全通过；verify.js 34/34，damage-test 3/3
+- [x] 修复导航按钮黑底灰字（`.nav-links a.btn-brand` 被链接灰覆盖）
 
 ### 待办（按优先级）
 1. **仪表盘产品化重构**（用户已提兴趣）：目前是 SaaSKit 计费后台换肤。可把 "Credits" 改为 "Verified edits"、许可证页融入品牌 manifest 概念、加编辑历史/质量报告视图

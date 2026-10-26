@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { BeforeAfter } from "./BeforeAfter";
 
 interface ElementReport {
   verdict: "PASS" | "REPAIR" | "REGENERATE";
@@ -32,6 +33,10 @@ interface EditResult {
   meta: { source: string; engine: string; license: string };
 }
 
+type Input =
+  | { kind: "sample"; id: string }
+  | { kind: "b64"; data: string };
+
 const SAMPLES = [
   { id: "serum", name: "Serum bottle" },
   { id: "phones", name: "Headphones" },
@@ -47,16 +52,22 @@ const ACTIONS = [
   { id: "watermark", label: "Add watermark", hint: "editable text layer", instruction: "add a SUREPIX watermark" },
 ];
 
+interface HistoryEntry {
+  input: Input;
+  label: string;
+  thumb: string; // data or path for the chip thumbnail
+}
+
 export default function DemoClient() {
-  const [sampleId, setSampleId] = useState("serum");
-  const [uploaded, setUploaded] = useState<string | null>(null);
+  const [input, setInput] = useState<Input>({ kind: "sample", id: "serum" });
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [actionId, setActionId] = useState(ACTIONS[0].id);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<EditResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const originalSrc = uploaded ? `data:image/png;base64,${uploaded}` : `/samples/${sampleId}.png`;
+  const inputSrc = input.kind === "b64" ? `data:image/png;base64,${input.data}` : `/samples/${input.id}.png`;
 
   const run = useCallback(async () => {
     setLoading(true);
@@ -65,10 +76,10 @@ export default function DemoClient() {
     const action = ACTIONS.find((a) => a.id === actionId) ?? ACTIONS[0];
     try {
       const body: Record<string, unknown> = { intent: action.instruction };
-      if (uploaded) {
-        body.imageBase64 = uploaded;
+      if (input.kind === "b64") {
+        body.imageBase64 = input.data;
       } else {
-        body.sampleId = sampleId;
+        body.sampleId = input.id;
       }
       const res = await fetch("/api/edit", {
         method: "POST",
@@ -86,7 +97,27 @@ export default function DemoClient() {
     } finally {
       setLoading(false);
     }
-  }, [actionId, sampleId, uploaded]);
+  }, [actionId, input]);
+
+  const setInputAndTrack = (next: Input, label: string, thumb: string) => {
+    setHistory((h) => [...h.slice(-4), { input, label, thumb: inputSrc }]);
+    setInput(next);
+    setResult(null);
+    setError(null);
+  };
+
+  const useResultAsInput = () => {
+    if (!result?.ok) return;
+    const action = ACTIONS.find((a) => a.id === actionId);
+    setInputAndTrack({ kind: "b64", data: result.image.base64 }, action?.label ?? "edit", inputSrc);
+  };
+
+  const resetToSample = () => {
+    setInput({ kind: "sample", id: "serum" });
+    setHistory([]);
+    setResult(null);
+    setError(null);
+  };
 
   const onUpload = (file: File) => {
     if (file.size > 3.5 * 1024 * 1024) {
@@ -97,9 +128,7 @@ export default function DemoClient() {
     reader.onload = () => {
       const s = String(reader.result);
       const b64 = s.includes(",") ? s.split(",")[1] : s;
-      setUploaded(b64);
-      setResult(null);
-      setError(null);
+      setInputAndTrack({ kind: "b64", data: b64 }, "your upload", inputSrc);
     };
     reader.readAsDataURL(file);
   };
@@ -121,11 +150,11 @@ export default function DemoClient() {
       </header>
 
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.02em" }}>Live demo — the real pipeline, running now</h1>
-        <p style={{ color: "var(--ink-2)", margin: "8px 0 0", maxWidth: "60em", fontSize: 15.5 }}>
-          Every click executes a genuine edit through the Surepix stack: intent routing → whitelist validation →
-          PhotoCraft CLI (Rust) → per-element fidelity verification. No mockups. Sample photos carry a 6-element
-          brand manifest (logo, labels, price tag); your uploads get a whole-image check.
+        <h1 style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em" }}>Live demo</h1>
+        <p style={{ color: "var(--ink-2)", margin: "8px 0 0", maxWidth: "56em", fontSize: 15.5 }}>
+          The real pipeline, running now: intent routing → whitelist validation →
+          PhotoCraft CLI → per-element fidelity verification. Sample photos carry a
+          6-element brand manifest; your uploads get a whole-image check.
         </p>
       </div>
 
@@ -135,7 +164,7 @@ export default function DemoClient() {
           <div className="panel-head">
             <span>Canvas</span>
             <span className="hint">
-              {result ? `${result.image.width}×${result.image.height}px · ${(result.timingMs.total).toFixed(0)}ms end-to-end` : "no edit yet"}
+              {result ? `${result.image.width}×${result.image.height}px · ${result.timingMs.total.toFixed(0)}ms end-to-end` : "no edit yet"}
             </span>
           </div>
           <div className="panel-body">
@@ -143,20 +172,21 @@ export default function DemoClient() {
               {SAMPLES.map((s) => (
                 <button
                   key={s.id}
-                  className={`sample-chip${!uploaded && sampleId === s.id ? " on" : ""}`}
-                  onClick={() => {
-                    setUploaded(null);
-                    setSampleId(s.id);
-                    setResult(null);
-                  }}
+                  className={`sample-chip${input.kind === "sample" && input.id === s.id ? " on" : ""}`}
+                  onClick={() => setInputAndTrack({ kind: "sample", id: s.id }, s.name, inputSrc)}
                 >
                   <img src={`/samples/${s.id}.png`} alt="" width={40} height={30} />
                   {s.name}
                 </button>
               ))}
-              <button className={`sample-chip${uploaded ? " on" : ""}`} onClick={() => fileRef.current?.click()}>
-                ⬆ Upload yours
+              <button className="sample-chip" onClick={() => fileRef.current?.click()}>
+                Upload yours
               </button>
+              {input.kind === "b64" && (
+                <button className="sample-chip" onClick={resetToSample}>
+                  Reset
+                </button>
+              )}
               <input
                 ref={fileRef}
                 type="file"
@@ -169,33 +199,52 @@ export default function DemoClient() {
               />
             </div>
 
-            <div className="compare">
-              <figure>
-                <figcaption>Original</figcaption>
-                <div className="canvas" style={{ minHeight: 260 }}>
-                  <img src={originalSrc} alt="original product photo" />
-                </div>
-              </figure>
-              <figure>
-                <figcaption>Result · verified</figcaption>
-                <div className="canvas" style={{ minHeight: 260 }}>
-                  {loading && <div className="spin">running pipeline…</div>}
-                  {!loading && result?.ok && (
-                    <img src={`data:image/png;base64,${result.image.base64}`} alt="edited product photo" />
-                  )}
-                  {!loading && !result && <div className="empty">pick an action and hit “Run &amp; verify”</div>}
-                </div>
-              </figure>
-            </div>
+            {result?.ok ? (
+              <BeforeAfter
+                before={inputSrc}
+                after={`data:image/png;base64,${result.image.base64}`}
+                altBefore="input image"
+                altAfter="edited image"
+                initial={50}
+              />
+            ) : (
+              <div className="canvas" style={{ minHeight: 300 }}>
+                <img src={inputSrc} alt="current input image" />
+                {loading && <div className="spin">running pipeline…</div>}
+              </div>
+            )}
+
+            {history.length > 0 && (
+              <div className="history-row">
+                <span className="hr-label">history:</span>
+                {history.map((h, i) => (
+                  <button
+                    key={`${h.label}-${i}`}
+                    className="history-chip"
+                    onClick={() => {
+                      setInput(h.input);
+                      setResult(null);
+                      setError(null);
+                    }}
+                  >
+                    <img src={h.thumb} alt="" />
+                    {h.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {result?.ok && (
-              <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <a className="btn btn-ghost btn-sm" href={`data:image/png;base64,${result.image.base64}`} download="surepix-result.png">
-                  ⬇ Download PNG
+              <div className="chain-row">
+                <button className="chain-btn" onClick={useResultAsInput}>
+                  Use result as input →
+                </button>
+                <a className="chain-btn" style={{ textDecoration: "none" }} href={`data:image/png;base64,${result.image.base64}`} download="surepix-result.png">
+                  Download PNG
                 </a>
                 {result.psd && (
-                  <a className="btn btn-ghost btn-sm" href={`data:image/octet-stream;base64,${result.psd.base64}`} download="surepix-master.psd">
-                    ⬇ Download PSD ({result.psd.layers.filter((l) => l.kind === "Type").length} text layer{result.psd.layers.filter((l) => l.kind === "Type").length === 1 ? "" : "s"})
+                  <a className="chain-btn" style={{ textDecoration: "none" }} href={`data:image/octet-stream;base64,${result.psd.base64}`} download="surepix-master.psd">
+                    Download PSD ({result.psd.layers.filter((l) => l.kind === "Type").length} text layer{result.psd.layers.filter((l) => l.kind === "Type").length === 1 ? "" : "s"})
                   </a>
                 )}
               </div>
@@ -229,13 +278,13 @@ export default function DemoClient() {
                 </button>
               </div>
               <p className="demo-note">
-                Semantic requests (“change the background”) are detected by the router and would escalate to a
-                generative model — that path is intentionally not wired in this demo.
+                Semantic requests (“change the background”) are detected by the router and would
+                escalate to a generative model — that path is intentionally not wired in this demo.
               </p>
             </div>
           </div>
 
-          {error && <div className="error-box">⚠ {error}</div>}
+          {error && <div className="error-box">{error}</div>}
 
           {result?.ok && (
             <>
@@ -289,6 +338,7 @@ export default function DemoClient() {
                   </span>
                 </div>
                 <div className="panel-body">
+                  <div className="fid-scroll">
                   <table className="fid-table">
                     <thead>
                       <tr>
@@ -313,6 +363,7 @@ export default function DemoClient() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                   <div style={{ marginTop: 12, fontSize: 13, color: "var(--ink-2)" }}>
                     <b>Decision:</b> {result.fidelityAction.reason}
                     {result.fidelityAction.scope && result.fidelityAction.scope.length > 0 && (

@@ -74,10 +74,7 @@ export default function PricingPage() {
 
       <section className="price-hero">
         <div className="wrap">
-          <span className="eyebrow">Pricing</span>
-          <h1>
-            Verified editing, <span className="grad">priced per catalogue</span>
-          </h1>
+          <h1>Verified editing, priced per catalogue</h1>
           <p>
             Start free with 50 verified edits a month. Upgrade when your catalogue grows —
             every plan includes per-element fidelity verification, because quality control

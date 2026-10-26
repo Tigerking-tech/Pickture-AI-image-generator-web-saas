@@ -83,26 +83,39 @@ const PLANS = [
     name: "Free",
     price: "$0",
     per: "/month",
-    features: ["50 edits / month", "Fidelity verification included", "PNG + JPG export", "Surepix watermark on exports", "Community support"],
+    credits: "5 AI credits • 50 exports",
+    features: ["Unlimited core tools", "Fidelity verification included", "PNG + JPG export", "Surepix watermark on exports", "Community support"],
     cta: "Start free",
     hot: false,
     href: "/signup",
   },
   {
     name: "Pro",
-    price: "$9",
+    price: "$7.50",
     per: "/month",
-    features: ["5,000 edits / month", "No watermark", "Batch processing (full catalogue)", "Editable PSD master files", "Brand-kit manifests", "Priority support"],
+    credits: "200 AI credits • unlimited exports",
+    features: ["Unlimited deterministic edits", "No watermark", "Batch processing (full catalogue)", "Editable PSD master files", "Brand-kit manifests", "Priority support"],
     cta: "Start 14-day trial",
     hot: true,
     href: "/pricing",
   },
   {
-    name: "Scale",
-    price: "$24",
+    name: "Max",
+    price: "$19",
     per: "/month",
-    features: ["Unlimited edits", "API access + webhooks", "Custom platform presets (Amazon, Zalando…)", "SSO & audit logs", "Dedicated support"],
+    credits: "2,000 AI credits • unlimited exports",
+    features: ["Unlimited deterministic edits", "API access + webhooks", "Custom platform presets (Amazon, Zalando…)", "Shopify integration", "Priority support"],
     cta: "Start 14-day trial",
+    hot: false,
+    href: "/pricing",
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    per: "",
+    credits: "Unlimited volume • dedicated capacity",
+    features: ["Everything in Max", "SSO / SAML + audit logs", "Enterprise SLA & onboarding", "Custom recipes", "Dedicated support"],
+    cta: "Contact sales",
     hot: false,
     href: "/pricing",
   },
@@ -389,6 +402,10 @@ export default function Landing() {
                     {p.hot && <span className="tag">Popular</span>}
                     <h3>{p.name}</h3>
                     <div className="price">{p.price}<span>{p.per}</span></div>
+                    {p.price !== "Custom" && p.price !== "$0" && (
+                      <div className="plan-billed" style={{ marginTop: -4 }}>Per month, billed yearly</div>
+                    )}
+                    <div className="plan-credits">{p.credits}</div>
                     <ul>
                       {p.features.map((f) => <li key={f}>{f}</li>)}
                     </ul>

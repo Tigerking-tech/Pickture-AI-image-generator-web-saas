@@ -6,28 +6,44 @@ import { MobileNav } from "@/components/MobileNav";
 export const metadata: Metadata = {
   title: "Pricing — Verified Product-Photo Editing",
   description:
-    "Surepix pricing: start free with 50 verified edits per month. Pro is $9/month for 5,000 edits with PSD masters; Scale is $24/month with API access. Every plan includes per-element fidelity verification.",
+    "Surepix pricing: free tier, Pro $9/month ($7.50 billed yearly) with unlimited deterministic edits, Max $24/month ($19 billed yearly) with API access, plus Enterprise. Every plan includes per-element fidelity verification.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Surepix pricing — verified editing from $0",
     description:
-      "Free tier with fidelity verification included. Pro $9/month, Scale $24/month. 14-day trial, cancel anytime.",
+      "Free tier with fidelity verification included. Pro from $7.50/month billed yearly, Max from $19/month. 14-day trial, cancel anytime.",
     type: "website",
   },
 };
 
-const COMPARISON = [
-  { feature: "Deterministic edits (~40ms)", free: true, pro: true, scale: true },
-  { feature: "Per-element fidelity verification", free: true, pro: true, scale: true },
-  { feature: "Edits per month", free: "50", pro: "5,000", scale: "Unlimited" },
-  { feature: "Watermark on exports", free: "Surepix mark", pro: "None", scale: "None" },
-  { feature: "Batch processing", free: false, pro: true, scale: true },
-  { feature: "Editable PSD masters", free: false, pro: true, scale: true },
-  { feature: "Brand-kit manifests", free: false, pro: true, scale: true },
-  { feature: "API access + webhooks", free: false, pro: false, scale: true },
-  { feature: "Custom platform presets", free: false, pro: false, scale: true },
-  { feature: "SSO & audit logs", free: false, pro: false, scale: true },
-  { feature: "Support", free: "Community", pro: "Priority", scale: "Dedicated" },
+type Cell = boolean | string;
+
+const COMPARISON: { feature: string; free: Cell; pro: Cell; max: Cell; ent: Cell }[] = [
+  // ---- credits & limits ----
+  { feature: "Deterministic edits (white bg, colour, resize, watermark)", free: "50 / month", pro: "Unlimited", max: "Unlimited", ent: "Unlimited" },
+  { feature: "Generative AI credits", free: "5 / month", pro: "200 / month", max: "2,000 / month", ent: "Custom" },
+  { feature: "Exports", free: "50 / month", pro: "Unlimited", max: "Unlimited", ent: "Unlimited" },
+  { feature: "Watermark on exports", free: "Surepix mark", pro: "None", max: "None", ent: "None" },
+  { feature: "Seats", free: "1", pro: "3", max: "Up to 50", ent: "Unlimited" },
+  // ---- core tools (deterministic, not metered) ----
+  { feature: "Background → pure white", free: true, pro: true, max: true, ent: true },
+  { feature: "Colour & light (curves)", free: true, pro: true, max: true, ent: true },
+  { feature: "Resize / fit-and-pad presets", free: true, pro: true, max: true, ent: true },
+  { feature: "Sharpen & image enhancer", free: true, pro: true, max: true, ent: true },
+  { feature: "Batch processing", free: false, pro: true, max: true, ent: true },
+  { feature: "Editable PSD masters", free: false, pro: true, max: true, ent: true },
+  { feature: "Brand-kit manifests", free: false, pro: true, max: true, ent: true },
+  // ---- credit-intensive (generative) ----
+  { feature: "Scene / lifestyle background", free: "5 / month", pro: "Up to 200", max: "Up to 2,000", ent: "Custom" },
+  { feature: "Generative object removal", free: "5 / month", pro: "Up to 200", max: "Up to 2,000", ent: "Custom" },
+  // ---- integrations & access ----
+  { feature: "API access + webhooks", free: false, pro: false, max: true, ent: true },
+  { feature: "Custom platform presets", free: false, pro: false, max: true, ent: true },
+  { feature: "Shopify / marketplace integration", free: false, pro: false, max: true, ent: true },
+  // ---- performance & support ----
+  { feature: "SSO / SAML & audit logs", free: false, pro: false, max: false, ent: true },
+  { feature: "Enterprise SLA", free: false, pro: false, max: false, ent: true },
+  { feature: "Support", free: "Community", pro: "Priority", max: "Priority", ent: "Dedicated" },
 ];
 
 function Cell({ v }: { v: boolean | string }) {
@@ -76,9 +92,9 @@ export default function PricingPage() {
         <div className="wrap">
           <h1>Verified editing, priced per catalogue</h1>
           <p>
-            Start free with 50 verified edits a month. Upgrade when your catalogue grows —
-            every plan includes per-element fidelity verification, because quality control
-            is not an upsell.
+            Deterministic edits — white background, colour, resize, watermark — are never
+            metered, on any plan. Only generative edits use AI credits. Switch to yearly
+            and save up to 21%.
           </p>
         </div>
       </section>
@@ -99,20 +115,22 @@ export default function PricingPage() {
         <div className="wrap">
           <div className="section-head">
             <div className="kicker">How we compare</div>
-            <h2>Same shelf as the big names, priced to actually scale</h2>
+            <h2>How we compare</h2>
             <p>
-              List prices from public pricing pages (October 2026). Competitor plans are
-              credit- or export-capped; Surepix counts verified edits and includes fidelity
-              checks on every one of them.
+              List prices from public pricing pages (October 2026), all shown as
+              <b> per-month billed yearly</b> so the numbers are apples to apples. Competitor
+              plans cap exports or credits; Surepix never meters deterministic edits, and
+              includes fidelity verification on every image.
             </p>
           </div>
           <div style={{ overflowX: "auto" }}>
-            <table className="fid-table" style={{ fontSize: 14, minWidth: 560 }}>
+            <table className="fid-table" style={{ fontSize: 14, minWidth: 760 }}>
               <thead>
                 <tr>
-                  <th style={{ width: "24%" }}>Tool</th>
-                  <th>Monthly price</th>
-                  <th>Included volume</th>
+                  <th style={{ width: "22%" }}>Tool</th>
+                  <th>Monthly</th>
+                  <th>Billed yearly</th>
+                  <th>What&apos;s capped</th>
                   <th>≈ per image</th>
                 </tr>
               </thead>
@@ -121,26 +139,37 @@ export default function PricingPage() {
                   <td style={{ fontFamily: "var(--sans)", fontWeight: 700, color: "var(--ink)" }}>
                     Surepix Pro
                   </td>
-                  <td><b>$9</b></td>
-                  <td>5,000 verified edits + PSD masters</td>
-                  <td><b style={{ color: "var(--brand, #16a34a)" }}>~$0.002</b></td>
+                  <td>$9</td>
+                  <td><b>$7.50</b></td>
+                  <td>Nothing on core tools — edits &amp; exports unlimited</td>
+                  <td><b>~$0</b></td>
                 </tr>
                 <tr>
                   <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>Photoroom Pro</td>
-                  <td>$12.99</td>
-                  <td>~1,000 exports / month (credit-capped)</td>
-                  <td>~$0.013</td>
+                  <td>$7.99</td>
+                  <td>$4.50</td>
+                  <td>4,500 AI credits + 1,000 exports / month</td>
+                  <td>~$0.005</td>
+                </tr>
+                <tr>
+                  <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>Photoroom Max</td>
+                  <td>$26.99</td>
+                  <td>$10.50</td>
+                  <td>14,000 AI credits + 3,000 exports / month</td>
+                  <td>~$0.004</td>
                 </tr>
                 <tr>
                   <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>remove.bg (Canva)</td>
                   <td>$9</td>
+                  <td>—</td>
                   <td>40 credits / month</td>
                   <td>~$0.23</td>
                 </tr>
                 <tr>
                   <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>Canva Pro</td>
                   <td>$15</td>
-                  <td>Design suite, background remover credit-capped</td>
+                  <td>—</td>
+                  <td>Credit-capped background remover</td>
                   <td>varies</td>
                 </tr>
               </tbody>
@@ -152,17 +181,18 @@ export default function PricingPage() {
       <section className="section">
         <div className="wrap">
           <div className="section-head">
-            <div className="kicker">Compare plans</div>
+            <div className="kicker">Compare our plans</div>
             <h2>What&apos;s in each plan</h2>
           </div>
           <div style={{ overflowX: "auto" }}>
-            <table className="fid-table" style={{ fontSize: 14, minWidth: 560 }}>
+            <table className="fid-table" style={{ fontSize: 14, minWidth: 720 }}>
               <thead>
                 <tr>
-                  <th style={{ width: "44%" }}>Feature</th>
+                  <th style={{ width: "40%" }}>Feature</th>
                   <th>Free</th>
                   <th>Pro</th>
-                  <th>Scale</th>
+                  <th>Max</th>
+                  <th>Enterprise</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,7 +201,8 @@ export default function PricingPage() {
                     <td style={{ fontFamily: "var(--sans)", fontWeight: 600, color: "var(--ink)" }}>{row.feature}</td>
                     <td><Cell v={row.free} /></td>
                     <td><Cell v={row.pro} /></td>
-                    <td><Cell v={row.scale} /></td>
+                    <td><Cell v={row.max} /></td>
+                    <td><Cell v={row.ent} /></td>
                   </tr>
                 ))}
               </tbody>

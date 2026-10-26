@@ -34,21 +34,21 @@ const STEPS = [
 const SHOWCASE = [
   {
     id: "serum",
-    title: "Vitamin C serum",
-    desc: "Warm grade on bottle and background — label, logo and price tag verified untouched.",
+    title: "Amber serum bottles",
+    desc: "Warm grade on glass and background — label regions re-measured after the edit, not repainted.",
     metrics: ["6/6 PASS", "SSIM ≥ 0.989", "edge recall ≥ 0.991"],
   },
   {
     id: "phones",
     title: "Wireless earbuds",
-    desc: "Warm grade plus crop to platform preset — every glyph region re-measured, not repainted.",
-    metrics: ["6/6 PASS", "SSIM ≥ 0.989", "edge recall ≥ 0.987"],
+    desc: "Background knocked out to pure marketplace white — the product itself is untouched, pixel for pixel.",
+    metrics: ["6/6 PASS", "pure white bg", "product fidelity 1.000"],
   },
   {
     id: "coffee",
     title: "Coffee beans",
-    desc: "Warm grade on packaging — brand colours survive, edges stay inside ±2px tolerance.",
-    metrics: ["6/6 PASS", "SSIM ≥ 0.989", "edge recall 1.000"],
+    desc: "Resized to a marketplace preset with fit-and-pad — the full product stays in frame, nothing cropped away.",
+    metrics: ["6/6 PASS", "fit + pad", "no content loss"],
   },
 ];
 
@@ -90,7 +90,7 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "$12",
+    price: "$9",
     per: "/month",
     features: ["5,000 edits / month", "No watermark", "Batch processing (full catalogue)", "Editable PSD master files", "Brand-kit manifests", "Priority support"],
     cta: "Start 14-day trial",
@@ -99,7 +99,7 @@ const PLANS = [
   },
   {
     name: "Scale",
-    price: "$29",
+    price: "$24",
     per: "/month",
     features: ["Unlimited edits", "API access + webhooks", "Custom platform presets (Amazon, Zalando…)", "SSO & audit logs", "Dedicated support"],
     cta: "Start 14-day trial",
@@ -170,9 +170,9 @@ export default function Landing() {
             <Reveal>
               <h1>Product photos that stay true.</h1>
               <p className="lead">
-                Colour, crop, resize, watermark — deterministic edits in ~40ms,
-                with every logo, label and price tag verified against the
-                original before delivery.
+                White background, colour, resize, watermark — deterministic
+                edits in ~40ms, with every logo, label and price tag verified
+                against the original before delivery.
               </p>
               <div className="hero-cta">
                 <Link href="/signup" className="btn btn-brand">Start editing free</Link>
@@ -193,8 +193,8 @@ export default function Landing() {
                 <BeforeAfter
                   before="/samples/serum.png"
                   after="/showcase/serum-after.png"
-                  altBefore="Vitamin C serum — original upload"
-                  altAfter="Vitamin C serum — edited by Surepix, verified"
+                  altBefore="Amber serum bottles — original upload"
+                  altAfter="Amber serum bottles — edited by Surepix, verified"
                   initial={52}
                 />
                 <div className="hero-note">
@@ -225,7 +225,7 @@ export default function Landing() {
             <Reveal className="section-head">
               <div className="kicker">What it does</div>
               <h2>One workspace for every product-photo edit</h2>
-              <p>Colour, crop, resize, watermark — executed as deterministic recipes and verified before delivery.</p>
+              <p>White background, colour, crop, resize, watermark — executed as deterministic recipes and verified before delivery.</p>
             </Reveal>
             <Reveal delay={90}>
               <CapTabs />

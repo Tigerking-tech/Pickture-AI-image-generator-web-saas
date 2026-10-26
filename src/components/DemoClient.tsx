@@ -36,8 +36,8 @@ interface EditResult {
 type Input = { kind: "sample"; id: string } | { kind: "b64"; data: string };
 
 const SAMPLES = [
-  { id: "serum", name: "Serum bottle" },
-  { id: "phones", name: "Headphones" },
+  { id: "serum", name: "Serum bottles" },
+  { id: "phones", name: "Earbuds" },
   { id: "coffee", name: "Coffee bag" },
 ];
 

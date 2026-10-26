@@ -186,7 +186,7 @@ export default function SignupPage() {
                 What you get
               </span>
             </div>
-            {["Fidelity verification included", "PNG + JPG export", "No training on your images", "Upgrade anytime — $12/mo Pro"].map((el) => (
+            {["Fidelity verification included", "PNG + JPG export", "No training on your images", "Upgrade anytime — $9/mo Pro"].map((el) => (
               <div key={el} className="flex items-center gap-2.5 text-sm py-1.5" style={{ color: "#fff" }}>
                 <span style={{ color: "#bbf7d0", fontWeight: 800 }}>✓</span>
                 <span style={{ opacity: 0.85 }}>{el}</span>

@@ -31,7 +31,7 @@ const PLANS: Plan[] = [
   },
   {
     name: "Pro",
-    price: "$12",
+    price: "$9",
     period: "month",
     productId: process.env.NEXT_PUBLIC_CREEM_PRO_PRODUCT_ID ?? "prod_pro",
     popular: true,
@@ -48,7 +48,7 @@ const PLANS: Plan[] = [
   },
   {
     name: "Scale",
-    price: "$29",
+    price: "$24",
     period: "month",
     productId: process.env.NEXT_PUBLIC_CREEM_SCALE_PRODUCT_ID ?? "prod_scale",
     blurb: "For teams integrating verified editing into their own stack.",

@@ -11,6 +11,19 @@ import { BeforeAfter } from "./BeforeAfter";
 
 const TABS = [
   {
+    id: "whitebg",
+    tab: "Background & white",
+    h: "Marketplace white, in one step",
+    desc: "Knock the background out to pure e-commerce white — subject selected, inverse filled, edges kept. Deterministic, so the same SKU always gets the same cutout.",
+    points: [
+      ["Subject → inverse → white fill", "~100ms"],
+      ["No AI repaint of your product", "pixel-true"],
+      ["Fidelity checked after the cutout", "6/6 PASS"],
+    ],
+    before: "/samples/phones.png",
+    after: "/showcase/phones-after.png",
+  },
+  {
     id: "colour",
     tab: "Colour & light",
     h: "Colour that obeys the recipe",
@@ -33,8 +46,8 @@ const TABS = [
       ["No content loss — pad, don't crop", "fit + pad"],
       ["Same recipe across 100 SKUs", "< 3s"],
     ],
-    before: "/samples/phones.png",
-    after: "/showcase/phones-after.png",
+    before: "/samples/coffee.png",
+    after: "/showcase/coffee-after.png",
   },
   {
     id: "brand",
@@ -46,8 +59,8 @@ const TABS = [
       ["Logo & label fidelity check", "MS-SSIM ≥ 0.95"],
       ["Three-level verdict per element", "PASS / REPAIR / REGENERATE"],
     ],
-    before: "/samples/coffee.png",
-    after: "/showcase/coffee-after.png",
+    before: "/samples/serum.png",
+    after: "/showcase/serum-brand-after.png",
   },
 ];
 

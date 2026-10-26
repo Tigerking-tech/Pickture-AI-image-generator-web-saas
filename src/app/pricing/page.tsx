@@ -6,12 +6,12 @@ import { MobileNav } from "@/components/MobileNav";
 export const metadata: Metadata = {
   title: "Pricing — Verified Product-Photo Editing",
   description:
-    "Surepix pricing: start free with 50 verified edits per month. Pro is $12/month for 5,000 edits with PSD masters; Scale is $29/month with API access. Every plan includes per-element fidelity verification.",
+    "Surepix pricing: start free with 50 verified edits per month. Pro is $9/month for 5,000 edits with PSD masters; Scale is $24/month with API access. Every plan includes per-element fidelity verification.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Surepix pricing — verified editing from $0",
     description:
-      "Free tier with fidelity verification included. Pro $12/month, Scale $29/month. 14-day trial, cancel anytime.",
+      "Free tier with fidelity verification included. Pro $9/month, Scale $24/month. 14-day trial, cancel anytime.",
     type: "website",
   },
 };
@@ -96,6 +96,60 @@ export default function PricingPage() {
       </section>
 
       <section className="section alt">
+        <div className="wrap">
+          <div className="section-head">
+            <div className="kicker">How we compare</div>
+            <h2>Same shelf as the big names, priced to actually scale</h2>
+            <p>
+              List prices from public pricing pages (October 2026). Competitor plans are
+              credit- or export-capped; Surepix counts verified edits and includes fidelity
+              checks on every one of them.
+            </p>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table className="fid-table" style={{ fontSize: 14, minWidth: 560 }}>
+              <thead>
+                <tr>
+                  <th style={{ width: "24%" }}>Tool</th>
+                  <th>Monthly price</th>
+                  <th>Included volume</th>
+                  <th>≈ per image</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ fontFamily: "var(--sans)", fontWeight: 700, color: "var(--ink)" }}>
+                    Surepix Pro
+                  </td>
+                  <td><b>$9</b></td>
+                  <td>5,000 verified edits + PSD masters</td>
+                  <td><b style={{ color: "var(--brand, #16a34a)" }}>~$0.002</b></td>
+                </tr>
+                <tr>
+                  <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>Photoroom Pro</td>
+                  <td>$12.99</td>
+                  <td>~1,000 exports / month (credit-capped)</td>
+                  <td>~$0.013</td>
+                </tr>
+                <tr>
+                  <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>remove.bg (Canva)</td>
+                  <td>$9</td>
+                  <td>40 credits / month</td>
+                  <td>~$0.23</td>
+                </tr>
+                <tr>
+                  <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>Canva Pro</td>
+                  <td>$15</td>
+                  <td>Design suite, background remover credit-capped</td>
+                  <td>varies</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
         <div className="wrap">
           <div className="section-head">
             <div className="kicker">Compare plans</div>

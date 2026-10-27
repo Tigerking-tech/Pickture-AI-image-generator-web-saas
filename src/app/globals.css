@@ -230,6 +230,40 @@ h4 {
 .nav-links a.btn-brand:hover {
   color: #fff;
 }
+/* 语言切换器 */
+.locale-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.6);
+}
+.locale-switcher__btn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.locale-switcher__btn:hover {
+  color: var(--ink);
+}
+.locale-switcher__btn.is-active {
+  background: var(--ink);
+  color: #fff;
+}
+@media (max-width: 960px) {
+  .locale-switcher {
+    display: none;
+  }
+}
 
 /* ---------- 按钮（实色、小圆角、无阴影——竞品执行标准） ---------- */
 .btn {

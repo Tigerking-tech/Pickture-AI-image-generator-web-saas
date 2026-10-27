@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Reveal } from "./Reveal";
-import { MobileNav } from "./MobileNav";
 import { BeforeAfter } from "./BeforeAfter";
 import { CapTabs } from "./CapTabs";
+import { SiteHeader } from "./SiteHeader";
 
 /* ============================================================
    落地页 v4 — 对标 Photoroom / Pixelcut / Claid 的去 AI 味重构：
@@ -157,24 +157,8 @@ export default function Landing() {
 
   return (
     <>
-      {/* ---------- 导航 ---------- */}
-      <header className="nav">
-        <div className="wrap nav-inner">
-          <Link href="/" className="logo" aria-label="Surepix home">
-            <span className="logo-mark" aria-hidden="true">S</span>
-            Surepix
-          </Link>
-          <nav className="nav-links nav-links-desktop" aria-label="Main navigation">
-            <Link href="/#capabilities">Features</Link>
-            <Link href="/#fidelity">Why verified</Link>
-            <Link href="/#pricing">Pricing</Link>
-            <Link href="/#faq">FAQ</Link>
-            <Link href="/login">Sign in</Link>
-            <Link href="/demo" className="btn btn-brand btn-sm">Try the demo</Link>
-          </nav>
-          <MobileNav />
-        </div>
-      </header>
+      {/* ---------- 导航（i18n 化，见 SiteHeader） ---------- */}
+      <SiteHeader />
 
       <main>
         {/* ---------- Hero ---------- */}

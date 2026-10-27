@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
+import { I18nProvider } from "@/i18n/I18nProvider";
+import { getLocale } from "@/i18n/get-locale";
+import { messages } from "@/i18n/messages";
+import { defaultLocale } from "@/i18n/config";
 import "@fontsource/manrope/400.css";
 import "@fontsource/manrope/500.css";
 import "@fontsource/manrope/600.css";
@@ -35,7 +40,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    alternateLocale: ["en_GB", "de_DE", "fr_FR"],
+    alternateLocale: ["zh_CN"],
     url: SITE_URL,
     siteName: "Surepix",
     title: "Surepix — Product Photos That Stay True, Verified Element by Element",
@@ -60,7 +65,7 @@ export const viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -89,8 +94,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     ],
   };
 
+  const locale = await getLocale();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="sitemap" href="/sitemap.xml" />
@@ -99,7 +106,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </noscript>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <I18nProvider locale={locale} messages={messages[locale]}>
+          {children}
+        </I18nProvider>
+      </body>
     </html>
   );
 }

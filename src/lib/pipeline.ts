@@ -18,6 +18,8 @@ import {
 import { runGenerative } from "./generative";
 import { creditsForIntents, hasCredits, spendForIntents } from "./credits";
 import { checkAnonGenerativeQuota, consumeAnonGenerativeQuota } from "./anon-quota";
+import { checkFairUse, consumeFairUse, type FairUseStatus } from "./fair-use";
+import { resolveUserPlan } from "./entitlements";
 import { convertFile, docInfo, rmQuiet, runChain, tmpPath } from "./pc";
 import { planWithFallback, type RouteDecision, route, routeAfterFidelity } from "./router";
 import { type ChainStep, INTENT_TEMPLATES, planChain, validateCommandChain } from "./whitelist";
@@ -60,6 +62,8 @@ export interface EditResult {
   code?: string;
   /** 匿名试用配额状态（仅触发匿名闸门时返回），前端用于提示登录 */
   anonQuota?: { remaining: number; limit: number; resetAt: string };
+  /** 月度 fair-use 状态（触发超额闸门时返回），前端用于提示升级/登录 */
+  fairUse?: FairUseStatus;
 }
 
 const SAMPLES_DIR = path.join(process.cwd(), "public", "samples");
@@ -256,6 +260,18 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     ...extra,
   });
 
+  // 解析调用方计划（用于 fair-use 月度上限）；无订阅 / 异常回退 free。
+  // 匿名（无 userId）直接按 free 档计；demo 模式由 fair-use 模块短路放行。
+  const userPlan = req.userId
+    ? await resolveUserPlan(req.userId).catch(() => "free")
+    : "free";
+
+  // 成功后计量一次确定性编辑（edits + exports 同月上限）；best-effort，失败不阻断交付。
+  const countDeterministicEdit = async () => {
+    await consumeFairUse(req.userId, req.anonKey, userPlan, "edits");
+    await consumeFairUse(req.userId, req.anonKey, userPlan, "exports");
+  };
+
   // 1. 输入解析
   let origPng: Buffer;
   let manifest: Manifest | null = null;
@@ -315,7 +331,7 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
       const q = await checkAnonGenerativeQuota(req.anonKey);
       if (!q.allowed) {
         return fail(
-          `Anonymous generative trial limit reached (${q.limit}/day). Sign in to unlock unlimited AI edits.`,
+          `Anonymous generative trial limit reached (${q.limit}/day). Sign in to unlock your monthly AI edit allowance.`,
           routeDecision,
           [],
           {
@@ -328,6 +344,18 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
 
     // hybrid：先把确定性那部分用 PhotoCraft 跑掉，再生成（生成只补语义差异）
     if (routeDecision.route === "hybrid") {
+      // 月度 fair-use 闸门：hybrid 的确定性前置计入月度额度
+      const fu = await checkFairUse(req.userId, req.anonKey, userPlan, "edits");
+      if (!fu.ok) {
+        return fail(
+          fu.status.unlimited
+            ? "Monthly fair-use limit reached. Upgrade your plan for more."
+            : `Monthly fair-use limit reached (${fu.status.used}/${fu.status.limit} edits). ${req.userId ? "Upgrade to continue." : "Sign in to unlock your monthly allowance."}`,
+          routeDecision,
+          [],
+          { code: "FAIR_USE_EXCEEDED", fairUse: fu.status },
+        );
+      }
       const plan = resolvePlan(req.intent, origImg.w, origImg.h);
       const fb = planWithFallback(req.intent, origImg.w, origImg.h);
       const levels =
@@ -339,11 +367,12 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
       for (const lv of levels) {
         const transform = transformFromChain(lv.chain, origImg.w, origImg.h);
         const res = await runLevel(origPng, manifest, lv, false, transform);
-        if (res.ok && res.resultPng) {
-          inputPng = res.resultPng;
-          detDesc = lv.desc;
-          break;
-        }
+      if (res.ok && res.resultPng) {
+        inputPng = res.resultPng;
+        detDesc = lv.desc;
+        await countDeterministicEdit();
+        break;
+      }
       }
     }
 
@@ -425,6 +454,22 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
   }
 
   // 3. 命令链 + 回退级别（模板 id 直连优先，否则自然语言规划）
+
+  // ── 月度 fair-use 闸门（确定性编辑 / 导出，防薅免费 CPU）──
+  {
+    const fu = await checkFairUse(req.userId, req.anonKey, userPlan, "edits");
+    if (!fu.ok) {
+      return fail(
+        fu.status.unlimited
+          ? "Monthly fair-use limit reached. Upgrade your plan for more."
+          : `Monthly fair-use limit reached (${fu.status.used}/${fu.status.limit} edits). ${req.userId ? "Upgrade to continue." : "Sign in to unlock your monthly allowance."}`,
+        routeDecision,
+        [],
+        { code: "FAIR_USE_EXCEEDED", fairUse: fu.status },
+      );
+    }
+  }
+
   const plan = resolvePlan(req.intent, origImg.w, origImg.h);
   if (!plan.ok) {
     return fail(`planner: ${plan.error}`, routeDecision, [], {
@@ -458,6 +503,7 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
       });
     }
     const img = decodePng(res.resultPng);
+    await countDeterministicEdit();
     return {
       ok: true,
       route: routeDecision,
@@ -496,6 +542,7 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     }
     if (last.fidelity.verdict === "PASS") {
       const img = decodePng(last.resultPng!);
+      await countDeterministicEdit();
       return {
         ok: true,
         route: routeDecision,
@@ -516,6 +563,7 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
 
   // 所有级别都没通过保真 → 按 L0 结果交付，但决策是升级 AI（仅受损元素）
   const img = decodePng(last!.resultPng!);
+  await countDeterministicEdit();
   return {
     ok: true,
     route: routeDecision,

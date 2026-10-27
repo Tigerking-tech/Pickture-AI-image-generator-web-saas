@@ -6,8 +6,9 @@ import Link from "next/link";
 /**
  * 定价卡片 — 版式对标 Photoroom /pricing：
  *   月付↔年付切换 → 卡片(名称/卖点/删除线原价+年付价/credits·exports 行/✅✕特性列表/CTA)
- *   计量口径：确定性编辑与导出不计量（对标 Photoroom 的 "Unlimited core tools"），
- *   只对生成式编辑收 credits。
+ *   计量口径：确定性编辑与导出设慷慨上限（Pro 5,000 / Max 15,000 次·月），
+ *   仍 5× 于 Photoroom 的 1,000/3,000，且远超中小目录需求；
+ *   仅生成式编辑收 credits。
  */
 
 interface Plan {
@@ -30,7 +31,7 @@ const PLANS: Plan[] = [
     credits: "5 AI credits • 50 exports",
     blurb: "Try the verified pipeline on your own photos.",
     feats: [
-      { t: "Unlimited core tools", on: true },
+      { t: "50 core-tool edits / month", on: true },
       { t: "Fidelity verification included", on: true },
       { t: "PNG + JPG export", on: true },
       { t: "Batch processing", on: false },
@@ -43,10 +44,10 @@ const PLANS: Plan[] = [
     name: "Pro",
     monthly: "$9",
     yearly: "$7.50",
-    credits: "200 AI credits • unlimited exports",
+    credits: "200 AI credits • 5,000 exports / mo",
     blurb: "For growing catalogues that need brand-consistent output.",
     feats: [
-      { t: "Unlimited deterministic edits", on: true },
+      { t: "5,000 deterministic edits / mo", on: true },
       { t: "Batch processing (full catalogue)", on: true },
       { t: "Editable PSD master files", on: true },
       { t: "Brand-kit manifests", on: true },
@@ -60,10 +61,10 @@ const PLANS: Plan[] = [
     name: "Max",
     monthly: "$24",
     yearly: "$19",
-    credits: "2,000 AI credits • unlimited exports",
+    credits: "2,000 AI credits • 15,000 exports / mo",
     blurb: "For teams integrating verified editing into their own stack.",
     feats: [
-      { t: "Unlimited deterministic edits", on: true },
+      { t: "15,000 deterministic edits / mo", on: true },
       { t: "Batch processing (full catalogue)", on: true },
       { t: "Editable PSD master files", on: true },
       { t: "API access + webhooks", on: true },

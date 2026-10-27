@@ -6,7 +6,7 @@ import { MobileNav } from "@/components/MobileNav";
 export const metadata: Metadata = {
   title: "Pricing — Verified Product-Photo Editing",
   description:
-    "Surepix pricing: free tier, Pro $9/month ($7.50 billed yearly) with unlimited deterministic edits, Max $24/month ($19 billed yearly) with API access, plus Enterprise. Every plan includes per-element fidelity verification.",
+    "Surepix pricing: free tier, Pro $9/month ($7.50 billed yearly) with 5,000 deterministic edits & exports per month, Max $24/month ($19 billed yearly) with API access, plus Enterprise. Every plan includes per-element fidelity verification.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Surepix pricing — verified editing from $0",
@@ -20,9 +20,9 @@ type Cell = boolean | string;
 
 const COMPARISON: { feature: string; free: Cell; pro: Cell; max: Cell; ent: Cell }[] = [
   // ---- credits & limits ----
-  { feature: "Deterministic edits (white bg, colour, resize, watermark)", free: "50 / month", pro: "Unlimited", max: "Unlimited", ent: "Unlimited" },
+  { feature: "Deterministic edits (white bg, colour, resize, watermark)", free: "50 / month", pro: "5,000 / month", max: "15,000 / month", ent: "Custom" },
   { feature: "Generative AI credits", free: "5 / month", pro: "200 / month", max: "2,000 / month", ent: "Custom" },
-  { feature: "Exports", free: "50 / month", pro: "Unlimited", max: "Unlimited", ent: "Unlimited" },
+  { feature: "Exports", free: "50 / month", pro: "5,000 / month", max: "15,000 / month", ent: "Custom" },
   { feature: "Watermark on exports", free: "Surepix mark", pro: "None", max: "None", ent: "None" },
   { feature: "Seats", free: "1", pro: "3", max: "Up to 50", ent: "Unlimited" },
   // ---- core tools (deterministic, not metered) ----
@@ -117,10 +117,10 @@ export default function PricingPage() {
             <div className="kicker">How we compare</div>
             <h2>How we compare</h2>
             <p>
-              List prices from public pricing pages (October 2026), all shown as
-              <b> per-month billed yearly</b> so the numbers are apples to apples. Competitor
-              plans cap exports or credits; Surepix never meters deterministic edits, and
-              includes fidelity verification on every image.
+              List prices from public pricing pages (October 2026, USD), all shown as
+              <b> per-month billed yearly</b> so the numbers are apples to apples. Photoroom caps
+              exports hard at 1,000–3,000/month; Surepix publishes generous limits
+              (5,000 / 15,000 edits &amp; exports) and verifies fidelity on every image.
             </p>
           </div>
           <div style={{ overflowX: "auto" }}>
@@ -141,28 +141,28 @@ export default function PricingPage() {
                   </td>
                   <td>$9</td>
                   <td><b>$7.50</b></td>
-                  <td>Nothing on core tools — edits &amp; exports unlimited</td>
-                  <td><b>~$0</b></td>
+                  <td>5,000 edits &amp; 5,000 exports / month (5× Photoroom)</td>
+                  <td><b>~$0</b> core</td>
                 </tr>
                 <tr>
                   <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>Photoroom Pro</td>
-                  <td>$7.99</td>
-                  <td>$4.50</td>
-                  <td>4,500 AI credits + 1,000 exports / month</td>
-                  <td>~$0.005</td>
+                  <td>$12.99</td>
+                  <td><b>$7.50</b></td>
+                  <td>8,000 AI credits + 1,000 exports / month</td>
+                  <td>~$0.008</td>
                 </tr>
                 <tr>
                   <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>Photoroom Max</td>
-                  <td>$26.99</td>
-                  <td>$10.50</td>
-                  <td>14,000 AI credits + 3,000 exports / month</td>
-                  <td>~$0.004</td>
+                  <td>$34.99</td>
+                  <td><b>$20.99</b></td>
+                  <td>25,000 AI credits + 3,000 exports / month</td>
+                  <td>~$0.007</td>
                 </tr>
                 <tr>
                   <td style={{ fontFamily: "var(--sans)", fontWeight: 600 }}>remove.bg (Canva)</td>
                   <td>$9</td>
                   <td>—</td>
-                  <td>40 credits / month</td>
+                  <td>40 credits / month (closing Dec 2026)</td>
                   <td>~$0.23</td>
                 </tr>
                 <tr>

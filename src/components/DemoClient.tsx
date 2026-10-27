@@ -361,7 +361,7 @@ export default function DemoClient() {
                   <a href="/login" style={{ color: "#3730a3" }}>
                     登录
                   </a>{" "}
-                  后无限
+                  解锁每月额度
                 </div>
               )}
               {anonQuota && anonQuota.remaining === 0 && (
@@ -379,7 +379,7 @@ export default function DemoClient() {
                   <a href="/login" style={{ color: "#b45309" }}>
                     登录
                   </a>{" "}
-                  解锁无限次
+                  解锁每月额度
                 </div>
               )}
               <div className="action-grid" role="group" aria-label="Edit actions">

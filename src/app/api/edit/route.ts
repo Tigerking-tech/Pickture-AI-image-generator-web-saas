@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
     let status = result.ok ? 200 : 422;
     if (result.code === "INSUFFICIENT_CREDITS") status = 402;
     if (result.code === "ANON_QUOTA_EXCEEDED") status = 429;
+    if (result.code === "FAIR_USE_EXCEEDED") status = userId ? 402 : 429;
     return NextResponse.json(result, { status });
   } catch (e) {
     return NextResponse.json(

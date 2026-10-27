@@ -35,7 +35,9 @@ export default async function AdminPage() {
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold text-text-primary mb-2">Admin Dashboard</h1>
-        <p className="text-text-muted">Manage Surepix subscriptions, users and billing from here.</p>
+        <p className="text-text-muted">
+          Manage Surepix subscriptions, users and billing from here.
+        </p>
       </div>
 
       {/* Stats */}

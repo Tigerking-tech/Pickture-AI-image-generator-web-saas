@@ -15,8 +15,15 @@ describe("sitemap", () => {
     expect(urls.some((u) => u.includes("/pricing"))).toBe(true);
   });
 
-  test("returns 4 entries", () => {
-    expect(sitemap()).toHaveLength(4);
+  // 旧断言写死 4 条，而后来新增了 /demo 路由（README 明确"sitemap 已含 /demo"）——
+  // 这里改为断言"路由清单本身"，新增页面时不会再把测试跑红。
+  test("returns one entry per public route", () => {
+    const urls = sitemap().map((e) => e.url);
+    expect(urls).toHaveLength(5);
+    for (const path of ["", "/demo", "/pricing", "/login", "/signup"]) {
+      const expected = path === "" ? urls[0] : `${urls[0]}${path}`;
+      expect(urls).toContain(expected);
+    }
   });
 });
 

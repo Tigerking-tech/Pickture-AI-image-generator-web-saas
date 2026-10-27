@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { assertAdmin, recordAudit } from "@/lib/authz";
 import { creem } from "@/lib/creem";
 import { isDemoMode } from "@/lib/demo/mode";
 import { generateDemoId } from "@/lib/demo/store";
@@ -29,6 +30,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // ── 管理员校验 ──────────────────────────────────────────────────────────
+  // 旧实现只校验"是否登录"，等于任何注册用户都能自助创建 100% 折扣码，
+  // 再拿它走 checkout 白嫖订阅（webhook 还会照常发放对应额度的积分）。
+  // assertAdmin 内部 fail-closed：未配置 ADMIN_EMAIL 一律拒绝。
+  const admin = assertAdmin({ id: user.id, email: user.email });
+  if (!admin.ok) {
+    await recordAudit({
+      user: { id: user.id, email: user.email },
+      action: "discount.create.denied",
+      targetType: "discount",
+      metadata: { reason: admin.error },
+      req: request,
+    });
+    return NextResponse.json({ error: admin.error }, { status: admin.status });
+  }
+
   const body = await request.json();
   const validation = validateDiscountCreate(body);
 
@@ -38,6 +55,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await creem.discounts.create(validation.data);
+    await recordAudit({
+      user: { id: user.id, email: user.email },
+      action: "discount.create",
+      targetType: "discount",
+      targetId: ((result as Record<string, unknown> | undefined)?.id as string) ?? undefined,
+      metadata: validation.data as unknown as Record<string, unknown>,
+      req: request,
+    });
     return NextResponse.json({ success: true, discount: result });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Discount creation failed";

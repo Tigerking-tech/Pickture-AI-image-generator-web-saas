@@ -250,7 +250,9 @@ h4 {
   padding: 6px 10px;
   border-radius: 999px;
   color: var(--ink-2);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .locale-switcher__btn:hover {
   color: var(--ink);
@@ -280,7 +282,10 @@ h4 {
   padding: 14px 26px;
   border-radius: 999px;
   min-height: 50px;
-  transition: background 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.15s var(--ease);
+  transition:
+    background 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    transform 0.15s var(--ease);
 }
 .btn:active {
   transform: translateY(1px);
@@ -369,7 +374,9 @@ h4 {
   border-radius: 18px;
   overflow: hidden;
   background: var(--surface);
-  box-shadow: 0 1px 2px rgb(17 17 24 / 0.04), 0 16px 44px rgb(17 17 24 / 0.08);
+  box-shadow:
+    0 1px 2px rgb(17 17 24 / 0.04),
+    0 16px 44px rgb(17 17 24 / 0.08);
 }
 .hero-shot-bar {
   display: flex;
@@ -478,7 +485,9 @@ h4 {
 .reveal {
   opacity: 0;
   transform: translateY(14px);
-  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+  transition:
+    opacity 0.5s var(--ease),
+    transform 0.5s var(--ease);
 }
 .reveal.in {
   opacity: 1;
@@ -503,7 +512,10 @@ h4 {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   padding: 34px 30px;
-  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease),
+    border-color 0.25s var(--ease);
 }
 .cap:hover {
   transform: translateY(-3px);
@@ -553,7 +565,9 @@ h4 {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
+  transition:
+    box-shadow 0.25s var(--ease),
+    border-color 0.25s var(--ease);
 }
 .show-item:hover {
   box-shadow: var(--shadow);
@@ -611,7 +625,9 @@ h4 {
   padding: 10px 20px;
   min-height: 42px;
   cursor: pointer;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+  transition:
+    background 0.15s var(--ease),
+    color 0.15s var(--ease);
 }
 .cap-tab:hover {
   color: var(--ink);
@@ -671,8 +687,14 @@ h4 {
   animation: capFade 0.3s var(--ease);
 }
 @keyframes capFade {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ---------- before / after 对比滑块 ---------- */
@@ -762,7 +784,9 @@ h4 {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   background: var(--bg);
-  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
 }
 .feat:hover {
   transform: translateY(-3px);
@@ -977,7 +1001,9 @@ h4 {
   align-items: stretch;
 }
 @media (max-width: 1120px) {
-  .plans { grid-template-columns: repeat(2, 1fr); }
+  .plans {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 .plan {
   background: var(--bg);
@@ -1098,7 +1124,9 @@ h4 {
   flex: 0 0 auto;
   font-weight: 700;
 }
-.plan .plan-blurb { min-height: 42px; }
+.plan .plan-blurb {
+  min-height: 42px;
+}
 
 .plan .price span {
   font-size: 15px;
@@ -1572,7 +1600,9 @@ h4 {
   padding: 9px 16px;
   min-height: 38px;
   cursor: pointer;
-  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+  transition:
+    border-color 0.15s var(--ease),
+    background 0.15s var(--ease);
 }
 .chain-btn:hover {
   border-color: var(--ink);
@@ -1702,7 +1732,9 @@ h4 {
   height: 2px;
   background: var(--ink);
   border-radius: 2px;
-  transition: transform 0.25s var(--ease), opacity 0.2s var(--ease);
+  transition:
+    transform 0.25s var(--ease),
+    opacity 0.2s var(--ease);
 }
 .burger-box.open span:nth-child(1) {
   transform: translateY(7px) rotate(45deg);

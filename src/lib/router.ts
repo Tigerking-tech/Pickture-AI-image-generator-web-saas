@@ -6,8 +6,14 @@
  *  - AI 重生成：3-8s/张、概率性、LOGO/文字有约 1/5 变形风险 → 只在语义级改动或保真失败时兜底
  */
 
-import { planChain, detectIntents, validateCommandChain, mergeRank, type ChainStep } from "./whitelist";
 import type { FidelityReport } from "./fidelity";
+import {
+  type ChainStep,
+  detectIntents,
+  mergeRank,
+  planChain,
+  validateCommandChain,
+} from "./whitelist";
 
 /** 成本常量（毫秒） */
 export const COST = {
@@ -21,7 +27,13 @@ export type RouteKind = "photocraft" | "hybrid" | "regenerate" | "reject";
 
 export interface RouteDecision {
   route: RouteKind;
-  plan: { kind: "chain" | "hybrid" | "ai"; chain?: ChainStep[]; intent?: string; intents?: string[]; generative?: string[] } | null;
+  plan: {
+    kind: "chain" | "hybrid" | "ai";
+    chain?: ChainStep[];
+    intent?: string;
+    intents?: string[];
+    generative?: string[];
+  } | null;
   reason: string;
   decision: string;
   costEstimateMs: number;
@@ -31,9 +43,15 @@ export interface RouteDecision {
 export function routeAfterFidelity(
   fidelityResult: FidelityReport,
   opts: { maxRepairs?: number } = {},
-): { action: "accept" | "repair" | "regenerate"; reason: string; costMs: number; maxRepairs?: number; scope?: string[] } {
+): {
+  action: "accept" | "repair" | "regenerate";
+  reason: string;
+  costMs: number;
+  maxRepairs?: number;
+  scope?: string[];
+} {
   const { maxRepairs = 2 } = opts;
-  const verdict = fidelityResult && fidelityResult.verdict;
+  const verdict = fidelityResult?.verdict;
   if (verdict === "PASS") {
     return { action: "accept", reason: "Fidelity check passed", costMs: COST.fidelityCheckMs };
   }
@@ -58,7 +76,10 @@ export function routeAfterFidelity(
 }
 
 /** 主路由：自然语言指令 → 执行计划（origW/origH 供几何模板计算 contain/pad） */
-export function route(instruction: string, ctx: { protectedElements?: string[]; origW?: number; origH?: number } = {}): RouteDecision {
+export function route(
+  instruction: string,
+  ctx: { protectedElements?: string[]; origW?: number; origH?: number } = {},
+): RouteDecision {
   const { deterministic, generative } = detectIntents(instruction);
   const protectedElements = ctx.protectedElements || [];
 
@@ -92,7 +113,10 @@ export function route(instruction: string, ctx: { protectedElements?: string[]; 
   }
 
   if (generative.length > 0) {
-    const risk = protectedElements.length > 0 ? "high (protected elements — per-element fidelity check required)" : "normal";
+    const risk =
+      protectedElements.length > 0
+        ? "high (protected elements — per-element fidelity check required)"
+        : "normal";
     return {
       route: "regenerate",
       plan: { kind: "ai", generative: generative.map((g) => g.intent) },
@@ -152,7 +176,13 @@ export function planWithFallback(
       return { ok: false, error: `fallback L${lv.level} invalid: ${check.error}`, levels };
     }
   }
-  return { ok: true, intent: plan.intent, intents: plan.intents, levels, maxLevel: levels.length - 1 };
+  return {
+    ok: true,
+    intent: plan.intent,
+    intents: plan.intents,
+    levels,
+    maxLevel: levels.length - 1,
+  };
 }
 
 export type BatchPolicy = "noop" | "accept_all" | "redo_individual" | "rollback_batch";
@@ -165,7 +195,9 @@ export function batchQualityPolicy(
   const { threshold = 0.1 } = opts;
   const n = fidelityResults.length;
   if (n === 0) return { policy: "noop", reason: "empty batch", damaged: [], rate: 0 };
-  const damaged = fidelityResults.map((r, i) => (r.verdict !== "PASS" ? i : -1)).filter((i) => i >= 0);
+  const damaged = fidelityResults
+    .map((r, i) => (r.verdict !== "PASS" ? i : -1))
+    .filter((i) => i >= 0);
   const rate = damaged.length / n;
   if (rate === 0) return { policy: "accept_all", reason: "all pass", damaged: [], rate };
   if (rate > threshold && damaged.length >= 2) {

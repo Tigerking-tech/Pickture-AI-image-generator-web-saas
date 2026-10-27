@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useState } from "react";
 
 /**
  * 定价卡片 — 版式对标 Photoroom /pricing：
@@ -51,7 +51,7 @@ const PLANS: Plan[] = [
       { t: "Batch processing (full catalogue)", on: true },
       { t: "Editable PSD master files", on: true },
       { t: "Brand-kit manifests", on: true },
-      { t: "API access + webhooks", on: false },
+      { t: "Platform size presets", on: false },
       { t: "Priority support", on: true },
     ],
     productId: process.env.NEXT_PUBLIC_CREEM_PRO_PRODUCT_ID ?? "prod_pro",
@@ -67,9 +67,8 @@ const PLANS: Plan[] = [
       { t: "15,000 deterministic edits / mo", on: true },
       { t: "Batch processing (full catalogue)", on: true },
       { t: "Editable PSD master files", on: true },
-      { t: "API access + webhooks", on: true },
       { t: "Custom platform presets (Amazon, Zalando…)", on: true },
-      { t: "SSO & audit logs", on: false },
+      { t: "Priority support", on: true },
     ],
     productId: process.env.NEXT_PUBLIC_CREEM_SCALE_PRODUCT_ID ?? "prod_scale",
     popular: true,
@@ -83,7 +82,7 @@ const PLANS: Plan[] = [
     blurb: "Enterprise-grade security, SLA and onboarding.",
     feats: [
       { t: "Everything in Max", on: true },
-      { t: "SSO / SAML + audit logs", on: true },
+      // SSO / SAML / 审计日志尚未实现：不对外承诺（见 entitlements.ts 的接线说明）
       { t: "Enterprise SLA & dedicated onboarding", on: true },
       { t: "Custom recipes for your catalogue", on: true },
       { t: "Invoice & procurement support", on: true },
@@ -147,9 +146,7 @@ function CheckoutButton({ plan }: { plan: Plan }) {
       >
         {loading ? "Redirecting…" : plan.cta}
       </button>
-      {error && (
-        <p style={{ color: "var(--bad)", fontSize: 12.5, margin: "10px 0 0" }}>{error}</p>
-      )}
+      {error && <p style={{ color: "var(--bad)", fontSize: 12.5, margin: "10px 0 0" }}>{error}</p>}
     </>
   );
 }
@@ -161,10 +158,10 @@ export function PricingPlans() {
     <div>
       <div style={{ display: "flex", justifyContent: "center" }}>
         <div className="plan-toggle" role="group" aria-label="Billing period">
-          <button className={yearly ? "" : "on"} onClick={() => setYearly(false)}>
+          <button type="button" className={yearly ? "" : "on"} onClick={() => setYearly(false)}>
             Monthly
           </button>
-          <button className={yearly ? "on" : ""} onClick={() => setYearly(true)}>
+          <button type="button" className={yearly ? "on" : ""} onClick={() => setYearly(true)}>
             Yearly
           </button>
           <span className="save">Save up to 21%</span>

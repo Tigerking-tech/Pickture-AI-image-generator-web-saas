@@ -133,7 +133,9 @@ export function BeforeAfter({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
+      {/* biome-ignore lint/performance/noImgElement: 图片来自编辑管线的运行时 dataURL/base64，next/image 无法优化且会破坏对比滑块的定位 */}
       <img src={before} alt={altBefore} draggable={false} />
+      {/* biome-ignore lint/performance/noImgElement: 图片来自编辑管线的运行时 dataURL/base64，next/image 无法优化且会破坏对比滑块的定位 */}
       <img src={after} alt={altAfter} className="ba-after" draggable={false} />
       {labels && (
         <>

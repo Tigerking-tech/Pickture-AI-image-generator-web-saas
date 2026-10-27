@@ -152,7 +152,6 @@ function createSeededStore(): DemoStore {
 }
 
 declare global {
-  // biome-ignore lint: globalThis requires var
   var __demoStore: DemoStore | undefined;
 }
 

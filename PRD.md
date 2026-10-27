@@ -201,13 +201,31 @@ verify.js 断言覆盖：SEO（title/description/canonical/OG/Twitter/JSON-LD×2
 - [x] 目检脚本化（audit.py）：交互生效性 / 溢出 / 对比度 / 控制台零错误，全通过；verify.js 34/34，damage-test 3/3
 - [x] 修复导航按钮黑底灰字（`.nav-links a.btn-brand` 被链接灰覆盖）
 
+### 已完成（v5，2026-10-28 · 上线前安全与正确性加固）
+- [x] **收回积分 RPC 权限**：`004_harden_rpc.sql` revoke 掉 `grant_credits` / `spend_credits` 对 anon/authenticated 的 EXECUTE，并固定 `search_path`（此前用公开的 anon key 就能给任意账号加积分）
+- [x] **越权修复**：新增 `src/lib/authz.ts` 统一归属校验；`checkout/success` 改为按 Creem metadata/customer 判定归属；`cancel` / `upgrade` / `update-seats` 增加订阅归属校验；`discounts` 增加管理员校验
+- [x] **审计日志**：新增 `audit_log` 表，上述高危操作与失败尝试全部留痕
+- [x] **Webhook 幂等**：所有事件统一用 `webhookId` 去重（insert-conflict 原子判定），月额度按计费周期幂等，杜绝 `active` + `paid` 双发与重试重复发放
+- [x] **Webhook 错误检查**：13 处 DB 写入全部检查 error 并抛错让 Creem 重试；`subscription.update` 的 status 走 `normalizeStatus` 映射（不再直接写 CHECK 约束列）
+- [x] **编辑管线资源闸门**：body 体积上限 + 12MB 上传上限 + 1600 万像素上限 + `/api/edit` IP 限流（60/分钟）；匿名配额改为原子占位（此前 check-then-consume 可被并发绕过），key 去掉 UA 伪造面
+- [x] **定价承诺对齐**：移除未实现的 API/webhooks、SSO/SAML、审计日志、Shopify 对接、席位数量等对外承诺（代码同步注释说明接线步骤）
+- [x] **补 CI**：`.github/workflows/ci.yml`（lint + typecheck + vitest + 迁移完整性检查）
+- [x] **账号可恢复性与合规**：新增 `/forgot-password` + `/reset-password`；新增 `GET /api/export` 数据导出；财务流水改为 ON DELETE SET NULL（删号不再连带删流水）
+- [x] **其他加固**：CSP 响应头；demo 模式支持 `DEMO_MODE` 显式开关（生产 fail-closed）；引擎鉴权改为 deny-by-default；邮件模板转义 + 金额单位统一为「分」
+
 ### 待办（按优先级）
-1. **仪表盘产品化重构**（用户已提兴趣）：目前是 SaaSKit 计费后台换肤。可把 "Credits" 改为 "Verified edits"、许可证页融入品牌 manifest 概念、加编辑历史/质量报告视图
-2. **字体换装布局抖动**：可加 `<link rel="preload">` 或 @font-face size-adjust 兜底
-3. **补推 `.github/workflows/ci.yml`**：需用户提供带 `workflow` scope 的 PAT（或 GitHub 网页手动上传该文件），之后经 Contents API 推送即可与本地对齐
-4. **真实 Supabase + Creem 密钥接入**：目前全程 demo 模式；上线前需建 Supabase 项目（schema 来自 SaaSKit）、Creem 产品（prod_pro/prod_scale）、配置 webhook
-5. **SEO 增强**：og-cover.svg 可升级为真实产品图封面；sitemap 已含 /demo
-6. **竞品复测**：Photoroom/Claid/Pixelcut 改版时重新取计算样式，保持对标
+1. **上线前必须执行的操作清单**（代码已就位，需人工确认）：
+   - 依次执行 `supabase/migrations/001_init.sql → 002_expand → 003_credits_grant → 004_harden_rpc`
+   - 用 anon key 实测 `POST /rest/v1/rpc/grant_credits` 应返回 401/404（验证收权生效）
+   - 生产环境必须配置：`DEMO_MODE=false`、`UPSTASH_REDIS_REST_*`（否则限流不生效）、`CREEM_WEBHOOK_SECRET`、`ADMIN_EMAIL`、`RESEND_*`、Render 侧 `PC_TOKEN`
+   - Supabase Dashboard > Authentication 的 Site URL / Redirect URLs 加入 `/reset-password`
+2. **仪表盘产品化重构**（用户已提兴趣）：目前是 SaaSKit 计费后台换肤。可把 "Credits" 改为 "Verified edits"、许可证页融入品牌 manifest 概念、加编辑历史/质量报告视图；并把 `GET /api/export` 的入口放到设置页
+3. **团队席位模型**：`subscriptions.seats` 已接 Creem 计费，但没有 org/成员/邀请模型，实际只有购买者本人能用 —— 定价页已暂停宣传席位数量，补实现后可恢复
+4. **SSO / 审计日志 / API key / 出站 webhook**：已从对外承诺移除，实现后按 `src/lib/entitlements.ts` 顶部说明接线
+5. **字体换装布局抖动**：可加 `<link rel="preload">` 或 @font-face size-adjust 兜底
+6. **真实 Supabase + Creem 密钥接入**：目前全程 demo 模式；上线前需建 Supabase 项目、Creem 产品（prod_pro/prod_scale）、配置 webhook
+7. **SEO 增强**：og-cover.svg 可升级为真实产品图封面；sitemap 已含 /demo
+8. **竞品复测**：Photoroom/Claid/Pixelcut 改版时重新取计算样式，保持对标
 
 ## 11. 关键文件修改热力图（常动的）
 

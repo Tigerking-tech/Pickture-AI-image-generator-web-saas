@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { extractAnonKey } from "@/lib/anon-key";
 import { getAnonQuotaStatus } from "@/lib/anon-quota";
 

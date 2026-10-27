@@ -156,7 +156,13 @@ function ssimSimple(a: Float64Array, b: Float64Array): number {
  * 对比度与结构的保持——调色通过、模糊/涂灰仍然断崖下降。
  * 全局色偏由 MAE 单独把关（文字类 MAE>40 → REGENERATE）。
  */
-function luminanceCompensatedSsim(ga: Float64Array, gb: Float64Array, w: number, h: number, scales = 3): number {
+function luminanceCompensatedSsim(
+  ga: Float64Array,
+  gb: Float64Array,
+  w: number,
+  h: number,
+  scales = 3,
+): number {
   const na = new Float64Array(ga.length);
   const nb = new Float64Array(gb.length);
   let ma = 0,
@@ -174,7 +180,11 @@ function luminanceCompensatedSsim(ga: Float64Array, gb: Float64Array, w: number,
   return msSsim(na, nb, w, h, scales);
 }
 
-function decimate(g: Float64Array, w: number, h: number): { g: Float64Array; w: number; h: number } {
+function decimate(
+  g: Float64Array,
+  w: number,
+  h: number,
+): { g: Float64Array; w: number; h: number } {
   const nw = Math.ceil(w / 2);
   const nh = Math.ceil(h / 2);
   const out = new Float64Array(nw * nh);
@@ -187,7 +197,13 @@ function decimate(g: Float64Array, w: number, h: number): { g: Float64Array; w: 
 }
 
 /** 多尺度 SSIM：逐级 2x 降采样后取平均 */
-function msSsim(grayA: Float64Array, grayB: Float64Array, w: number, h: number, scales = 3): number {
+function msSsim(
+  grayA: Float64Array,
+  grayB: Float64Array,
+  w: number,
+  h: number,
+  scales = 3,
+): number {
   const scores: number[] = [];
   let a = { g: grayA, w, h };
   let b = { g: grayB, w, h };
@@ -278,7 +294,13 @@ function resampleTo(img: Img, tw: number, th: number): Img {
 }
 
 /** 单元素校验：原图区域 + 处理图区域（两个坐标系各自裁剪）+ 元素名（决定阈值档位） */
-export function verifyElement(orig: Img, proc: Img, origBbox: Bbox, procBbox: Bbox, name: string): ElementReport {
+export function verifyElement(
+  orig: Img,
+  proc: Img,
+  origBbox: Bbox,
+  procBbox: Bbox,
+  name: string,
+): ElementReport {
   const ro = crop(orig, origBbox);
   let rp = crop(proc, procBbox);
   if (ro.rgb.length === 0 || rp.rgb.length === 0) {
@@ -420,7 +442,8 @@ function warpToTransform(img: Img, outW: number, outH: number, t: ImgTransform, 
         const p10 = img.rgb[(y0 * img.w + x1) * 3 + c];
         const p01 = img.rgb[(y1 * img.w + x0) * 3 + c];
         const p11 = img.rgb[(y1 * img.w + x1) * 3 + c];
-        out[o + c] = p00 * (1 - wx) * (1 - wy) + p10 * wx * (1 - wy) + p01 * (1 - wx) * wy + p11 * wx * wy;
+        out[o + c] =
+          p00 * (1 - wx) * (1 - wy) + p10 * wx * (1 - wy) + p01 * (1 - wx) * wy + p11 * wx * wy;
       }
     }
   }
@@ -440,9 +463,12 @@ export function verify(
 ): FidelityReport {
   const orig = decodePng(origBuf);
   const proc = decodePng(procBuf);
-  const t: ImgTransform =
-    transform ?? { scale: [proc.w / orig.w, proc.h / orig.h], translate: [0, 0] };
-  const geometric = t.scale[0] !== 1 || t.scale[1] !== 1 || t.translate[0] !== 0 || t.translate[1] !== 0;
+  const t: ImgTransform = transform ?? {
+    scale: [proc.w / orig.w, proc.h / orig.h],
+    translate: [0, 0],
+  };
+  const geometric =
+    t.scale[0] !== 1 || t.scale[1] !== 1 || t.translate[0] !== 0 || t.translate[1] !== 0;
   const ref = geometric ? warpToTransform(orig, proc.w, proc.h, t, 255) : orig;
 
   const report: FidelityReport = { verdict: "PASS", elements: {}, summary: {} };
@@ -478,9 +504,18 @@ export function verify(
 }
 
 /** 无 manifest 的上传图：全图作为单元素校验（whole_image 走商品主体档阈值） */
-export function verifyGlobal(origBuf: Buffer, procBuf: Buffer, transform?: ImgTransform): FidelityReport {
+export function verifyGlobal(
+  origBuf: Buffer,
+  procBuf: Buffer,
+  transform?: ImgTransform,
+): FidelityReport {
   const orig = decodePng(origBuf);
-  return verify(origBuf, procBuf, {
-    elements: { whole_image: { bbox: [0, 0, orig.w, orig.h] as Bbox } },
-  }, transform);
+  return verify(
+    origBuf,
+    procBuf,
+    {
+      elements: { whole_image: { bbox: [0, 0, orig.w, orig.h] as Bbox } },
+    },
+    transform,
+  );
 }

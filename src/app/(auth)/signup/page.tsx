@@ -78,7 +78,10 @@ export default function SignupPage() {
               boxShadow: "0 1px 2px rgb(17 17 24 / 0.04), 0 8px 28px rgb(17 17 24 / 0.07)",
             }}
           >
-            <h1 className="text-2xl font-extrabold mb-1" style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}>
+            <h1
+              className="text-2xl font-extrabold mb-1"
+              style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
+            >
               Create your account
             </h1>
             <p className="text-sm mb-6" style={{ color: "var(--ink-2)" }}>
@@ -87,7 +90,11 @@ export default function SignupPage() {
 
             <form onSubmit={handleSignup} className="space-y-4">
               <div>
-                <label htmlFor="signup-email" className="block text-sm font-bold mb-1.5" style={{ color: "var(--ink)" }}>
+                <label
+                  htmlFor="signup-email"
+                  className="block text-sm font-bold mb-1.5"
+                  style={{ color: "var(--ink)" }}
+                >
                   Email address
                 </label>
                 <input
@@ -104,7 +111,11 @@ export default function SignupPage() {
                 />
               </div>
               <div>
-                <label htmlFor="signup-password" className="block text-sm font-bold mb-1.5" style={{ color: "var(--ink)" }}>
+                <label
+                  htmlFor="signup-password"
+                  className="block text-sm font-bold mb-1.5"
+                  style={{ color: "var(--ink)" }}
+                >
                   Password
                 </label>
                 <input
@@ -127,7 +138,11 @@ export default function SignupPage() {
                 </p>
               )}
 
-              <button type="submit" disabled={loading} className="w-full py-3 btn-primary disabled:btn-disabled text-base">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 btn-primary disabled:btn-disabled text-base"
+              >
                 {loading ? "Creating account…" : "Sign Up →"}
               </button>
             </form>
@@ -137,7 +152,10 @@ export default function SignupPage() {
                 <div className="w-full border-t" style={{ borderColor: "var(--line-soft)" }} />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-3 font-medium" style={{ background: "var(--surface)", color: "var(--ink-3)" }}>
+                <span
+                  className="px-3 font-medium"
+                  style={{ background: "var(--surface)", color: "var(--ink-3)" }}
+                >
                   or
                 </span>
               </div>
@@ -166,28 +184,53 @@ export default function SignupPage() {
         <div className="relative z-10 text-center px-12 max-w-md">
           <span
             className="inline-block px-4 py-1.5 text-xs font-bold rounded-full mb-8"
-            style={{ background: "rgb(255 255 255 / 0.16)", color: "#fff", letterSpacing: "0.08em" }}
+            style={{
+              background: "rgb(255 255 255 / 0.16)",
+              color: "#fff",
+              letterSpacing: "0.08em",
+            }}
           >
             FREE PLAN · 50 EDITS / MONTH
           </span>
-          <h2 className="text-5xl font-extrabold leading-[1.05] mb-5" style={{ color: "#fff", letterSpacing: "-0.03em" }}>
+          <h2
+            className="text-5xl font-extrabold leading-[1.05] mb-5"
+            style={{ color: "#fff", letterSpacing: "-0.03em" }}
+          >
             Verified editing, from the first photo.
           </h2>
-          <p className="text-lg font-medium" style={{ color: "rgb(255 255 255 / 0.78)", lineHeight: 1.6 }}>
-            Colour, crop, resize and watermark as deterministic recipes —
-            every logo, label and price tag verified before delivery.
+          <p
+            className="text-lg font-medium"
+            style={{ color: "rgb(255 255 255 / 0.78)", lineHeight: 1.6 }}
+          >
+            Colour, crop, resize and watermark as deterministic recipes — every logo, label and
+            price tag verified before delivery.
           </p>
           <div
             className="mt-10 rounded-2xl p-5 text-left"
-            style={{ background: "rgb(255 255 255 / 0.1)", border: "1px solid rgb(255 255 255 / 0.18)" }}
+            style={{
+              background: "rgb(255 255 255 / 0.1)",
+              border: "1px solid rgb(255 255 255 / 0.18)",
+            }}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: "rgb(255 255 255 / 0.7)" }}>
+              <span
+                className="text-xs font-extrabold uppercase tracking-wider"
+                style={{ color: "rgb(255 255 255 / 0.7)" }}
+              >
                 What you get
               </span>
             </div>
-            {["Fidelity verification included", "PNG + JPG export", "No training on your images", "Upgrade anytime — $9/mo Pro"].map((el) => (
-              <div key={el} className="flex items-center gap-2.5 text-sm py-1.5" style={{ color: "#fff" }}>
+            {[
+              "Fidelity verification included",
+              "PNG + JPG export",
+              "No training on your images",
+              "Upgrade anytime — $9/mo Pro",
+            ].map((el) => (
+              <div
+                key={el}
+                className="flex items-center gap-2.5 text-sm py-1.5"
+                style={{ color: "#fff" }}
+              >
                 <span style={{ color: "#bbf7d0", fontWeight: 800 }}>✓</span>
                 <span style={{ opacity: 0.85 }}>{el}</span>
               </div>

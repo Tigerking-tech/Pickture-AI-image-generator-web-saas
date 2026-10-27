@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Reveal } from "./Reveal";
 import { BeforeAfter } from "./BeforeAfter";
 import { CapTabs } from "./CapTabs";
+import { Reveal } from "./Reveal";
 import { SiteHeader } from "./SiteHeader";
 
 /* ============================================================
@@ -54,9 +54,21 @@ const SHOWCASE = [
 
 const VS_ROWS = [
   ["Speed", "~4,000ms per image", "~40ms per edit"],
-  ["Brand assets", "~1 in 5 logos and text elements come back warped", "Verified element-by-element before delivery"],
-  ["Repeatability", "Non-deterministic — same prompt, different result", "Deterministic — same recipe, same output"],
-  ["Audit trail", "No record of what changed", "Every edit is an auditable, re-runnable command chain"],
+  [
+    "Brand assets",
+    "~1 in 5 logos and text elements come back warped",
+    "Verified element-by-element before delivery",
+  ],
+  [
+    "Repeatability",
+    "Non-deterministic — same prompt, different result",
+    "Deterministic — same recipe, same output",
+  ],
+  [
+    "Audit trail",
+    "No record of what changed",
+    "Every edit is an auditable, re-runnable command chain",
+  ],
 ];
 
 const TRUST = [
@@ -84,7 +96,13 @@ const PLANS = [
     price: "$0",
     per: "/month",
     credits: "5 AI credits • 50 exports",
-    features: ["50 core-tool edits / month", "Fidelity verification included", "PNG + JPG export", "Surepix watermark on exports", "Community support"],
+    features: [
+      "50 core-tool edits / month",
+      "Fidelity verification included",
+      "PNG + JPG export",
+      "Surepix watermark on exports",
+      "Community support",
+    ],
     cta: "Start free",
     hot: false,
     href: "/signup",
@@ -94,7 +112,14 @@ const PLANS = [
     price: "$7.50",
     per: "/month",
     credits: "200 AI credits • 5,000 exports / mo",
-    features: ["5,000 deterministic edits / mo", "No watermark", "Batch processing (full catalogue)", "Editable PSD master files", "Brand-kit manifests", "Priority support"],
+    features: [
+      "5,000 deterministic edits / mo",
+      "No watermark",
+      "Batch processing (full catalogue)",
+      "Editable PSD master files",
+      "Brand-kit manifests",
+      "Priority support",
+    ],
     cta: "Start 14-day trial",
     hot: true,
     href: "/pricing",
@@ -104,7 +129,9 @@ const PLANS = [
     price: "$19",
     per: "/month",
     credits: "2,000 AI credits • 15,000 exports / mo",
-    features: ["15,000 deterministic edits / mo", "API access + webhooks", "Custom platform presets (Amazon, Zalando…)", "Shopify integration", "Priority support"],
+    // 原为 ["...", "API access + webhooks", "Custom platform presets (Amazon, Zalando…)", "Shopify integration", "Priority support"]
+    // 前三项代码里没有实现（无 API key 体系 / 无 Shopify 对接），已从对外承诺中移出。
+    features: ["15,000 deterministic edits / mo", "Platform size presets", "Priority support"],
     cta: "Start 14-day trial",
     hot: false,
     href: "/pricing",
@@ -114,7 +141,13 @@ const PLANS = [
     price: "Custom",
     per: "",
     credits: "Unlimited volume • dedicated capacity",
-    features: ["Everything in Max", "SSO / SAML + audit logs", "Enterprise SLA & onboarding", "Custom recipes", "Dedicated support"],
+    features: [
+      "Everything in Max",
+      "SSO / SAML + audit logs",
+      "Enterprise SLA & onboarding",
+      "Custom recipes",
+      "Dedicated support",
+    ],
     cta: "Contact sales",
     hot: false,
     href: "/pricing",
@@ -167,24 +200,35 @@ export default function Landing() {
             <Reveal>
               <h1>Product photos that stay true.</h1>
               <p className="lead">
-                White background, colour, resize, watermark — deterministic
-                edits in ~40ms, with every logo, label and price tag verified
-                against the original before delivery.
+                White background, colour, resize, watermark — deterministic edits in ~40ms, with
+                every logo, label and price tag verified against the original before delivery.
               </p>
               <div className="hero-cta">
-                <Link href="/signup" className="btn btn-brand">Start editing free</Link>
-                <Link href="/demo" className="btn btn-ghost">Try the live demo</Link>
+                <Link href="/signup" className="btn btn-brand">
+                  Start editing free
+                </Link>
+                <Link href="/demo" className="btn btn-ghost">
+                  Try the live demo
+                </Link>
               </div>
               <div className="hero-meta">
-                <span><b>~40ms</b> per edit</span>
-                <span><b>100 SKUs</b> in under 3s</span>
-                <span><b>0</b> images used for training</span>
+                <span>
+                  <b>~40ms</b> per edit
+                </span>
+                <span>
+                  <b>100 SKUs</b> in under 3s
+                </span>
+                <span>
+                  <b>0</b> images used for training
+                </span>
               </div>
             </Reveal>
             <Reveal delay={120} className="hero-visual">
               <div className="hero-shot">
                 <div className="hero-shot-bar" aria-hidden="true">
-                  <i /><i /><i />
+                  <i />
+                  <i />
+                  <i />
                   <span>surepix · warm_up recipe</span>
                 </div>
                 <BeforeAfter
@@ -195,7 +239,9 @@ export default function Landing() {
                   initial={52}
                 />
                 <div className="hero-note">
-                  <span><b>PASS</b> fidelity report · serum</span>
+                  <span>
+                    <b>PASS</b> fidelity report · serum
+                  </span>
                   <span>{HERO_NOTE}</span>
                 </div>
               </div>
@@ -222,7 +268,10 @@ export default function Landing() {
             <Reveal className="section-head">
               <div className="kicker">What it does</div>
               <h2>One workspace for every product-photo edit</h2>
-              <p>White background, colour, crop, resize, watermark — executed as deterministic recipes and verified before delivery.</p>
+              <p>
+                White background, colour, crop, resize, watermark — executed as deterministic
+                recipes and verified before delivery.
+              </p>
             </Reveal>
             <Reveal delay={90}>
               <CapTabs />
@@ -237,9 +286,8 @@ export default function Landing() {
               <div className="kicker">Why verified</div>
               <h2>Every texture, label and logo preserved</h2>
               <p>
-                The category&apos;s shared weakness is packaging text and logos:
-                generative tools repaint them and hope. Surepix measures them instead.
-                Drag the sliders.
+                The category&apos;s shared weakness is packaging text and logos: generative tools
+                repaint them and hope. Surepix measures them instead. Drag the sliders.
               </p>
             </Reveal>
             <div className="showcase">
@@ -257,7 +305,9 @@ export default function Landing() {
                       <h3>{s.title}</h3>
                       <p>{s.desc}</p>
                       <div className="show-metrics">
-                        {s.metrics.map((m) => <span key={m}>{m}</span>)}
+                        {s.metrics.map((m) => (
+                          <span key={m}>{m}</span>
+                        ))}
                       </div>
                     </div>
                   </article>
@@ -295,8 +345,8 @@ export default function Landing() {
               <div className="kicker">Why deterministic</div>
               <h2>Generative tools vs. a verified pipeline</h2>
               <p>
-                Generative models are powerful — but they repaint pixels you need
-                preserved. Surepix reserves generation for genuinely semantic work.
+                Generative models are powerful — but they repaint pixels you need preserved. Surepix
+                reserves generation for genuinely semantic work.
               </p>
             </Reveal>
             <Reveal delay={90}>
@@ -327,9 +377,9 @@ export default function Landing() {
                   <div className="kicker">The Surepix guarantee</div>
                   <h2>Edits that stay true to the product — or they don&apos;t ship.</h2>
                   <p>
-                    Every protected element passes four fidelity metrics before delivery.
-                    If an edit can&apos;t be verified, it is repaired with gentler
-                    parameters or escalated — never silently shipped with a warped logo.
+                    Every protected element passes four fidelity metrics before delivery. If an edit
+                    can&apos;t be verified, it is repaired with gentler parameters or escalated —
+                    never silently shipped with a warped logo.
                   </p>
                 </div>
                 <div className="guarantee-stats">
@@ -385,15 +435,24 @@ export default function Landing() {
                   <div className={`plan${p.hot ? " hot" : ""}`}>
                     {p.hot && <span className="tag">Popular</span>}
                     <h3>{p.name}</h3>
-                    <div className="price">{p.price}<span>{p.per}</span></div>
+                    <div className="price">
+                      {p.price}
+                      <span>{p.per}</span>
+                    </div>
                     {p.price !== "Custom" && p.price !== "$0" && (
-                      <div className="plan-billed" style={{ marginTop: -4 }}>Per month, billed yearly</div>
+                      <div className="plan-billed" style={{ marginTop: -4 }}>
+                        Per month, billed yearly
+                      </div>
                     )}
                     <div className="plan-credits">{p.credits}</div>
                     <ul>
-                      {p.features.map((f) => <li key={f}>{f}</li>)}
+                      {p.features.map((f) => (
+                        <li key={f}>{f}</li>
+                      ))}
                     </ul>
-                    <Link href={p.href} className={`btn ${p.hot ? "btn-brand" : "btn-ghost"}`}>{p.cta}</Link>
+                    <Link href={p.href} className={`btn ${p.hot ? "btn-brand" : "btn-ghost"}`}>
+                      {p.cta}
+                    </Link>
                   </div>
                 </Reveal>
               ))}
@@ -420,7 +479,11 @@ export default function Landing() {
                 </details>
               ))}
             </Reveal>
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+            {/* JSON-LD：faqJsonLd 是本文件常量，不得拼接任何外部输入（见 biome.json 的 overrides 注释） */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+            />
           </div>
         </section>
       </main>
@@ -431,32 +494,59 @@ export default function Landing() {
           <div className="footer-grid">
             <div>
               <Link href="/" className="logo" style={{ marginBottom: 14 }}>
-                <span className="logo-mark" aria-hidden="true">S</span>
+                <span className="logo-mark" aria-hidden="true">
+                  S
+                </span>
                 Surepix
               </Link>
               <p style={{ maxWidth: "34em", margin: "0 0 10px" }}>
-                Deterministic product-photo editing with built-in fidelity verification.
-                Built for e-commerce teams who care about brand consistency.
+                Deterministic product-photo editing with built-in fidelity verification. Built for
+                e-commerce teams who care about brand consistency.
               </p>
               <p style={{ margin: 0, fontSize: 12.5 }}>
-                Editing engine: <a href="https://github.com/storytold/photocraft" rel="noopener noreferrer" target="_blank">PhotoCraft</a> (MIT OR Apache-2.0).
-                Quality-control and routing algorithms are Surepix proprietary.
+                Editing engine:{" "}
+                <a
+                  href="https://github.com/storytold/photocraft"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  PhotoCraft
+                </a>{" "}
+                (MIT OR Apache-2.0). Quality-control and routing algorithms are Surepix proprietary.
               </p>
             </div>
             <div>
               <h4>Product</h4>
               <ul>
-                <li><Link href="/demo">Live demo</Link></li>
-                <li><Link href="/#how-it-works">How it works</Link></li>
-                <li><Link href="/#pricing">Pricing</Link></li>
+                <li>
+                  <Link href="/demo">Live demo</Link>
+                </li>
+                <li>
+                  <Link href="/#how-it-works">How it works</Link>
+                </li>
+                <li>
+                  <Link href="/#pricing">Pricing</Link>
+                </li>
               </ul>
             </div>
             <div>
               <h4>Legal</h4>
               <ul>
-                <li><Link href="/#faq">Privacy &amp; data</Link></li>
-                <li><Link href="/#faq">Terms</Link></li>
-                <li><a href="https://github.com/storytold/photocraft" target="_blank" rel="noopener noreferrer">Engine license</a></li>
+                <li>
+                  <Link href="/#faq">Privacy &amp; data</Link>
+                </li>
+                <li>
+                  <Link href="/#faq">Terms</Link>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/storytold/photocraft"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Engine license
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

@@ -161,14 +161,17 @@ export function createDemoClient(): any {
           return { data: null, error: { message: "No credits record for user" } };
         }
         if (wallet.balance === -1) {
-          store.creditTransactions.set(`ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, {
-            id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-            user_id: userId,
-            amount: -amount,
-            type: "spend",
-            description: reason,
-            created_at: new Date().toISOString(),
-          });
+          store.creditTransactions.set(
+            `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            {
+              id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+              user_id: userId,
+              amount: -amount,
+              type: "spend",
+              description: reason,
+              created_at: new Date().toISOString(),
+            },
+          );
           return { data: -1, error: null };
         }
         if (wallet.balance < amount) {

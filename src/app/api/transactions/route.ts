@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const page = Number(searchParams.get("page") ?? "1");
+  // 分页参数必须 sanitize：直接 Number() 会把 "abc" 变成 NaN 传给 Creem，
+  // 负数同理（Creem 会返回 400，而用户看到的是一句无关的报错）
+  const rawPage = Number(searchParams.get("page") ?? "1");
+  const page = Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1;
 
   try {
     const result = await creem.transactions.search(

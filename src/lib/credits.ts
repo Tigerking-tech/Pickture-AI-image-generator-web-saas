@@ -28,8 +28,8 @@
 
 import { isDemoMode } from "@/lib/demo/mode";
 import { getDemoStore } from "@/lib/demo/store";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { estimatedCostUsd } from "@/lib/generative";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 // ============================================================
 // 1. 常量（运营可调，环境变量覆盖）

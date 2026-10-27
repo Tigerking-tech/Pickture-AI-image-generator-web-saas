@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { assertOwnsSubscription, recordAudit } from "@/lib/authz";
 import { creem } from "@/lib/creem";
 import { isDemoMode } from "@/lib/demo/mode";
 import { getDemoStore } from "@/lib/demo/store";
@@ -42,10 +43,33 @@ export async function POST(request: NextRequest) {
 
   const { subscriptionId, mode } = validation.data;
 
+  // ── 归属校验：这个订阅必须是当前用户的 ──────────────────────────────────
+  // 旧实现拿到任何人的 creem_subscription_id 就能取消对方订阅（mode: immediate）。
+  const owns = await assertOwnsSubscription(user.id, subscriptionId);
+  if (!owns.ok) {
+    await recordAudit({
+      user: { id: user.id, email: user.email },
+      action: "subscription.cancel.denied",
+      targetType: "subscription",
+      targetId: subscriptionId,
+      metadata: { reason: owns.error },
+      req: request,
+    });
+    return NextResponse.json({ error: owns.error }, { status: owns.status });
+  }
+
   try {
     const result = await creem.subscriptions.cancel(subscriptionId, {
       mode,
       onExecute: mode === "scheduled" ? "cancel" : undefined,
+    });
+    await recordAudit({
+      user: { id: user.id, email: user.email },
+      action: "subscription.cancel",
+      targetType: "subscription",
+      targetId: subscriptionId,
+      metadata: { mode },
+      req: request,
     });
     return NextResponse.json({ success: true, subscription: result });
   } catch (error) {

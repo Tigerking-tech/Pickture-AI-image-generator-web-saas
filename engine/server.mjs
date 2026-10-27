@@ -25,6 +25,8 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PC_CLI = process.env.PC_CLI || path.join(ROOT, "vendor", "photocraft", "photocraft-cli");
 const TOKEN = process.env.PC_TOKEN || "";
+/** 仅本地调试：显式 LOCAL_ANON=1 且未配 PC_TOKEN 时才允许无鉴权访问 */
+const ALLOW_ANON = process.env.LOCAL_ANON === "1";
 const PORT = Number(process.env.PORT || 3000);
 const TIMEOUT_MS = Number(process.env.PC_TIMEOUT_MS || 120000);
 const MAX_BODY = 64 * 1024 * 1024;
@@ -159,7 +161,16 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && url === "/api/pc/healthz") {
     return send(res, 200, { ok: true, engine: "photocraft", version: pinnedVersion(), pid: process.pid });
   }
-  if (TOKEN && req.headers["authorization"] !== `Bearer ${TOKEN}`) {
+  // 鉴权改为 **deny-by-default**：
+  // 旧写法是 `TOKEN && 不匹配才拒绝`，也就是忘了配 PC_TOKEN 时整个引擎在公网裸奔
+  // （Render 上 ENV 手滑漏填 = 任何人都能白嫖你的 CPU 跑批处理）。
+  // 现在未配置令牌时一律拒绝，仅限显式开 LOCAL_ANON=1 的本地调试场景放行。
+  const authorized =
+    TOKEN && req.headers["authorization"] === `Bearer ${TOKEN}`;
+  if (!authorized && !(ALLOW_ANON && !TOKEN)) {
+    if (!TOKEN) {
+      return deny(res, 503, "engine misconfigured: PC_TOKEN not set (set LOCAL_ANON=1 for local debugging only)");
+    }
     return deny(res, 401, "unauthorized");
   }
   try {

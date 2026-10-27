@@ -8,6 +8,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  type AnonQuotaStatus,
+  getAnonQuotaStatus,
+  refundAnonGenerativeQuota,
+  tryConsumeAnonGenerativeQuota,
+} from "./anon-quota";
+import { creditsForIntents, hasCredits, spendForIntents } from "./credits";
+import { resolveUserPlan } from "./entitlements";
+import { checkFairUse, consumeFairUse, type FairUseStatus } from "./fair-use";
+import {
   type Bbox,
   decodePng,
   type FidelityReport,
@@ -16,10 +25,6 @@ import {
   verifyGlobal,
 } from "./fidelity";
 import { runGenerative } from "./generative";
-import { creditsForIntents, hasCredits, spendForIntents } from "./credits";
-import { checkAnonGenerativeQuota, consumeAnonGenerativeQuota } from "./anon-quota";
-import { checkFairUse, consumeFairUse, type FairUseStatus } from "./fair-use";
-import { resolveUserPlan } from "./entitlements";
 import { convertFile, docInfo, rmQuiet, runChain, tmpPath } from "./pc";
 import { planWithFallback, type RouteDecision, route, routeAfterFidelity } from "./router";
 import { type ChainStep, INTENT_TEMPLATES, planChain, validateCommandChain } from "./whitelist";
@@ -67,6 +72,13 @@ export interface EditResult {
 }
 
 const SAMPLES_DIR = path.join(process.cwd(), "public", "samples");
+
+// ── 输入闸门：单请求的资源上限 ────────────────────────────────────────────
+// 旧实现没有任何上限：一张 8000×8000 的图解码后要 Float64Array(w*h*3) ≈ 1.5GB，
+// 一个请求就能打爆 serverless 实例，而且确定性编辑不扣积分 —— 攻击成本为零。
+// 两级拦截：先卡上传体积（省一次解码），再卡像素总数（省后续所有算子）。
+export const MAX_UPLOAD_BYTES = 12 * 1024 * 1024; // 解码后的原图字节上限
+export const MAX_IMAGE_PIXELS = 16_000_000; // 4096×4096 量级
 
 function loadSample(id: string): { png: Buffer; manifest: Manifest | null } {
   const pngPath = path.join(SAMPLES_DIR, `${id}.png`);
@@ -262,9 +274,7 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
 
   // 解析调用方计划（用于 fair-use 月度上限）；无订阅 / 异常回退 free。
   // 匿名（无 userId）直接按 free 档计；demo 模式由 fair-use 模块短路放行。
-  const userPlan = req.userId
-    ? await resolveUserPlan(req.userId).catch(() => "free")
-    : "free";
+  const userPlan = req.userId ? await resolveUserPlan(req.userId).catch(() => "free") : "free";
 
   // 成功后计量一次确定性编辑（edits + exports 同月上限）；best-effort，失败不阻断交付。
   const countDeterministicEdit = async () => {
@@ -282,6 +292,14 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     manifest = s.manifest;
     source = `sample:${req.sampleId}`;
   } else if (req.imageBase64) {
+    // 先估解码后的字节数（base64 每 4 字符 ≈ 3 字节），超限直接拒，不做任何解码
+    const decodedBytes = Math.floor((req.imageBase64.length * 3) / 4);
+    if (decodedBytes > MAX_UPLOAD_BYTES) {
+      return fail(
+        `image too large (${(decodedBytes / 1024 / 1024).toFixed(1)}MB > ${MAX_UPLOAD_BYTES / 1024 / 1024}MB). Resize before uploading.`,
+        route("reject me"),
+      );
+    }
     origPng = Buffer.from(req.imageBase64, "base64");
     manifest = req.manifest ?? null;
     source = "upload";
@@ -291,6 +309,13 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
 
   // 2. 路由决策（几何模板需要原图尺寸，先解码）
   const origImg = decodePng(origPng);
+  const pixels = origImg.w * origImg.h;
+  if (pixels > MAX_IMAGE_PIXELS) {
+    return fail(
+      `image too large (${origImg.w}×${origImg.h} = ${pixels} px > ${MAX_IMAGE_PIXELS} px). Decode and verify costs scale with pixel count.`,
+      route("reject me"),
+    );
+  }
   const routeDecision = route(req.intent, {
     protectedElements: manifest ? Object.keys(manifest.elements) : [],
     origW: origImg.w,
@@ -327,19 +352,30 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     // 对标竞品漏斗：确定性编辑（$0）免登录全开；生成式（fal.ai 按次计费 ≈$0.02）
     // 对匿名用户开放有限次试用，超出后要求登录（登录后走积分账本 credits.ts）。
     // demo 模式豁免（fal 为 mock 不烧钱）；登录用户走积分，不在此限。
+    //
+    // 闸门实现必须是「原子占位」而不是「先查后扣」：旧实现用 check 判断、
+    // 生成成功后才 consume，中间隔着好几秒模型调用，并发请求会全部通过。
+    let anonReserved = false;
+    let anonStatus: AnonQuotaStatus | undefined;
     if (!req.userId && req.anonKey && genIntents.length > 0) {
-      const q = await checkAnonGenerativeQuota(req.anonKey);
-      if (!q.allowed) {
+      const res = await tryConsumeAnonGenerativeQuota(req.anonKey);
+      anonStatus = res.status;
+      if (!res.allowed) {
         return fail(
-          `Anonymous generative trial limit reached (${q.limit}/day). Sign in to unlock your monthly AI edit allowance.`,
+          `Anonymous generative trial limit reached (${res.status.limit}/day). Sign in to unlock your monthly AI edit allowance.`,
           routeDecision,
           [],
           {
             code: "ANON_QUOTA_EXCEEDED",
-            anonQuota: { remaining: q.remaining, limit: q.limit, resetAt: q.resetAt },
+            anonQuota: {
+              remaining: res.status.remaining,
+              limit: res.status.limit,
+              resetAt: res.status.resetAt,
+            },
           },
         );
       }
+      anonReserved = true;
     }
 
     // hybrid：先把确定性那部分用 PhotoCraft 跑掉，再生成（生成只补语义差异）
@@ -367,12 +403,12 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
       for (const lv of levels) {
         const transform = transformFromChain(lv.chain, origImg.w, origImg.h);
         const res = await runLevel(origPng, manifest, lv, false, transform);
-      if (res.ok && res.resultPng) {
-        inputPng = res.resultPng;
-        detDesc = lv.desc;
-        await countDeterministicEdit();
-        break;
-      }
+        if (res.ok && res.resultPng) {
+          inputPng = res.resultPng;
+          detDesc = lv.desc;
+          await countDeterministicEdit();
+          break;
+        }
       }
     }
 
@@ -384,6 +420,8 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     for (const g of genIntents) {
       const genResult = await runGenerative(g, genPng.toString("base64"), req.intent);
       if (!genResult.ok || !genResult.imageBase64) {
+        // 模型侧失败：把之前占位的匿名额度退还给用户（不是用户的错）
+        if (anonReserved && req.anonKey) await refundAnonGenerativeQuota(req.anonKey);
         return fail(
           `generative path failed at "${g}" (${routeDecision.route}): ${genResult.error || "no output"}`,
           routeDecision,
@@ -397,31 +435,33 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
       totalGenMs += genResult.ms ?? 0;
     }
 
-    // 生成成功后才扣积分（失败不扣；偶发失败由毛利倍数吸收）。best-effort：扣减异常不影响交付。
+    // 生成成功后才扣积分（失败不扣；偶发失败由毛利倍数吸收）。
+    // best-effort：扣减异常不影响已交付的结果，但要留下可见错误——
+    // 旧实现 catch 后什么都不做，等于"扣费失败也能白嫖"，且没有任何线索。
     if (req.userId && genIntents.length > 0) {
       try {
-        await spendForIntents(
+        const spent = await spendForIntents(
           req.userId,
           genIntents,
           `Generative edit — ${genIntents.join(" + ")}`,
         );
-      } catch {
-        // 扣减失败（如并发竞态）不阻断已成功的生成结果
+        if (!spent.ok) {
+          console.error(
+            `[billing] credit spend failed for user ${req.userId}: ${spent.error} (genIntents=${genIntents.join(",")})`,
+          );
+        }
+      } catch (e) {
+        console.error("[billing] credit spend threw:", e instanceof Error ? e.message : e);
       }
     }
 
-    // 生成成功后消费一次匿名试用额度（best-effort；demo 模式内部短路不计）
-    if (!req.userId && req.anonKey && genIntents.length > 0) {
-      try {
-        await consumeAnonGenerativeQuota(req.anonKey);
-      } catch {
-        // 限流计数失败不阻断交付
-      }
-    }
+    // 匿名额度已在闸门处占位，此处不再重复计数（旧实现在这里补一次 consume）
 
     const img = decodePng(genPng);
-    // 生成成功后附上最新匿名配额状态（已消费一次），供前端刷新"今日剩余"展示
-    const anonQuota = req.anonKey ? await checkAnonGenerativeQuota(req.anonKey) : undefined;
+    // 附上一次最新的匿名配额状态（已占位一次），供前端刷新"今日剩余"展示
+    const anonQuota: AnonQuotaStatus | undefined = req.anonKey
+      ? (anonStatus ?? (await getAnonQuotaStatus(req.anonKey)))
+      : undefined;
     const genFidelity: FidelityReport = {
       verdict: "PASS",
       elements: {},

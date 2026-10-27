@@ -2,8 +2,8 @@
 
 // 语言切换器：写入 locale cookie 后刷新，根布局重新读取并切换 <html lang> 与字典。
 import { useRouter } from "next/navigation";
+import { LOCALE_COOKIE, type Locale, localeNames, locales } from "@/i18n/config";
 import { useLocale, useT } from "@/i18n/I18nProvider";
-import { locales, localeNames, LOCALE_COOKIE, type Locale } from "@/i18n/config";
 
 export function LocaleSwitcher() {
   const locale = useLocale();
@@ -11,6 +11,7 @@ export function LocaleSwitcher() {
   const router = useRouter();
 
   function switchTo(next: Locale) {
+    // biome-ignore lint/suspicious/noDocumentCookie: 这里写的是非敏感的 UI 偏好 cookie（samesite=lax，不含凭据）
     document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
     router.refresh();
   }

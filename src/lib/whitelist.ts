@@ -6,6 +6,10 @@
  *  1. 只能从白名单里选命令，禁止幻觉出不存在的命令
  *  2. 每个命令带参数 schema + 取值范围校验
  *  3. 语义动作（客户的人话）→ 命令链模板 的映射是 Surepix 自有资产
+ *
+ * 尺寸上限为什么是 4096：源 clipping 到 [16, 4096] 后，解压出的 RGB 缓冲由
+ * fidelity.ts 的 Float64Array(w*h*3) 承载 —— 4096² 已是 ~400MB，再高会被单个
+ * 请求打爆 serverless 实例。上限同时由 pipeline 的 totalPixels 闸门兜底。
  */
 
 type Validator = (v: unknown, range?: [number, number] | string[]) => boolean;
@@ -83,8 +87,8 @@ export const ALLOWED: Record<string, CommandSpec> = {
   "image.imageSize": {
     risk: "guarded",
     params: {
-      width: { type: "int", range: [16, 8000] },
-      height: { type: "int", range: [16, 8000] },
+      width: { type: "int", range: [16, 4096] },
+      height: { type: "int", range: [16, 4096] },
       percent: { type: "int", range: [1, 1000] },
       resample: {
         type: "enum",
@@ -107,8 +111,8 @@ export const ALLOWED: Record<string, CommandSpec> = {
   "image.canvasSize": {
     risk: "guarded",
     params: {
-      width: { type: "int", range: [16, 8000], required: true },
-      height: { type: "int", range: [16, 8000], required: true },
+      width: { type: "int", range: [16, 4096], required: true },
+      height: { type: "int", range: [16, 4096], required: true },
       anchor: {
         type: "enum",
         range: [
@@ -135,10 +139,10 @@ export const ALLOWED: Record<string, CommandSpec> = {
     params: {
       x: { type: "int", range: [0, 7999] },
       y: { type: "int", range: [0, 7999] },
-      width: { type: "int", range: [16, 8000] },
-      height: { type: "int", range: [16, 8000] },
-      targetWidth: { type: "int", range: [16, 8000] },
-      targetHeight: { type: "int", range: [16, 8000] },
+      width: { type: "int", range: [16, 4096] },
+      height: { type: "int", range: [16, 4096] },
+      targetWidth: { type: "int", range: [16, 4096] },
+      targetHeight: { type: "int", range: [16, 4096] },
       resample: {
         type: "enum",
         range: ["bicubic", "bilinear", "nearest", "lanczos", "preserveDetails"],
@@ -188,14 +192,40 @@ export const ALLOWED: Record<string, CommandSpec> = {
     params: {
       contents: {
         type: "enum",
-        range: ["foreground", "background", "color", "contentAware", "pattern", "history", "black", "gray", "white"],
+        range: [
+          "foreground",
+          "background",
+          "color",
+          "contentAware",
+          "pattern",
+          "history",
+          "black",
+          "gray",
+          "white",
+        ],
       },
       color: { type: "str" },
       opacity: { type: "int", range: [0, 100] },
       preserveTransparency: { type: "bool" },
       mode: {
         type: "enum",
-        range: ["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "softLight", "hardLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"],
+        range: [
+          "normal",
+          "multiply",
+          "screen",
+          "overlay",
+          "darken",
+          "lighten",
+          "colorDodge",
+          "softLight",
+          "hardLight",
+          "difference",
+          "exclusion",
+          "hue",
+          "saturation",
+          "color",
+          "luminosity",
+        ],
       },
     },
     desc: "Fill the selection (white → white background)",
@@ -485,7 +515,9 @@ export const INTENT_TEMPLATES: IntentTemplate[] = [
   },
   {
     intent: "remove_bg_white",
-    patterns: [/去背景|抠图|抠出来|白底|纯色背景|背景换成白底|去掉背景|移除背景|去除背景|背景换成白色|换成白色背景|背景变白|把背景.{0,6}白|remove (?:the )?background|remove bg|background removal|knockout|cutout/i],
+    patterns: [
+      /去背景|抠图|抠出来|白底|纯色背景|背景换成白底|去掉背景|移除背景|去除背景|背景换成白色|换成白色背景|背景变白|把背景.{0,6}白|remove (?:the )?background|remove bg|background removal|knockout|cutout/i,
+    ],
     desc: "Knock out background to pure white (e-commerce standard, deterministic)",
     build: () => [
       { cmd: "select.subject", params: { sampleAllLayers: true, mode: "replace" } },
@@ -637,7 +669,14 @@ export function planChain(
   origW?: number,
   origH?: number,
 ):
-  | { ok: true; intent: string; intents: string[]; desc: string; chain: ChainStep[]; args: BuildArgs }
+  | {
+      ok: true;
+      intent: string;
+      intents: string[];
+      desc: string;
+      chain: ChainStep[];
+      args: BuildArgs;
+    }
   | { ok: false; error: string } {
   const matchedAll = INTENT_TEMPLATES.filter((t) => t.patterns.some((re) => re.test(instruction)));
   if (matchedAll.length === 0) return { ok: false, error: "no intent matched" };

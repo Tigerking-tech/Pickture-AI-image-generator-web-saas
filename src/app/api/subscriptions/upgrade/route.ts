@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { assertOwnsSubscription, recordAudit } from "@/lib/authz";
 import { creem } from "@/lib/creem";
 import { isDemoMode } from "@/lib/demo/mode";
 import { getDemoStore } from "@/lib/demo/store";
@@ -42,10 +43,33 @@ export async function POST(request: NextRequest) {
 
   const { subscriptionId, newProductId } = validation.data;
 
+  // ── 归属校验 ────────────────────────────────────────────────────────────
+  // upgrade 使用 proration-charge-immediately：给别人升级 = 让别人的卡立刻被扣钱。
+  const owns = await assertOwnsSubscription(user.id, subscriptionId);
+  if (!owns.ok) {
+    await recordAudit({
+      user: { id: user.id, email: user.email },
+      action: "subscription.upgrade.denied",
+      targetType: "subscription",
+      targetId: subscriptionId,
+      metadata: { reason: owns.error, newProductId },
+      req: request,
+    });
+    return NextResponse.json({ error: owns.error }, { status: owns.status });
+  }
+
   try {
     const result = await creem.subscriptions.upgrade(subscriptionId, {
       productId: newProductId,
       updateBehavior: "proration-charge-immediately",
+    });
+    await recordAudit({
+      user: { id: user.id, email: user.email },
+      action: "subscription.upgrade",
+      targetType: "subscription",
+      targetId: subscriptionId,
+      metadata: { newProductId },
+      req: request,
     });
     return NextResponse.json({ success: true, subscription: result });
   } catch (error) {

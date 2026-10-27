@@ -12,9 +12,7 @@ export async function getLocale(): Promise<Locale> {
 /** 从 Accept-Language 头推断语言（取第一个匹配的语言前缀） */
 export function localeFromAcceptLanguage(header: string | null): Locale {
   if (!header) return defaultLocale;
-  const preferred = header
-    .split(",")
-    .map((part) => part.split(";")[0].trim().split("-")[0]);
+  const preferred = header.split(",").map((part) => part.split(";")[0].trim().split("-")[0]);
   for (const p of preferred) {
     if (isLocale(p)) return p;
   }

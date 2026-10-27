@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      # postinstall 会去下载 photocraft 二进制（vendor/ 约 67MB），
+      # lint / typecheck / 单测都不需要它，跳过以缩短 CI 时间
+      - run: npm ci --ignore-scripts
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+  # SQL 迁移语法自检（不连库，只确认文件存在且顺序完整）
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check migration order
+        run: |
+          ls supabase/migrations
+          for f in 001_init 002_expand 003_credits_grant 004_harden_rpc; do
+            test -f "supabase/migrations/${f}.sql" || { echo "missing ${f}.sql"; exit 1; }
+          done

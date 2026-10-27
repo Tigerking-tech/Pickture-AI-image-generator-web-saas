@@ -23,6 +23,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/components/Landing.tsx", "src/app/layout.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
+    }
+  ],
   "formatter": {
     "enabled": true,
     "indentStyle": "space",

@@ -72,26 +72,48 @@ async function getCount(anonKey: string): Promise<number> {
   return e && e.day === todayUTC() ? e.count : 0;
 }
 
-async function incrCount(anonKey: string): Promise<void> {
+/** +1 并返回自增后的最新值（Redis 侧 INCR 本身是原子的） */
+async function incrCount(anonKey: string): Promise<number> {
   if (redis) {
     const k = dailyRedisKey(anonKey);
-    await redis.incr(k);
+    const n = await redis.incr(k);
     await redis.expire(k, secondsUntilNextMidnightUTC());
-    return;
+    return typeof n === "number" ? n : 0;
   }
+  // 内存分支：读改写之间没有 await，Node 单线程天然原子
   const day = todayUTC();
   const e = memStore.get(anonKey);
   if (!e || e.day !== day) {
     memStore.set(anonKey, { day, count: 1 });
-  } else {
-    e.count += 1;
-    memStore.set(anonKey, e);
+    return 1;
   }
+  e.count += 1;
+  memStore.set(anonKey, e);
+  return e.count;
+}
+
+/** -1（仅用于拒单回退与失败退还），最低降到 0 */
+async function rollbackCount(anonKey: string): Promise<void> {
+  if (redis) {
+    const k = dailyRedisKey(anonKey);
+    const n = await redis.decr(k);
+    if (typeof n === "number" && n < 0) await redis.set(k, 0);
+    return;
+  }
+  const day = todayUTC();
+  const e = memStore.get(anonKey);
+  if (!e || e.day !== day) return;
+  e.count = Math.max(0, e.count - 1);
+  memStore.set(anonKey, e);
 }
 
 /**
  * 预检：匿名用户是否还有今日生成式试用额度。
  * demo 模式短路放行（fal 为 mock，不烧钱）。
+ *
+ * 注意：这个函数**不能用来做放行判断**。它是 check-then-act 的前半段，
+ * 并发 N 个请求会同时看到 remaining>0 从而全部通过。真正扣额请用
+ * tryConsumeAnonGenerativeQuota（原子 INCR 后判断）。
  */
 export async function checkAnonGenerativeQuota(key: string): Promise<AnonQuotaStatus> {
   const limit = DEFAULT_DAILY_LIMIT;
@@ -103,7 +125,61 @@ export async function checkAnonGenerativeQuota(key: string): Promise<AnonQuotaSt
   return { allowed: remaining > 0, remaining, limit, resetAt: nextMidnightUTC() };
 }
 
-/** 生成成功后消费一次额度（best-effort；demo 模式内部短路不计）。 */
+/**
+ * 原子占位：+1 之后再判断有没有超。
+ *
+ * 这是配额闸门的唯一正确实现。旧实现是「先 check 再（生成成功后）consume」，
+ * 两个操作之间隔着一整次模型调用（几秒），并发请求全部能同时通过闸门 ——
+ * 一个脚本并发 50 次就能拿走 50 次免费生成。
+ */
+export async function tryConsumeAnonGenerativeQuota(
+  key: string,
+): Promise<{ allowed: boolean; status: AnonQuotaStatus }> {
+  const limit = DEFAULT_DAILY_LIMIT;
+  if (isDemoMode()) {
+    return {
+      allowed: true,
+      status: { allowed: true, remaining: limit, limit, resetAt: nextMidnightUTC() },
+    };
+  }
+
+  const used = await incrCount(key); // +1 后立即返回新值
+  const remaining = Math.max(0, limit - used);
+
+  if (used > limit) {
+    // 超限：把刚加的那一次退回去，保证计数不会因为被拒的请求持续虚高
+    await rollbackCount(key);
+    return {
+      allowed: false,
+      status: { allowed: false, remaining: 0, limit, resetAt: nextMidnightUTC() },
+    };
+  }
+
+  return {
+    allowed: true,
+    status: { allowed: true, remaining, limit, resetAt: nextMidnightUTC() },
+  };
+}
+
+/**
+ * 退还一次占位（生成失败时使用）。
+ *
+ * 为什么允许退还：既然改成「先占位」就要保证不是一次模型崩了却照扣 C 用户的额度。
+ * 退还只会让计数回到真实值，不会被用来刷额度（先占位才可能退）。
+ */
+export async function refundAnonGenerativeQuota(key: string): Promise<void> {
+  if (isDemoMode()) return;
+  try {
+    await rollbackCount(key);
+  } catch (e) {
+    console.error("[anon-quota] refund failed:", e instanceof Error ? e.message : e);
+  }
+}
+
+/**
+ * 生成成功后消费一次额度（保留兼容；新调用请用 tryConsumeAnonGenerativeQuota）。
+ * @deprecated 仅用于既有调用方，闸门逻辑已迁移到 tryConsume。
+ */
 export async function consumeAnonGenerativeQuota(key: string): Promise<void> {
   if (isDemoMode()) return;
   await incrCount(key);

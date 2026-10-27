@@ -1,14 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { creditsForIntent, isUnlimited, spendForIntents } from "@/lib/credits";
 import { isDemoMode } from "@/lib/demo/mode";
 import { getDemoStore } from "@/lib/demo/store";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import {
-  creditsForIntent,
-  isUnlimited,
-  spendForIntents,
-} from "@/lib/credits";
 import { validateSpendRequest } from "../helpers";
 
 export async function POST(request: NextRequest) {
@@ -20,7 +16,10 @@ export async function POST(request: NextRequest) {
     if (!isUnlimited(wallet.balance)) {
       const cost = creditsForIntent(body.intent ?? "");
       if (wallet.balance < cost) {
-        return NextResponse.json({ error: "Insufficient credits", code: "INSUFFICIENT" }, { status: 402 });
+        return NextResponse.json(
+          { error: "Insufficient credits", code: "INSUFFICIENT" },
+          { status: 402 },
+        );
       }
       wallet.balance = Math.max(0, wallet.balance - cost);
     }
@@ -63,7 +62,11 @@ export async function POST(request: NextRequest) {
   }
 
   // 原子扣减（spend_credits RPC 防并发超扣）
-  const res = await spendForIntents(user.id, [validation.data.intent], validation.data.description!);
+  const res = await spendForIntents(
+    user.id,
+    [validation.data.intent],
+    validation.data.description!,
+  );
   if (!res.ok) {
     const status = res.code === "INSUFFICIENT" ? 402 : res.code === "NO_WALLET" ? 404 : 500;
     return NextResponse.json({ error: res.error, code: res.code }, { status });

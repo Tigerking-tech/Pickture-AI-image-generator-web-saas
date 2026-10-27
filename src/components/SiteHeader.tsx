@@ -2,9 +2,9 @@
 
 // 站点头部（从 Landing 抽出为客户端组件）：导航文案走 useT()，证明 i18n 端到端可用。
 import Link from "next/link";
-import { MobileNav } from "./MobileNav";
-import { LocaleSwitcher } from "./LocaleSwitcher";
 import { useT } from "@/i18n/I18nProvider";
+import { LocaleSwitcher } from "./LocaleSwitcher";
+import { MobileNav } from "./MobileNav";
 
 export function SiteHeader() {
   const { t } = useT();
@@ -12,7 +12,9 @@ export function SiteHeader() {
     <header className="nav">
       <div className="wrap nav-inner">
         <Link href="/" className="logo" aria-label="Surepix home">
-          <span className="logo-mark" aria-hidden="true">S</span>
+          <span className="logo-mark" aria-hidden="true">
+            S
+          </span>
           Surepix
         </Link>
         <nav className="nav-links nav-links-desktop" aria-label="Main navigation">

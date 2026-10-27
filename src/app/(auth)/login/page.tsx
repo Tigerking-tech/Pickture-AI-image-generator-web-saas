@@ -78,7 +78,10 @@ export default function LoginPage() {
               boxShadow: "0 1px 2px rgb(17 17 24 / 0.04), 0 8px 28px rgb(17 17 24 / 0.07)",
             }}
           >
-            <h1 className="text-2xl font-extrabold mb-1" style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}>
+            <h1
+              className="text-2xl font-extrabold mb-1"
+              style={{ color: "var(--ink)", letterSpacing: "-0.02em" }}
+            >
               Sign in to Surepix
             </h1>
             <p className="text-sm mb-6" style={{ color: "var(--ink-2)" }}>
@@ -87,7 +90,11 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label htmlFor="login-email" className="block text-sm font-bold mb-1.5" style={{ color: "var(--ink)" }}>
+                <label
+                  htmlFor="login-email"
+                  className="block text-sm font-bold mb-1.5"
+                  style={{ color: "var(--ink)" }}
+                >
                   Email address
                 </label>
                 <input
@@ -103,22 +110,33 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="login-password" className="block text-sm font-bold mb-1.5" style={{ color: "var(--ink)" }}>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="login-password"
+                  className="block text-sm font-bold mb-1.5"
+                  style={{ color: "var(--ink)" }}
+                >
                   Password
                 </label>
-                <input
-                  id="login-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border focus:outline-none transition-colors duration-150"
-                  style={inputStyle}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--brand)")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
-                  required
-                />
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-bold mb-1.5"
+                  style={{ color: "var(--brand)" }}
+                >
+                  Forgot password?
+                </Link>
               </div>
+              <input
+                id="login-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border focus:outline-none transition-colors duration-150"
+                style={inputStyle}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "var(--brand)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
+                required
+              />
 
               {error && (
                 <p className="text-sm font-medium" style={{ color: "var(--bad)" }} role="alert">
@@ -126,7 +144,11 @@ export default function LoginPage() {
                 </p>
               )}
 
-              <button type="submit" disabled={loading} className="w-full py-3 btn-primary disabled:btn-disabled text-base">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 btn-primary disabled:btn-disabled text-base"
+              >
                 {loading ? "Signing in…" : "Sign In →"}
               </button>
             </form>
@@ -136,7 +158,10 @@ export default function LoginPage() {
                 <div className="w-full border-t" style={{ borderColor: "var(--line-soft)" }} />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-3 font-medium" style={{ background: "var(--surface)", color: "var(--ink-3)" }}>
+                <span
+                  className="px-3 font-medium"
+                  style={{ background: "var(--surface)", color: "var(--ink-3)" }}
+                >
                   or
                 </span>
               </div>
@@ -165,23 +190,39 @@ export default function LoginPage() {
         <div className="relative z-10 text-center px-12 max-w-md">
           <span
             className="inline-block px-4 py-1.5 text-xs font-bold rounded-full mb-8"
-            style={{ background: "rgb(255 255 255 / 0.16)", color: "#fff", letterSpacing: "0.08em" }}
+            style={{
+              background: "rgb(255 255 255 / 0.16)",
+              color: "#fff",
+              letterSpacing: "0.08em",
+            }}
           >
             DETERMINISTIC EDITING · VERIFIED FIDELITY
           </span>
-          <h2 className="text-5xl font-extrabold leading-[1.05] mb-5" style={{ color: "#fff", letterSpacing: "-0.03em" }}>
+          <h2
+            className="text-5xl font-extrabold leading-[1.05] mb-5"
+            style={{ color: "#fff", letterSpacing: "-0.03em" }}
+          >
             Every edit stays true to the product.
           </h2>
-          <p className="text-lg font-medium" style={{ color: "rgb(255 255 255 / 0.78)", lineHeight: 1.6 }}>
-            Logos, labels and price tags are measured — never repainted.
-            ~40ms per image, verified element by element before anything ships.
+          <p
+            className="text-lg font-medium"
+            style={{ color: "rgb(255 255 255 / 0.78)", lineHeight: 1.6 }}
+          >
+            Logos, labels and price tags are measured — never repainted. ~40ms per image, verified
+            element by element before anything ships.
           </p>
           <div
             className="mt-10 rounded-2xl p-5 text-left"
-            style={{ background: "rgb(255 255 255 / 0.1)", border: "1px solid rgb(255 255 255 / 0.18)" }}
+            style={{
+              background: "rgb(255 255 255 / 0.1)",
+              border: "1px solid rgb(255 255 255 / 0.18)",
+            }}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-extrabold uppercase tracking-wider" style={{ color: "rgb(255 255 255 / 0.7)" }}>
+              <span
+                className="text-xs font-extrabold uppercase tracking-wider"
+                style={{ color: "rgb(255 255 255 / 0.7)" }}
+              >
                 Fidelity report
               </span>
               <span className="text-xs font-extrabold" style={{ color: "#bbf7d0" }}>
@@ -189,9 +230,15 @@ export default function LoginPage() {
               </span>
             </div>
             {["brand_logo", "product_label", "price_tag", "product_body"].map((el) => (
-              <div key={el} className="flex items-center justify-between text-sm py-1.5" style={{ color: "#fff" }}>
+              <div
+                key={el}
+                className="flex items-center justify-between text-sm py-1.5"
+                style={{ color: "#fff" }}
+              >
                 <span style={{ opacity: 0.85 }}>{el}</span>
-                <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "#c7d2fe" }}>SSIM ≥ 0.989</span>
+                <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "#c7d2fe" }}>
+                  SSIM ≥ 0.989
+                </span>
               </div>
             ))}
           </div>

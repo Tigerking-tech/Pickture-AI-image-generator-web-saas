@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import "./globals.css";
-import { I18nProvider } from "@/i18n/I18nProvider";
 import { getLocale } from "@/i18n/get-locale";
+import { I18nProvider } from "@/i18n/I18nProvider";
 import { messages } from "@/i18n/messages";
-import { defaultLocale } from "@/i18n/config";
 import "@fontsource/manrope/400.css";
 import "@fontsource/manrope/500.css";
 import "@fontsource/manrope/600.css";
@@ -46,7 +44,14 @@ export const metadata: Metadata = {
     title: "Surepix — Product Photos That Stay True, Verified Element by Element",
     description:
       "Deterministic product-photo editing with built-in fidelity verification. Your logos stay crisp, your text stays readable, 100 SKUs processed in seconds.",
-    images: [{ url: "/og-cover.svg", width: 1200, height: 630, alt: "Surepix — verified product photo editing" }],
+    images: [
+      {
+        url: "/og-cover.svg",
+        width: 1200,
+        height: 630,
+        alt: "Surepix — verified product photo editing",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -55,7 +60,11 @@ export const metadata: Metadata = {
       "Deterministic product-photo editing with built-in fidelity verification. Logos stay crisp. 100 SKUs in seconds.",
     images: ["/og-cover.svg"],
   },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
   category: "technology",
 };
 
@@ -76,7 +85,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         operatingSystem: "Web",
         description:
           "Deterministic e-commerce product photo editing with built-in brand-asset fidelity verification. Colour, crop, resize and watermark at ~40ms per image, with batch processing, per-element quality reports and editable PSD masters.",
-        offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Free tier — 50 edits/month" },
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+          description: "Free tier — 50 edits/month",
+        },
         featureList: [
           "Deterministic (recipe-based) photo edits",
           "Per-element fidelity verification for logos, labels and text",
@@ -104,7 +118,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <noscript>
           <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>
         </noscript>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body>
         <I18nProvider locale={locale} messages={messages[locale]}>

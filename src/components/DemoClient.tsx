@@ -155,7 +155,7 @@ export default function DemoClient() {
     }
   }, [actionId, input]);
 
-  const setInputAndTrack = (next: Input, label: string, thumb: string) => {
+  const setInputAndTrack = (next: Input, label: string, _thumb: string) => {
     setHistory((h) => [...h.slice(-4), { input, label, thumb: inputSrc }]);
     setInput(next);
     setResult(null);
@@ -245,19 +245,25 @@ export default function DemoClient() {
             <div className="sample-row" role="group" aria-label="Sample photos">
               {SAMPLES.map((s) => (
                 <button
+                  type="button"
                   key={s.id}
                   className={`sample-chip${input.kind === "sample" && input.id === s.id ? " on" : ""}`}
                   onClick={() => setInputAndTrack({ kind: "sample", id: s.id }, s.name, inputSrc)}
                 >
+                  {/* biome-ignore lint/performance/noImgElement: 图片来自编辑管线的运行时 dataURL/base64，next/image 无法优化且会破坏对比滑块的定位 */}
                   <img src={`/samples/${s.id}.png`} alt="" width={40} height={30} />
                   {s.name}
                 </button>
               ))}
-              <button className="sample-chip" onClick={() => fileRef.current?.click()}>
+              <button
+                type="button"
+                className="sample-chip"
+                onClick={() => fileRef.current?.click()}
+              >
                 Upload yours
               </button>
               {input.kind === "b64" && (
-                <button className="sample-chip" onClick={resetToSample}>
+                <button type="button" className="sample-chip" onClick={resetToSample}>
                   Reset
                 </button>
               )}
@@ -283,7 +289,8 @@ export default function DemoClient() {
               />
             ) : (
               <div className="canvas" style={{ minHeight: 300 }}>
-                <img src={inputSrc} alt="current input image" />
+                {/* biome-ignore lint/performance/noImgElement: 图片来自编辑管线的运行时 dataURL/base64，next/image 无法优化且会破坏对比滑块的定位 */}
+                <img src={inputSrc} alt="" />
                 {loading && <div className="spin">running pipeline…</div>}
               </div>
             )}
@@ -293,7 +300,8 @@ export default function DemoClient() {
                 <span className="hr-label">history:</span>
                 {history.map((h, i) => (
                   <button
-                    key={`${h.label}-${i}`}
+                    type="button"
+                    key={`${h.label}-${h.thumb ?? i}`}
                     className="history-chip"
                     onClick={() => {
                       setInput(h.input);
@@ -301,6 +309,7 @@ export default function DemoClient() {
                       setError(null);
                     }}
                   >
+                    {/* biome-ignore lint/performance/noImgElement: 图片来自编辑管线的运行时 dataURL/base64，next/image 无法优化且会破坏对比滑块的定位 */}
                     <img src={h.thumb} alt="" />
                     {h.label}
                   </button>
@@ -310,7 +319,7 @@ export default function DemoClient() {
 
             {result?.ok && (
               <div className="chain-row">
-                <button className="chain-btn" onClick={useResultAsInput}>
+                <button type="button" className="chain-btn" onClick={useResultAsInput}>
                   Use result as input →
                 </button>
                 <a
@@ -385,6 +394,7 @@ export default function DemoClient() {
               <div className="action-grid" role="group" aria-label="Edit actions">
                 {ACTIONS.map((a) => (
                   <button
+                    type="button"
                     key={a.id}
                     className={`action-btn${actionId === a.id ? " on" : ""}`}
                     onClick={() => setActionId(a.id)}
@@ -395,7 +405,7 @@ export default function DemoClient() {
                 ))}
               </div>
               <div className="run-row">
-                <button className="btn btn-brand" onClick={run} disabled={loading}>
+                <button type="button" className="btn btn-brand" onClick={run} disabled={loading}>
                   {loading ? "Running…" : "Run & verify →"}
                 </button>
               </div>

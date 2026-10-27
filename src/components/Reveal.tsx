@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 /** 滚动渐入容器：进入视口时加 .in；尊重 prefers-reduced-motion */
-export function Reveal({ children, delay = 0, className = "" }: { children: ReactNode; delay?: number; className?: string }) {
+export function Reveal({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
 
@@ -28,7 +36,11 @@ export function Reveal({ children, delay = 0, className = "" }: { children: Reac
   }, []);
 
   return (
-    <div ref={ref} className={`reveal${shown ? " in" : ""}${className ? " " + className : ""}`} style={delay ? { transitionDelay: `${delay}ms` } : undefined}>
+    <div
+      ref={ref}
+      className={`reveal${shown ? " in" : ""}${className ? ` ${className}` : ""}`}
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+    >
       {children}
     </div>
   );

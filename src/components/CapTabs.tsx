@@ -73,6 +73,7 @@ export function CapTabs() {
       <div className="cap-tabs" role="tablist" aria-label="Capabilities">
         {TABS.map((x) => (
           <button
+            type="button"
             key={x.id}
             role="tab"
             aria-selected={x.id === active}

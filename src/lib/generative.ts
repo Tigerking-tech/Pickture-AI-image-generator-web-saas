@@ -149,7 +149,7 @@ const FAL_MODELS: Record<string, FalModelSpec> = {
   upscale: { model: "fal-ai/real-esrgan", shape: "upscale", costUsd: 0.005 },
 };
 
-const DEFAULT_COST_USD = 0.02;
+export const DEFAULT_COST_USD = 0.02;
 
 /** 允许通过 FAL_MODELS_JSON 环境变量整体覆盖/扩展映射（无需改代码） */
 function loadModelMap(): Record<string, FalModelSpec> {
@@ -173,6 +173,17 @@ export function resolveFalSpec(intent: GenerativeIntent): FalModelSpec {
     model: process.env.GENERATIVE_MODEL || "fal-ai/flux/dev/image-to-image",
     shape: (process.env.FAL_SHAPE as FalShape) || "img2img",
   };
+}
+
+/**
+ * 估算某语义意图的单次生成真实成本（美元）。
+ * 来源：FAL_MODELS 中各意图的 costUsd，缺失时回退到全局 GENERATIVE_COST_USD / DEFAULT_COST_USD。
+ * 这是"你买的 fal token 每次生成实际花的钱"——积分换算与利润保证的唯一成本锚点。
+ */
+export function estimatedCostUsd(intent: GenerativeIntent): number {
+  const spec = loadModelMap()[intent];
+  if (spec?.costUsd != null) return spec.costUsd;
+  return Number(process.env.GENERATIVE_COST_USD || DEFAULT_COST_USD);
 }
 
 /** 按模型形态组装请求体（mask / 专属参数通过 req.params 透传覆盖） */

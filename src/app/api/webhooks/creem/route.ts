@@ -2,7 +2,30 @@ import { Webhook } from "@creem_io/nextjs";
 import { isDemoMode } from "@/lib/demo/mode";
 import { sendPaymentConfirmation } from "@/lib/email";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { CREDIT_UNLIMITED, grantCredits, planMonthlyCredits } from "@/lib/credits";
 import { buildSubscriptionUpdate, buildSubscriptionUpsert, extractUserId } from "./handlers";
+
+/** 由产品名 / 产品 ID 推断计划档位，用于发放对应月额度 */
+function planFromProduct(name?: string, id?: string): string {
+  const s = `${name ?? ""} ${id ?? ""}`.toLowerCase();
+  if (s.includes("enterprise")) return "enterprise";
+  if (s.includes("scale") || s.includes("max")) return "max";
+  if (s.includes("pro")) return "pro";
+  return "free";
+}
+
+/** 订阅激活 / 续费时，按计划发放当月生成式积分额度 */
+async function topUpForProduct(userId: string | undefined, name?: string, id?: string) {
+  if (!userId) return;
+  const plan = planFromProduct(name, id);
+  const amount = planMonthlyCredits(plan);
+  if (amount === CREDIT_UNLIMITED) return; // 无限计划无需发放
+  try {
+    await grantCredits(userId, amount, "subscription_topup", `${plan} plan monthly credit grant`);
+  } catch (e) {
+    console.error(`[webhook] credit top-up failed for ${userId}:`, e);
+  }
+}
 
 function handleWebhook() {
   if (isDemoMode()) {
@@ -52,6 +75,9 @@ function handleWebhook() {
 
       await db.from("subscriptions").upsert(row, { onConflict: "user_id" });
 
+      // 发放订阅对应的当月生成式积分额度
+      await topUpForProduct(row.user_id, event.product?.name, event.product?.id);
+
       // Send payment confirmation email
       if (event.customer?.email) {
         await sendPaymentConfirmation(
@@ -67,6 +93,13 @@ function handleWebhook() {
         current_period_end_date: event.current_period_end_date,
       });
       await db.from("subscriptions").update(update).eq("creem_subscription_id", event.id);
+      // 续费：重新发放当月额度
+      const { data: sub } = await db
+        .from("subscriptions")
+        .select("user_id, product_name, creem_product_id")
+        .eq("creem_subscription_id", event.id)
+        .single();
+      if (sub) await topUpForProduct(sub.user_id, sub.product_name, sub.creem_product_id);
     },
 
     onSubscriptionPaid: async (event) => {
@@ -74,6 +107,13 @@ function handleWebhook() {
         current_period_end_date: event.current_period_end_date,
       });
       await db.from("subscriptions").update(update).eq("creem_subscription_id", event.id);
+      // 续费付款：重新发放当月额度
+      const { data: sub } = await db
+        .from("subscriptions")
+        .select("user_id, product_name, creem_product_id")
+        .eq("creem_subscription_id", event.id)
+        .single();
+      if (sub) await topUpForProduct(sub.user_id, sub.product_name, sub.creem_product_id);
     },
 
     onSubscriptionCanceled: async (event) => {
@@ -172,6 +212,7 @@ function handleWebhook() {
         return;
       }
       await db.from("subscriptions").update({ status: "active" }).eq("user_id", userId);
+      await topUpForProduct(userId, "Pro Plan", process.env.NEXT_PUBLIC_CREEM_PRO_PRODUCT_ID);
       console.log(`[webhook] Granted access (${reason}) for user ${userId}`);
     },
 

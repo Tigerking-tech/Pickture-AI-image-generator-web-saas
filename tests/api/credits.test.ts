@@ -16,28 +16,25 @@ describe("isUnlimited", () => {
 });
 
 describe("validateSpendRequest", () => {
-  it("accepts valid spend", () => {
-    const result = validateSpendRequest({ amount: 10, reason: "API call" });
+  it("accepts valid spend with intent", () => {
+    const result = validateSpendRequest({ intent: "swap_background", description: "API call" });
     expect(result.valid).toBe(true);
+    if (result.valid) expect(result.data.intent).toBe("swap_background");
   });
 
-  it("rejects zero amount", () => {
-    const result = validateSpendRequest({ amount: 0, reason: "test" });
+  it("rejects missing intent", () => {
+    const result = validateSpendRequest({ description: "test" });
     expect(result.valid).toBe(false);
   });
 
-  it("rejects negative amount", () => {
-    const result = validateSpendRequest({ amount: -5, reason: "test" });
+  it("rejects empty string intent", () => {
+    const result = validateSpendRequest({ intent: "" });
     expect(result.valid).toBe(false);
   });
 
-  it("rejects missing reason", () => {
-    const result = validateSpendRequest({ amount: 10 });
-    expect(result.valid).toBe(false);
-  });
-
-  it("rejects empty string reason", () => {
-    const result = validateSpendRequest({ amount: 5, reason: "" });
-    expect(result.valid).toBe(false);
+  it("falls back to default description when omitted", () => {
+    const result = validateSpendRequest({ intent: "upscale" });
+    expect(result.valid).toBe(true);
+    if (result.valid) expect(result.data.description).toBe("Generative edit");
   });
 });

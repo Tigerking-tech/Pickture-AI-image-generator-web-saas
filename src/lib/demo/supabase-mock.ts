@@ -155,11 +155,54 @@ export function createDemoClient(): any {
       if (fnName === "spend_credits") {
         const userId = params.p_user_id as string;
         const amount = params.p_amount as number;
+        const reason = (params.p_reason as string) ?? "spend";
         const wallet = store.creditWallets.get(userId);
-        if (!wallet || wallet.balance < amount) {
+        if (!wallet) {
+          return { data: null, error: { message: "No credits record for user" } };
+        }
+        if (wallet.balance === -1) {
+          store.creditTransactions.set(`ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, {
+            id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            user_id: userId,
+            amount: -amount,
+            type: "spend",
+            description: reason,
+            created_at: new Date().toISOString(),
+          });
+          return { data: -1, error: null };
+        }
+        if (wallet.balance < amount) {
           return { data: null, error: { message: "Insufficient credits" } };
         }
         wallet.balance -= amount;
+        store.creditTransactions.set(`ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, {
+          id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          user_id: userId,
+          amount: -amount,
+          type: "spend",
+          description: reason,
+          created_at: new Date().toISOString(),
+        });
+        return { data: wallet.balance, error: null };
+      }
+      if (fnName === "grant_credits") {
+        const userId = params.p_user_id as string;
+        const amount = params.p_amount as number;
+        const type = (params.p_type as string) ?? "subscription_topup";
+        const description = (params.p_description as string) ?? "credit grant";
+        const wallet = store.creditWallets.get(userId) ?? { user_id: userId, balance: 0 };
+        if (wallet.balance !== -1) {
+          wallet.balance += amount;
+          store.creditWallets.set(userId, wallet);
+        }
+        store.creditTransactions.set(`ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, {
+          id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          user_id: userId,
+          amount,
+          type,
+          description,
+          created_at: new Date().toISOString(),
+        });
         return { data: wallet.balance, error: null };
       }
       return { data: null, error: null };

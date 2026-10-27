@@ -16,6 +16,8 @@ import {
   verifyGlobal,
 } from "./fidelity";
 import { runGenerative } from "./generative";
+import { creditsForIntents, hasCredits, spendForIntents } from "./credits";
+import { checkAnonGenerativeQuota, consumeAnonGenerativeQuota } from "./anon-quota";
 import { convertFile, docInfo, rmQuiet, runChain, tmpPath } from "./pc";
 import { planWithFallback, type RouteDecision, route, routeAfterFidelity } from "./router";
 import { type ChainStep, INTENT_TEMPLATES, planChain, validateCommandChain } from "./whitelist";
@@ -34,6 +36,10 @@ export interface EditRequest {
   /** 或用户上传（base64 PNG，无 manifest 时走全局校验） */
   imageBase64?: string;
   manifest?: Manifest;
+  /** 调用方解析出的用户 ID（用于生成式编辑的积分扣减）；缺省则不扣费 */
+  userId?: string;
+  /** 匿名用户轻量限流 key（IP/UA 指纹）；仅未登录且真实模式时用于生成式试用配额 */
+  anonKey?: string;
 }
 
 export interface EditResult {
@@ -50,6 +56,10 @@ export interface EditResult {
   image: { base64: string; width: number; height: number };
   psd?: { base64: string; layers: { name: string; kind: string }[] };
   meta: { source: string; engine: string; license: string };
+  /** 业务错误码（如 INSUFFICIENT_CREDITS / ANON_QUOTA_EXCEEDED），供 API 层映射 HTTP 状态 */
+  code?: string;
+  /** 匿名试用配额状态（仅触发匿名闸门时返回），前端用于提示登录 */
+  anonQuota?: { remaining: number; limit: number; resetAt: string };
 }
 
 const SAMPLES_DIR = path.join(process.cwd(), "public", "samples");
@@ -283,6 +293,39 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     let inputPng = origPng;
     let detDesc = "";
 
+    // ── 积分预校验（生成式编辑按真实 fal 成本换算，服务端强制）──
+    // 确定性编辑（PhotoCraft）零成本不计量；仅生成式意图消耗 AI credits。
+    if (req.userId && genIntents.length > 0) {
+      const genCost = creditsForIntents(genIntents);
+      if (!(await hasCredits(req.userId, genCost))) {
+        return fail(
+          `Insufficient AI credits for this generative edit (need ${genCost}). Upgrade your plan or buy more.`,
+          routeDecision,
+          [],
+          { code: "INSUFFICIENT_CREDITS" },
+        );
+      }
+    }
+
+    // ── 匿名生成式试用配额闸门 ─────────────────────────────────────────────
+    // 对标竞品漏斗：确定性编辑（$0）免登录全开；生成式（fal.ai 按次计费 ≈$0.02）
+    // 对匿名用户开放有限次试用，超出后要求登录（登录后走积分账本 credits.ts）。
+    // demo 模式豁免（fal 为 mock 不烧钱）；登录用户走积分，不在此限。
+    if (!req.userId && req.anonKey && genIntents.length > 0) {
+      const q = await checkAnonGenerativeQuota(req.anonKey);
+      if (!q.allowed) {
+        return fail(
+          `Anonymous generative trial limit reached (${q.limit}/day). Sign in to unlock unlimited AI edits.`,
+          routeDecision,
+          [],
+          {
+            code: "ANON_QUOTA_EXCEEDED",
+            anonQuota: { remaining: q.remaining, limit: q.limit, resetAt: q.resetAt },
+          },
+        );
+      }
+    }
+
     // hybrid：先把确定性那部分用 PhotoCraft 跑掉，再生成（生成只补语义差异）
     if (routeDecision.route === "hybrid") {
       const plan = resolvePlan(req.intent, origImg.w, origImg.h);
@@ -324,7 +367,32 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
       if (genResult.model) genModels.push(genResult.model);
       totalGenMs += genResult.ms ?? 0;
     }
+
+    // 生成成功后才扣积分（失败不扣；偶发失败由毛利倍数吸收）。best-effort：扣减异常不影响交付。
+    if (req.userId && genIntents.length > 0) {
+      try {
+        await spendForIntents(
+          req.userId,
+          genIntents,
+          `Generative edit — ${genIntents.join(" + ")}`,
+        );
+      } catch {
+        // 扣减失败（如并发竞态）不阻断已成功的生成结果
+      }
+    }
+
+    // 生成成功后消费一次匿名试用额度（best-effort；demo 模式内部短路不计）
+    if (!req.userId && req.anonKey && genIntents.length > 0) {
+      try {
+        await consumeAnonGenerativeQuota(req.anonKey);
+      } catch {
+        // 限流计数失败不阻断交付
+      }
+    }
+
     const img = decodePng(genPng);
+    // 生成成功后附上最新匿名配额状态（已消费一次），供前端刷新"今日剩余"展示
+    const anonQuota = req.anonKey ? await checkAnonGenerativeQuota(req.anonKey) : undefined;
     const genFidelity: FidelityReport = {
       verdict: "PASS",
       elements: {},
@@ -352,6 +420,7 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
         engine: `Generative (${lastProvider || "?"}${[...new Set(genModels)].map((m) => ` · ${m}`).join("")}${genIntents.length > 1 ? ` ×${genIntents.length}` : ""}${detDesc ? ` after ${detDesc}` : ""})`,
         license: lastProvider === "fal" ? "provider terms" : "mock",
       },
+      anonQuota,
     };
   }
 

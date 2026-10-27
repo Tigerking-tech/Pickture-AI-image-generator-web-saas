@@ -4,7 +4,12 @@ import { getDemoStore } from "@/lib/demo/store";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { isUnlimited, validateSpendRequest } from "../helpers";
+import {
+  creditsForIntent,
+  isUnlimited,
+  spendForIntents,
+} from "@/lib/credits";
+import { validateSpendRequest } from "../helpers";
 
 export async function POST(request: NextRequest) {
   if (isDemoMode()) {
@@ -13,7 +18,11 @@ export async function POST(request: NextRequest) {
     const wallet = store.creditWallets.get("demo-user") ?? { user_id: "demo-user", balance: 0 };
     store.creditWallets.set("demo-user", wallet);
     if (!isUnlimited(wallet.balance)) {
-      wallet.balance = Math.max(0, wallet.balance - (body.amount ?? 0));
+      const cost = creditsForIntent(body.intent ?? "");
+      if (wallet.balance < cost) {
+        return NextResponse.json({ error: "Insufficient credits", code: "INSUFFICIENT" }, { status: 402 });
+      }
+      wallet.balance = Math.max(0, wallet.balance - cost);
     }
     return NextResponse.json({ balance: wallet.balance });
   }
@@ -34,51 +43,31 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const validation = validateSpendRequest(body);
-
   if (!validation.valid) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  const db = getSupabaseAdmin();
-  const { data: wallet } = await db
+  const cost = creditsForIntent(validation.data.intent);
+
+  // 余额预校验（无限计划 -1 永远通过）
+  const { data: wallet } = await getSupabaseAdmin()
     .from("credits")
     .select("balance")
     .eq("user_id", user.id)
     .single();
-
-  if (!wallet) {
-    return NextResponse.json({ error: "No credits record" }, { status: 404 });
+  if (wallet && !isUnlimited(wallet.balance) && wallet.balance < cost) {
+    return NextResponse.json(
+      { error: "Insufficient credits", code: "INSUFFICIENT", need: cost, have: wallet.balance },
+      { status: 402 },
+    );
   }
 
-  if (isUnlimited(wallet.balance)) {
-    // Unlimited credits — log but don't deduct
-    await db.from("credit_transactions").insert({
-      user_id: user.id,
-      amount: -validation.data.amount,
-      type: "spend",
-      description: validation.data.reason,
-    });
-    return NextResponse.json({ balance: wallet.balance });
+  // 原子扣减（spend_credits RPC 防并发超扣）
+  const res = await spendForIntents(user.id, [validation.data.intent], validation.data.description!);
+  if (!res.ok) {
+    const status = res.code === "INSUFFICIENT" ? 402 : res.code === "NO_WALLET" ? 404 : 500;
+    return NextResponse.json({ error: res.error, code: res.code }, { status });
   }
 
-  // Use atomic Postgres function
-  try {
-    const { data: newBalance, error } = await db.rpc("spend_credits", {
-      p_user_id: user.id,
-      p_amount: validation.data.amount,
-      p_reason: validation.data.reason,
-    });
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message.includes("Insufficient") ? "Insufficient credits" : error.message },
-        { status: 402 },
-      );
-    }
-
-    return NextResponse.json({ balance: newBalance });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Spend failed";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return NextResponse.json({ balance: res.balance, spent: res.delta });
 }

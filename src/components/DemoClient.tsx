@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BeforeAfter } from "./BeforeAfter";
 
 interface ElementReport {
@@ -31,6 +31,15 @@ interface EditResult {
   image: { base64: string; width: number; height: number };
   psd?: { base64: string; layers: { name: string; kind: string }[] };
   meta: { source: string; engine: string; license: string };
+  /** 当前匿名访客的生成式试用配额状态（前端展示用；登录用户不在此限流） */
+  anonQuota?: { allowed: boolean; remaining: number; limit: number; resetAt: string };
+}
+
+interface AnonQuota {
+  allowed: boolean;
+  remaining: number;
+  limit: number;
+  resetAt: string;
 }
 
 type Input = { kind: "sample"; id: string } | { kind: "b64"; data: string };
@@ -94,7 +103,22 @@ export default function DemoClient() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<EditResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [anonQuota, setAnonQuota] = useState<AnonQuota | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // 加载时拉取当前匿名配额状态，用于展示"今日剩余免费 AI 试用次数"
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/anon-quota")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: AnonQuota | null) => {
+        if (alive && d) setAnonQuota(d);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const inputSrc =
     input.kind === "b64" ? `data:image/png;base64,${input.data}` : `/samples/${input.id}.png`;
@@ -122,6 +146,8 @@ export default function DemoClient() {
       } else {
         setResult(data);
       }
+      // 编辑后刷新配额展示（生成式成功响应会带回最新 anonQuota）
+      if (data.anonQuota) setAnonQuota(data.anonQuota);
     } catch (e) {
       setError(e instanceof Error ? e.message : "network error");
     } finally {
@@ -320,6 +346,42 @@ export default function DemoClient() {
               <span className="hint">routed deterministically</span>
             </div>
             <div className="panel-body">
+              {anonQuota && anonQuota.remaining > 0 && (
+                <div
+                  style={{
+                    fontSize: 13,
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    background: "#eef2ff",
+                    color: "#3730a3",
+                    marginBottom: 12,
+                  }}
+                >
+                  ✨ 免费 AI 试用剩余 <b>{anonQuota.remaining}</b>/{anonQuota.limit} 次 ·{" "}
+                  <a href="/login" style={{ color: "#3730a3" }}>
+                    登录
+                  </a>{" "}
+                  后无限
+                </div>
+              )}
+              {anonQuota && anonQuota.remaining === 0 && (
+                <div
+                  style={{
+                    fontSize: 13,
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    background: "#fff7ed",
+                    color: "#b45309",
+                    marginBottom: 12,
+                  }}
+                >
+                  ⚠️ 今日免费 AI 试用已用完，
+                  <a href="/login" style={{ color: "#b45309" }}>
+                    登录
+                  </a>{" "}
+                  解锁无限次
+                </div>
+              )}
               <div className="action-grid" role="group" aria-label="Edit actions">
                 {ACTIONS.map((a) => (
                   <button

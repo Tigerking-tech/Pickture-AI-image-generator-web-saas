@@ -95,16 +95,16 @@ function createSeededStore(): DemoStore {
         },
       ],
     ]),
-    creditWallets: new Map([["demo-user", { user_id: "demo-user", balance: 4950 }]]),
+    creditWallets: new Map([["demo-user", { user_id: "demo-user", balance: 180 }]]),
     creditTransactions: new Map([
       [
         "ct_1",
         {
           id: "ct_1",
           user_id: "demo-user",
-          amount: 5000,
+          amount: 200,
           type: "subscription_topup",
-          description: "Pro plan monthly credit grant",
+          description: "Pro plan monthly credit grant (200 AI credits)",
           created_at: now,
         },
       ],
@@ -113,9 +113,9 @@ function createSeededStore(): DemoStore {
         {
           id: "ct_2",
           user_id: "demo-user",
-          amount: -30,
+          amount: -10,
           type: "spend",
-          description: "Verified edit — serum.png (warm grade)",
+          description: "Generative edit — swap_background",
           created_at: now,
         },
       ],
@@ -124,9 +124,9 @@ function createSeededStore(): DemoStore {
         {
           id: "ct_3",
           user_id: "demo-user",
-          amount: -20,
+          amount: -10,
           type: "spend",
-          description: "Verified edit — coffee.png (brighten)",
+          description: "Generative edit — style_transfer",
           created_at: now,
         },
       ],

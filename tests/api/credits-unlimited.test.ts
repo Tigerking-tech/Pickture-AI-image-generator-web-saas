@@ -6,21 +6,27 @@ describe("getCreditAllocation", () => {
     expect(getCreditAllocation("enterprise")).toBe(CREDIT_UNLIMITED);
   });
 
-  test("returns 500 for pro", () => {
-    expect(getCreditAllocation("pro")).toBe(500);
+  test("returns 200 for pro", () => {
+    expect(getCreditAllocation("pro")).toBe(200);
   });
 
-  test("returns 100 for starter", () => {
-    expect(getCreditAllocation("starter")).toBe(100);
+  test("returns 2000 for max", () => {
+    expect(getCreditAllocation("max")).toBe(2000);
   });
 
-  test("returns 100 for unknown plan", () => {
-    expect(getCreditAllocation("nonexistent")).toBe(100);
+  test("returns 5 for free", () => {
+    expect(getCreditAllocation("free")).toBe(5);
   });
 
-  test("is case-insensitive", () => {
+  test("is case-insensitive and handles aliases (scale→max, starter→free)", () => {
     expect(getCreditAllocation("Enterprise")).toBe(CREDIT_UNLIMITED);
-    expect(getCreditAllocation("PRO")).toBe(500);
+    expect(getCreditAllocation("PRO")).toBe(200);
+    expect(getCreditAllocation("Scale")).toBe(2000);
+    expect(getCreditAllocation("Starter")).toBe(5);
+  });
+
+  test("unknown plan falls back to free (5)", () => {
+    expect(getCreditAllocation("nonexistent")).toBe(5);
   });
 });
 

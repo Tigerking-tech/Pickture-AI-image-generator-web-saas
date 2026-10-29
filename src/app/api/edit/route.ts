@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 /** 单请求 JSON body 上限（base64 膨胀后约为 1.34×，留足余量） */
 const MAX_BODY_BYTES = MAX_UPLOAD_BYTES + 4 * 1024 * 1024;
 
-/** POST /api/edit — Pickture 编辑管线入口（完整闭环） */
+/** POST /api/edit — Surepix 编辑管线入口（完整闭环） */
 export async function POST(req: NextRequest) {
   // ── 第一道门：整包体积 ──────────────────────────────────────────────────
   // 任何大 body 都不要进 JSON.parse：解析成本本身就被用来做资源耗尽攻击。

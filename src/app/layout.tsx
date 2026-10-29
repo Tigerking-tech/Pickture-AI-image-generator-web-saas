@@ -31,6 +31,7 @@ export const metadata: Metadata = {
     "deterministic image editing",
     "SKU image pipeline",
   ],
+  applicationName: "Surepix",
   authors: [{ name: "Surepix" }],
   creator: "Surepix",
   publisher: "Surepix",
@@ -46,7 +47,7 @@ export const metadata: Metadata = {
       "Deterministic product-photo editing with built-in fidelity verification. Your logos stay crisp, your text stays readable, 100 SKUs processed in seconds.",
     images: [
       {
-        url: "/og-cover.svg",
+        url: "/og-cover.png",
         width: 1200,
         height: 630,
         alt: "Surepix — verified product photo editing",
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
     title: "Surepix — Product Photos That Stay True, Verified Element by Element",
     description:
       "Deterministic product-photo editing with built-in fidelity verification. Logos stay crisp. 100 SKUs in seconds.",
-    images: ["/og-cover.svg"],
+    images: ["/og-cover.png"],
   },
   robots: {
     index: true,
@@ -79,10 +80,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        url: SITE_URL,
+        name: "Surepix",
+        description:
+          "Surepix edits e-commerce product photos deterministically and verifies brand-asset fidelity before delivery.",
+        inLanguage: "en",
+        publisher: { "@id": `${SITE_URL}/#organization` },
+      },
+      {
         "@type": "SoftwareApplication",
         name: "Surepix",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
+        url: SITE_URL,
         description:
           "Deterministic e-commerce product photo editing with built-in brand-asset fidelity verification. Colour, crop, resize and watermark at ~40ms per image, with batch processing, per-element quality reports and editable PSD masters.",
         offers: {
@@ -100,10 +112,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       },
       {
         "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
         name: "Surepix",
         url: SITE_URL,
         logo: `${SITE_URL}/icon.svg`,
-        sameAs: [],
+        sameAs: [
+          "https://github.com/Tigerking-tech/Surepix-AI-image-generator-web-saas",
+        ],
       },
     ],
   };
@@ -114,6 +129,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale}>
       <head>
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="sitemap" href="/sitemap.xml" />
         <noscript>
           <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>

@@ -467,7 +467,7 @@ export default function Landing() {
         </section>
 
         {/* ---------- 保真承诺（深色块） ---------- */}
-        <section className="section">
+        <section className="section" id="guarantee">
           <div className="wrap">
             <Reveal>
               <div className="guarantee">

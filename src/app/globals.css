@@ -79,6 +79,33 @@
   box-sizing: border-box;
 }
 
+/* 防止整页横向滚动（落地页出现横向滚动条是最业余的破绽之一）。
+   overflow-x: clip 不建立滚动容器，因此不会破坏 sticky 导航。 */
+html,
+body {
+  overflow-x: clip;
+}
+img,
+svg,
+video {
+  max-width: 100%;
+}
+/* 网格子项默认 min-width:auto，会被图片的内在宽度撑破整列 →
+   必须归零，否则 .showcase/.plans 等会顶出视口产生横向滚动。 */
+.hero-grid > *,
+.showcase > *,
+.cap-grid > *,
+.feat-grid > *,
+.trust-grid > *,
+.steps > *,
+.plans > *,
+.footer-grid > *,
+.vsx-row > *,
+.guarantee > *,
+.reveal {
+  min-width: 0;
+}
+
 html,
 body {
   margin: 0;
@@ -320,7 +347,7 @@ h4 {
    ============================================================ */
 
 .hero {
-  padding: 104px 0 96px;
+  padding: 80px 0 72px;
   background: var(--bg);
 }
 .hero-grid {
@@ -391,17 +418,96 @@ h4 {
   border-radius: 50%;
   background: var(--line);
 }
-.hero-shot-bar span {
+.hero-win-title {
   margin-left: 8px;
   font-size: 12px;
   font-weight: 600;
   color: var(--ink-3);
   font-family: var(--mono);
 }
-.hero-shot .ba {
+.hero-win-export {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--brand);
+  padding: 5px 14px;
+  border-radius: 8px;
+}
+.hero-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--surface);
+}
+.ht {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+.ht.active {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+.ht-grow {
+  flex: 1;
+}
+.ht-ico {
+  font-size: 13px;
+  color: var(--ink-3);
+  padding: 4px 8px;
+}
+.hero-canvas {
+  position: relative;
+  padding: 30px 26px 34px;
+  background: radial-gradient(125% 85% at 50% -12%, #f5f7fc 0%, #eef1f7 46%, #e6e9f1 100%);
+}
+.hero-stage {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 12px 34px rgb(17 17 24 / 0.14);
+}
+.hero-stage .ba {
   border: none;
-  border-radius: 0;
+  border-radius: 14px;
   aspect-ratio: 4 / 3;
+}
+.hero-inspector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line-soft);
+  background: var(--surface);
+}
+.hi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+.hi-chip b {
+  color: var(--ink);
+  font-weight: 800;
+  font-family: var(--mono);
+  font-size: 11px;
 }
 .hero-note {
   display: flex;
@@ -449,7 +555,7 @@ h4 {
    ============================================================ */
 
 .section {
-  padding: 112px 0;
+  padding: 88px 0;
 }
 .section.alt {
   background: var(--surface);
@@ -576,7 +682,7 @@ h4 {
 .show-item .ba {
   border: none;
   border-radius: 0;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 3;
 }
 .show-body {
   padding: 18px 20px 20px;
@@ -595,8 +701,12 @@ h4 {
 }
 .show-metrics {
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 4px;
 }
 .show-metrics span {
   white-space: nowrap;
@@ -719,7 +829,10 @@ h4 {
 .ba .ba-after {
   position: absolute;
   inset: 0;
-  clip-path: inset(0 calc(100% - var(--pos, 55%)) 0 0);
+  /* after 必须显示在分割线【右】侧：左 Before / 右 After 是行业惯例，
+     也与左下/右下角标签对应。旧版裁的是左侧，导致"BEFORE 标签下面是处理后的图"，
+     拖动时越拖越迷惑（2026-10 修正）。 */
+  clip-path: inset(0 0 0 var(--pos, 55%));
 }
 .ba .ba-divider {
   position: absolute;
@@ -1685,6 +1798,161 @@ h4 {
   gap: 18px;
   flex-wrap: wrap;
   font-size: 13px;
+}
+
+/* ============================================================
+   v5 首屏增强 / 成果墙 / 真实证明条
+   ============================================================ */
+
+/* Hero 视觉：更像真实产品窗口 */
+.hero-shot {
+  position: relative;
+}
+.hero-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ok);
+  box-shadow: var(--shadow-sm);
+  z-index: 3;
+}
+.hero-badge i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+/* Hero 下的可信事实（真能力，不是编的用户数） */
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  margin-top: 26px;
+}
+.hero-trust div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.hero-trust b {
+  color: var(--ink);
+  font-weight: 800;
+}
+.hero-trust svg {
+  color: var(--ok);
+  flex: 0 0 auto;
+}
+
+/* 成果墙：大尺寸前后对比 */
+.results {
+  display: grid;
+  grid-template-columns: 1.18fr 1fr;
+  gap: 24px;
+}
+.results > * {
+  min-width: 0;
+}
+.result-card {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.result-card .ba {
+  border: none;
+  border-radius: 0;
+  aspect-ratio: 4 / 3;
+}
+.result-card.tall .ba {
+  aspect-ratio: auto;
+  flex: 1 1 auto;
+  min-height: 320px;
+}
+.result-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--line-soft);
+}
+.result-meta h3 {
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+.result-meta .chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ok);
+  background: var(--ok-bg);
+  border-radius: 999px;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+
+/* 真实证明条 */
+.proof-band {
+  padding: 44px 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line-soft);
+}
+.proof {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+.proof > div {
+  padding: 26px 24px;
+  border-right: 1px solid var(--line-soft);
+}
+.proof > div:last-child {
+  border-right: none;
+}
+.proof .pv {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-family: var(--mono);
+}
+.proof .pk {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+@media (max-width: 960px) {
+  .results {
+    grid-template-columns: 1fr;
+  }
+  .proof {
+    grid-template-columns: 1fr 1fr;
+  }
+  .proof > div:nth-child(2n) {
+    border-right: none;
+  }
+  .proof > div:nth-child(1),
+  .proof > div:nth-child(2) {
+    border-bottom: 1px solid var(--line-soft);
+  }
 }
 
 /* ---------- 响应式 ---------- */

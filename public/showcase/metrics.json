@@ -1,0 +1,69 @@
+{
+  "serum-after.png": {
+    "out": "serum-after.png",
+    "kind": "bg",
+    "elementsPass": "6/6",
+    "ms_ssim": 0.6502,
+    "edge_recall": 0.9938,
+    "mae": 101.36,
+    "qcPass": true,
+    "qcScore": "6/6",
+    "qcFailed": [],
+    "qcChecked": 6,
+    "subjectRecall": "0.9912",
+    "edgeHardness": "0.544"
+  },
+  "phones-after.png": {
+    "out": "phones-after.png",
+    "kind": "bg",
+    "elementsPass": "6/6",
+    "ms_ssim": 0.4685,
+    "edge_recall": 1,
+    "mae": 87.92,
+    "qcPass": true,
+    "qcScore": "7/7",
+    "qcFailed": [],
+    "qcChecked": 7,
+    "subjectRecall": "1.0000",
+    "edgeHardness": "0.377"
+  },
+  "counter-after.png": {
+    "out": "counter-after.png",
+    "kind": "bg",
+    "elementsPass": "n/a",
+    "ms_ssim": 0.9269,
+    "edge_recall": 1,
+    "mae": 34.97,
+    "qcPass": true,
+    "qcScore": "5/5",
+    "qcFailed": [],
+    "qcChecked": 5,
+    "subjectRecall": "0.9963"
+  },
+  "coffee-after.png": {
+    "out": "coffee-after.png",
+    "kind": "resize",
+    "elementsPass": "0/6",
+    "ms_ssim": 0.2839,
+    "edge_recall": 0.1719,
+    "mae": 39.48,
+    "qcPass": true,
+    "qcScore": "5/5",
+    "qcFailed": [],
+    "qcChecked": 5
+  },
+  "serum-brand-after.png": {
+    "out": "serum-brand-after.png",
+    "kind": "watermark",
+    "elementsPass": "6/6",
+    "ms_ssim": 0.9977,
+    "edge_recall": 1,
+    "mae": 0.1,
+    "qcPass": true,
+    "qcScore": "4/4",
+    "qcFailed": [],
+    "qcChecked": 4,
+    "subjectRecall": "0.9912",
+    "edgeHardness": "0.544"
+  }
+}

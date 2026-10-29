@@ -24,6 +24,19 @@ const TABS = [
     after: "/showcase/phones-after.png",
   },
   {
+    id: "shadow",
+    tab: "Shadow & grounding",
+    h: "Sits on the surface, doesn't float",
+    desc: "Cut a product out onto white and it looks pasted. The contact shadow is rebuilt from the subject's own bottom edge — traced column by column, so a round base gets a rounded shadow and two objects never collapse into one grey blob.",
+    points: [
+      ["Shadow traced from the subject's own base", "per-column"],
+      ["Fast decay, not a uniform haze", "grounded"],
+      ["Skipped for floating or cropped subjects", "no smear"],
+    ],
+    before: "/samples/counter.png",
+    after: "/showcase/counter-after.png",
+  },
+  {
     id: "colour",
     tab: "Colour & light",
     h: "Colour that obeys the recipe",

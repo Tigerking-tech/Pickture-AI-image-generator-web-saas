@@ -1,35 +1,150 @@
 /**
- * make-showcase.ts — 用真实管线（router→whitelist→PhotoCraft→保真校验）产出着陆页 after 图
- * 每个 tab 的 before/after 均为真实 pipeline 输出，非合成。
+ * make-showcase.ts — 用真实管线产出着陆页 after 图 + 真实保真指标。
+ *
+ * 每个 tab 的 before/after 均为真实 pipeline 输出（CLI 不可用时走 Surepix 参考引擎，
+ * 同一套白名单命令语义），并写出 public/showcase/metrics.json：
+ * 着陆页直接读取该文件展示指标，**不再硬编码任何假数字**。
+ *
+ * 说明：background-removal（边界漫水近似）与 watermark（sharp 合成文字层）
+ * 参考引擎现已支持，所有 after 图均真实产出，不再沿用占位图。
  */
 import fs from "node:fs";
+import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { runEdit } from "../src/lib/pipeline";
+import { verify, verifyGlobal } from "../src/lib/fidelity";
+
+const SAMPLES_DIR = path.join(process.cwd(), "public", "samples");
+const SHOWCASE_DIR = path.join(process.cwd(), "public", "showcase");
 
 const JOBS = [
-  { sample: "serum", intent: "make it warmer", out: "public/showcase/serum-after.png" },
-  { sample: "phones", intent: "去掉背景换成白底", out: "public/showcase/phones-after.png" },
-  { sample: "coffee", intent: "resize to 1200x900", out: "public/showcase/coffee-after.png" },
-  { sample: "serum", intent: "add a SUREPIX watermark", out: "public/showcase/serum-brand-after.png" },
+  {
+    sample: "serum",
+    intent: "product_shot",
+    out: "serum-after.png",
+    kind: "bg",
+  },
+  { sample: "phones", intent: "去掉背景换成白底", out: "phones-after.png", kind: "bg" },
+  { sample: "counter", intent: "product_shot", out: "counter-after.png", kind: "bg" },
+  { sample: "coffee", intent: "resize to 1200x900", out: "coffee-after.png", kind: "resize" },
+  { sample: "serum", intent: "add a SUREPIX watermark", out: "serum-brand-after.png", kind: "watermark" },
 ];
 
-async function main() {
-  let failed = false;
+function metricsOf(sample: string, afterPath: string) {
+  const origBuf = fs.readFileSync(path.join(SAMPLES_DIR, `${sample}.png`));
+  const procBuf = fs.readFileSync(afterPath);
+  const jsonPath = path.join(SAMPLES_DIR, `${sample}.json`);
+  if (!fs.existsSync(jsonPath)) {
+    // 无 manifest（如 resize 前后分辨率不同）→ 只做整图结构对比，不编造逐元素数字
+    const g = verifyGlobal(origBuf, procBuf, undefined, { toneEdit: true });
+    const whole = g.elements.whole_image ?? {};
+    return {
+      elementsPass: "n/a",
+      ms_ssim: whole.ms_ssim,
+      edge_recall: whole.edge_recall,
+      mae: whole.mae,
+    };
+  }
+  const manifest = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+  const report = verify(origBuf, procBuf, manifest, undefined, { toneEdit: true });
+  const els = Object.entries(report.elements).filter(([, v]) => !(v as any).removed);
+  const passCount = els.filter(([, v]) => (v as any).verdict === "PASS").length;
+  const g = verifyGlobal(origBuf, procBuf, undefined, { toneEdit: true });
+  const whole = g.elements.whole_image ?? {};
+  return {
+    elementsPass: `${passCount}/${els.length}`,
+    ms_ssim: whole.ms_ssim,
+    edge_recall: whole.edge_recall,
+    mae: whole.mae,
+  };
+}
+
+export async function main() {
+  const metrics: Record<string, unknown> = {};
   for (const j of JOBS) {
+    const afterPath = path.join(SHOWCASE_DIR, j.out);
     const res = await runEdit({ intent: j.intent, sampleId: j.sample });
     if (!res.ok) {
       console.error(`✗ ${j.sample} "${j.intent}" → ${res.error}`);
-      failed = true;
-      continue;
+      process.exit(1);
     }
-    fs.writeFileSync(j.out, Buffer.from(res.image.base64, "base64"));
-    const els = Object.entries(res.fidelity.elements)
-      .map(([k, v]) => `${k}:${v.verdict}`)
-      .join(" ");
+    fs.writeFileSync(afterPath, Buffer.from(res.image.base64, "base64"));
     console.log(
-      `✓ ${j.out} | route=${res.route.route} cli=${res.timingMs.cli}ms | ${els} | overall=${res.fidelity.verdict} action=${res.fidelityAction.action}`,
+      `✓ ${j.out} | engine=${res.meta.engine} | overall=${res.fidelity.verdict} action=${res.fidelityAction.action}`,
     );
+    metrics[j.out] = { out: j.out, kind: j.kind, ...metricsOf(j.sample, afterPath) };
   }
-  if (failed) process.exit(1);
+  fs.writeFileSync(path.join(SHOWCASE_DIR, "metrics.json"), JSON.stringify(metrics, null, 2));
+  console.log("✓ public/showcase/metrics.json written");
+
+  // ── 视觉质检门禁 ──────────────────────────────────────────────────────────
+  // 生成完必须过独立质检（scripts/qc.mjs 会真的打开每张图量轮廓/边缘/背景），
+  // 不通过就非 0 退出，绝不让「图是坏的、卡片却写着 PASS」再次发生。
+  let qc: { allPass: boolean; results: any[] } | null = null;
+  try {
+    execFileSync("node", ["scripts/qc.mjs"], { stdio: "inherit" });
+    qc = JSON.parse(fs.readFileSync(path.join(SHOWCASE_DIR, "qc-report.json"), "utf8"));
+  } catch {
+    // qc.mjs 退出码 1 = 有未通过项；报告仍然写了，读出来据实记录
+    try {
+      qc = JSON.parse(fs.readFileSync(path.join(SHOWCASE_DIR, "qc-report.json"), "utf8"));
+    } catch {
+      qc = null;
+    }
+  }
+  if (qc) {
+    for (const r of qc.results) {
+      const key = `${r.job}`;
+      for (const out of Object.keys(metrics)) {
+        if (!out.startsWith(key)) continue;
+        const m = metrics[out] as any;
+        const valid = r.checks.filter((c: any) => !c.info);
+        m.qcPass = r.pass;
+        m.qcScore = `${valid.filter((c: any) => c.ok).length}/${valid.length}`;
+        m.qcFailed = valid.filter((c: any) => !c.ok).map((c: any) => c.label);
+        m.qcChecked = valid.length;
+        const sr = valid.find((c: any) => c.id === "subject_recall");
+        if (sr) m.subjectRecall = sr.value;
+        const eh = valid.find((c: any) => c.id === "edge_hardness");
+        if (eh) m.edgeHardness = eh.value;
+      }
+    }
+    fs.writeFileSync(path.join(SHOWCASE_DIR, "metrics.json"), JSON.stringify(metrics, null, 2));
+  }
+  // 同时写出 TS 模块供 Landing 在构建期类型安全地读取（tsconfig 不扫描 public/*.json）
+  const tsPath = path.join(process.cwd(), "src", "lib", "showcase-metrics.ts");
+  fs.writeFileSync(
+    tsPath,
+    `// AUTO-GENERATED by scripts/make-showcase.ts — 真实管线产出的保真指标 + 质检结果，勿手改。\nexport type ShowcaseMetric = {\n  out: string;\n  kind: string;\n  elementsPass?: string;\n  ms_ssim?: number;\n  edge_recall?: number;\n  mae?: number;\n  qcPass?: boolean;\n  qcScore?: string;\n  qcFailed?: string[];\n  qcChecked?: number;\n  subjectRecall?: string;\n  edgeHardness?: string;\n};\nexport const SHOWCASE_METRICS = ${JSON.stringify(metrics, null, 2)} as Record<string, ShowcaseMetric>;\n`,
+  );
+  console.log("✓ src/lib/showcase-metrics.ts written");
+  // 让生成文件符合 biome 格式（去掉键名引号等）
+  try {
+    execFileSync("npx", ["biome", "format", "--write", tsPath], { stdio: "ignore" });
+  } catch {
+    /* biome 不可用时忽略，仅影响格式 */
+  }
+
+  // ── 边缘审阅图 ────────────────────────────────────────────────────────────
+  // 量化指标抓不住「看起来干不干净」，只能靠放大看。这里自动产出 12 处
+  // 边界 ×5 的宫格图，交付前必须在 public/showcase/edge-audit.png 上看一眼。
+  try {
+    execFileSync("node", ["scripts/edge-audit.mjs"], { stdio: "inherit" });
+  } catch {
+    console.warn("⚠ 边缘审阅图生成失败（不影响产物，但请手动跑 node scripts/edge-audit.mjs）");
+  }
+
+  if (qc && !qc.allPass) {
+    const bad = qc.results.filter((r) => !r.pass).map((r) => r.job);
+    console.error(`\n✗ 视觉质检未通过：${bad.join(", ")} — 展示图不允许以坏图状态发布`);
+    process.exit(1);
+  }
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+// 通过 vitest 调用时不自动执行（由 tests 显式 await main()）
+if (!process.env.VITEST) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

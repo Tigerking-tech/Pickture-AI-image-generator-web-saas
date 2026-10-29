@@ -1,0 +1,304 @@
+{
+  "generatedAt": "2026-10-29T00:16:38.412Z",
+  "thresholds": {
+    "subjectRecall": 0.99,
+    "bgMean": 250,
+    "bgStd": 3,
+    "edgeHardness": 0.75,
+    "groundChroma": 6,
+    "groundCover": 0.6,
+    "edgeAlign": 0.5,
+    "maeMin": 6,
+    "bboxMargin": 1
+  },
+  "allPass": true,
+  "results": [
+    {
+      "job": "phones",
+      "kind": "bg",
+      "checks": [
+        {
+          "id": "format",
+          "label": "PNG 可解码且非空",
+          "ok": true,
+          "value": "1200×900",
+          "info": false
+        },
+        {
+          "id": "not_blank",
+          "label": "非纯白/纯黑输出",
+          "ok": true,
+          "value": "ok",
+          "info": false
+        },
+        {
+          "id": "subject_recall",
+          "label": "主体轮廓完整（未被啃边）",
+          "ok": true,
+          "value": "1.0000",
+          "detail": "阈值 ≥0.99；被吃掉 0 像素",
+          "info": false
+        },
+        {
+          "id": "bg_purity",
+          "label": "背景纯色",
+          "ok": true,
+          "value": "mean 255.0 / sd 0.11",
+          "detail": "阈值 mean ≥250, sd ≤3",
+          "info": false
+        },
+        {
+          "id": "ground_chroma",
+          "label": "地面带只含中性灰影（无彩色残留）",
+          "ok": true,
+          "value": "chroma 0.0 / 覆盖 0%",
+          "detail": "阈值 chroma ≤6, 覆盖 ≤60%",
+          "info": false
+        },
+        {
+          "id": "edge_hardness",
+          "label": "边缘为羽化过渡（非剪刀边）",
+          "ok": true,
+          "value": "0.377",
+          "detail": "阈值 ≤0.75（原图 0.00 + 0.10 容差）；硬切 377/1001 边界点",
+          "info": false
+        },
+        {
+          "id": "edge_align",
+          "label": "轮廓贴合真实边缘（未浮空）",
+          "ok": true,
+          "value": "1.14",
+          "detail": "阈值 ≥0.5；边界带 326 像素的梯度 / 全图 p99",
+          "info": false
+        },
+        {
+          "id": "bbox",
+          "label": "主体未顶到画布边缘",
+          "ok": false,
+          "value": "margin 0px",
+          "detail": "原图本身贴边，仅提示",
+          "info": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "job": "serum",
+      "kind": "bg",
+      "checks": [
+        {
+          "id": "format",
+          "label": "PNG 可解码且非空",
+          "ok": true,
+          "value": "1200×900",
+          "info": false
+        },
+        {
+          "id": "not_blank",
+          "label": "非纯白/纯黑输出",
+          "ok": true,
+          "value": "ok",
+          "info": false
+        },
+        {
+          "id": "subject_recall",
+          "label": "主体轮廓完整（未被啃边）",
+          "ok": true,
+          "value": "0.9912",
+          "detail": "阈值 ≥0.99；被吃掉 1978 像素",
+          "info": false
+        },
+        {
+          "id": "bg_purity",
+          "label": "背景纯色",
+          "ok": true,
+          "value": "mean 255.0 / sd 1.35",
+          "detail": "阈值 mean ≥250, sd ≤3",
+          "info": false
+        },
+        {
+          "id": "ground_chroma",
+          "label": "地面带只含中性灰影（无彩色残留）",
+          "ok": true,
+          "value": "chroma 0.0 / 覆盖 0%",
+          "detail": "阈值 chroma ≤6, 覆盖 ≤60%",
+          "info": false
+        },
+        {
+          "id": "edge_hardness",
+          "label": "边缘为羽化过渡（非剪刀边）",
+          "ok": true,
+          "value": "0.544",
+          "detail": "阈值 ≤0.75（原图 0.19 + 0.10 容差）；硬切 679/1248 边界点",
+          "info": false
+        },
+        {
+          "id": "edge_align",
+          "label": "轮廓贴合真实边缘（未浮空）",
+          "ok": true,
+          "value": "n/a",
+          "detail": "轮廓带本身无对比度（梯度中位 0.0），该判据不适用",
+          "info": true
+        },
+        {
+          "id": "bbox",
+          "label": "主体未顶到画布边缘",
+          "ok": false,
+          "value": "margin 0px",
+          "detail": "原图本身贴边，仅提示",
+          "info": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "job": "counter",
+      "kind": "bg",
+      "checks": [
+        {
+          "id": "format",
+          "label": "PNG 可解码且非空",
+          "ok": true,
+          "value": "1200×900",
+          "info": false
+        },
+        {
+          "id": "not_blank",
+          "label": "非纯白/纯黑输出",
+          "ok": true,
+          "value": "ok",
+          "info": false
+        },
+        {
+          "id": "subject_recall",
+          "label": "主体轮廓完整（未被啃边）",
+          "ok": true,
+          "value": "0.9963",
+          "detail": "阈值 ≥0.99；被吃掉 448 像素",
+          "info": false
+        },
+        {
+          "id": "bg_purity",
+          "label": "背景纯色",
+          "ok": true,
+          "value": "mean 255.0 / sd 0.41",
+          "detail": "阈值 mean ≥250, sd ≤3",
+          "info": false
+        },
+        {
+          "id": "ground_chroma",
+          "label": "地面带只含中性灰影（无彩色残留）",
+          "ok": true,
+          "value": "chroma 0.0 / 覆盖 2%",
+          "detail": "阈值 chroma ≤6, 覆盖 ≤60%",
+          "info": false
+        },
+        {
+          "id": "edge_hardness",
+          "label": "边缘为羽化过渡（非剪刀边）",
+          "ok": true,
+          "value": "0.798",
+          "detail": "原图本身锐边（0.42），仅提示；硬切 261/327 边界点",
+          "info": true
+        },
+        {
+          "id": "edge_align",
+          "label": "轮廓贴合真实边缘（未浮空）",
+          "ok": true,
+          "value": "n/a",
+          "detail": "轮廓带本身无对比度（梯度中位 2.8），该判据不适用",
+          "info": true
+        },
+        {
+          "id": "bbox",
+          "label": "主体未顶到画布边缘",
+          "ok": false,
+          "value": "margin 0px",
+          "detail": "原图本身贴边，仅提示",
+          "info": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "job": "coffee",
+      "kind": "resize",
+      "checks": [
+        {
+          "id": "format",
+          "label": "PNG 可解码且非空",
+          "ok": true,
+          "value": "1200×900",
+          "info": false
+        },
+        {
+          "id": "not_blank",
+          "label": "非纯白/纯黑输出",
+          "ok": true,
+          "value": "ok",
+          "info": false
+        },
+        {
+          "id": "resize_target",
+          "label": "输出尺寸符合目标画布",
+          "ok": true,
+          "value": "1200×900",
+          "detail": "期望 1200×900 ← 源 1000×1000",
+          "info": false
+        },
+        {
+          "id": "resize_changed",
+          "label": "画面确有变化",
+          "ok": true,
+          "value": "52.0",
+          "detail": "MAE >1",
+          "info": false
+        },
+        {
+          "id": "dark_ratio",
+          "label": "无全黑输出",
+          "ok": true,
+          "value": "0.001",
+          "info": false
+        }
+      ],
+      "pass": true
+    },
+    {
+      "job": "serum-brand",
+      "kind": "watermark",
+      "checks": [
+        {
+          "id": "format",
+          "label": "PNG 可解码且非空",
+          "ok": true,
+          "value": "1200×900",
+          "info": false
+        },
+        {
+          "id": "not_blank",
+          "label": "非纯白/纯黑输出",
+          "ok": true,
+          "value": "ok",
+          "info": false
+        },
+        {
+          "id": "wm_applied",
+          "label": "水印已叠加",
+          "ok": true,
+          "value": "0.10",
+          "detail": "与原图有差异",
+          "info": false
+        },
+        {
+          "id": "dark_ratio",
+          "label": "无全黑输出",
+          "ok": true,
+          "value": "0.000",
+          "info": false
+        }
+      ],
+      "pass": true
+    }
+  ]
+}

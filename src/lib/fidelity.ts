@@ -300,6 +300,7 @@ export function verifyElement(
   origBbox: Bbox,
   procBbox: Bbox,
   name: string,
+  opts?: { toneEdit?: boolean },
 ): ElementReport {
   const ro = crop(orig, origBbox);
   let rp = crop(proc, procBbox);
@@ -338,6 +339,13 @@ export function verifyElement(
     edgeTh = 0.4;
     crTh = 0.5;
   }
+
+  // 纯调色 / 调光编辑（curves / 亮度对比 / 色相饱和度 / 色阶）会**有意**改变全局
+  // 对比度——这正是用户要的效果，不是损伤。若仍用 0.7~0.85 的对比度下限，会被反复
+  // 误判为 REPAIR 并自动降级到「几乎无变化的温吞配方」，导致着陆页对比滑块看不出
+  // 区别。这里把对比度下限放宽到 0.5（仍能在整体灰白化 / 洗白时断崖下降），而结构类
+  // 指标（去均值 SSIM、边缘召回）完全不变，继续拦截模糊 / 位移 / 擦除。
+  if (opts?.toneEdit) crTh = 0.5;
 
   const reasons: string[] = [];
   if (s < ssimTh) reasons.push(`ssim=${s.toFixed(3)}<${ssimTh}`);
@@ -460,6 +468,7 @@ export function verify(
   procBuf: Buffer,
   manifest: { elements: Record<string, { bbox: Bbox }> },
   transform?: ImgTransform,
+  opts?: { toneEdit?: boolean },
 ): FidelityReport {
   const orig = decodePng(origBuf);
   const proc = decodePng(procBuf);
@@ -491,7 +500,7 @@ export function verify(
       report.summary.REMOVED = (report.summary.REMOVED || 0) + 1;
       continue;
     }
-    const r = verifyElement(ref, proc, clamped, clamped, name);
+    const r = verifyElement(ref, proc, clamped, clamped, name, opts);
     report.elements[name] = r;
     if (ORDER[r.verdict] > ORDER[worst]) worst = r.verdict as FidelityReport["verdict"];
   }
@@ -508,6 +517,7 @@ export function verifyGlobal(
   origBuf: Buffer,
   procBuf: Buffer,
   transform?: ImgTransform,
+  opts?: { toneEdit?: boolean },
 ): FidelityReport {
   const orig = decodePng(origBuf);
   return verify(
@@ -517,5 +527,6 @@ export function verifyGlobal(
       elements: { whole_image: { bbox: [0, 0, orig.w, orig.h] as Bbox } },
     },
     transform,
+    opts,
   );
 }

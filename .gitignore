@@ -64,10 +64,13 @@ video-proofs/*.mjs
 /vendor/
 
 # Old SaaSKit template assets (screenshots show pre-v2 design)
-/docs/
+# 注：本项目 QC 检查清单 docs/QC-CHECKLIST.md 需入库，故不再整体忽略 /docs/
 
 # damage-test.js outputs (regenerated on each run)
 /damage_*.png
 
 # temp build artifacts
 /.tmp-fidelity-cjs/
+
+# 分割模型权重（44MB，不入库；用 `npm run model` 拉取）
+/assets/models/*.onnx

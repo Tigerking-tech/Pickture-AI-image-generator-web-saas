@@ -25,7 +25,8 @@ import {
   verifyGlobal,
 } from "./fidelity";
 import { runGenerative } from "./generative";
-import { convertFile, docInfo, rmQuiet, runChain, tmpPath } from "./pc";
+import { isToneEdit, runChainOnBuffer } from "./js-engine";
+import { cliAvailable, convertFile, docInfo, rmQuiet, runChain, tmpPath } from "./pc";
 import { planWithFallback, type RouteDecision, route, routeAfterFidelity } from "./router";
 import { type ChainStep, INTENT_TEMPLATES, planChain, validateCommandChain } from "./whitelist";
 
@@ -183,6 +184,7 @@ async function runLevel(
   fidelity: FidelityReport;
   resultPng?: Buffer;
   psdInfo?: EditResult["psd"];
+  engine?: string;
 }> {
   const tmpFiles: string[] = [];
   const inFile = tmpPath("png");
@@ -193,46 +195,73 @@ async function runLevel(
   const outFile = tmpPath(outExt);
   tmpFiles.push(outFile);
 
-  const cliRes = await runChain(inFile, level.chain, outFile);
-  if (!cliRes.ok) {
-    rmQuiet(tmpFiles);
-    return {
-      ok: false,
-      error: `photocraft: ${cliRes.stderr || cliRes.error || "run failed"}`,
-      cliMs: cliRes.ms,
-      fidelityMs: 0,
-      fidelity: { verdict: "PASS", elements: {}, summary: {} },
-    };
-  }
-
-  let resultPng: Buffer;
+  // PhotoCraft CLI 不可用时（离线 / 沙箱 / DEMO_MODE 无二进制），回退到 Surepix
+  // 参考引擎（纯 TS，确定性、可离线）。两者共享同一套白名单命令语义，覆盖
+  // 调色 / 几何 / 去背（边界漫水近似）/ 文字水印（sharp 合成）。
+  const useReferenceEngine = !cliAvailable();
+  let cliMs = 0;
+  let engine = "photocraft";
+  let resultPng: Buffer | undefined;
   let psdInfo: EditResult["psd"];
-  if (wantPsd) {
-    const previewFile = tmpPath("png");
-    tmpFiles.push(previewFile);
-    const conv = await convertFile(outFile, previewFile);
-    if (!conv.ok || !fs.existsSync(previewFile)) {
+
+  if (useReferenceEngine) {
+    cliMs = Date.now();
+    const run = await runChainOnBuffer(origPng, level.chain);
+    cliMs = Date.now() - cliMs;
+    if (!run.ok) {
       rmQuiet(tmpFiles);
       return {
         ok: false,
-        error: `photocraft convert: ${conv.stderr || "failed"}`,
+        error: run.error,
+        cliMs,
+        fidelityMs: 0,
+        fidelity: { verdict: "PASS", elements: {}, summary: {} },
+      };
+    }
+    resultPng = Buffer.from(run.base64, "base64");
+    engine = "surepix-js";
+  } else {
+    const cliRes = await runChain(inFile, level.chain, outFile);
+    if (!cliRes.ok) {
+      rmQuiet(tmpFiles);
+      return {
+        ok: false,
+        error: `photocraft: ${cliRes.stderr || cliRes.error || "run failed"}`,
         cliMs: cliRes.ms,
         fidelityMs: 0,
         fidelity: { verdict: "PASS", elements: {}, summary: {} },
       };
     }
-    resultPng = fs.readFileSync(previewFile);
-    const info = await docInfo(outFile);
-    const layers = Array.isArray(info.info?.layers)
-      ? (info.info.layers as { name?: string; kind?: string }[]).map((l) => ({
-          name: l.name || "layer",
-          kind: l.kind || "unknown",
-        }))
-      : [];
-    psdInfo = { base64: fs.readFileSync(outFile).toString("base64"), layers };
-  } else {
-    resultPng = fs.readFileSync(outFile);
+
+    if (wantPsd) {
+      const previewFile = tmpPath("png");
+      tmpFiles.push(previewFile);
+      const conv = await convertFile(outFile, previewFile);
+      if (!conv.ok || !fs.existsSync(previewFile)) {
+        rmQuiet(tmpFiles);
+        return {
+          ok: false,
+          error: `photocraft convert: ${conv.stderr || "failed"}`,
+          cliMs: cliRes.ms,
+          fidelityMs: 0,
+          fidelity: { verdict: "PASS", elements: {}, summary: {} },
+        };
+      }
+      resultPng = fs.readFileSync(previewFile);
+      const info = await docInfo(outFile);
+      const layers = Array.isArray(info.info?.layers)
+        ? (info.info.layers as { name?: string; kind?: string }[]).map((l) => ({
+            name: l.name || "layer",
+            kind: l.kind || "unknown",
+          }))
+        : [];
+      psdInfo = { base64: fs.readFileSync(outFile).toString("base64"), layers };
+    } else {
+      resultPng = fs.readFileSync(outFile);
+    }
   }
+
+  const toneEdit = isToneEdit(level.chain);
 
   const tFid = Date.now();
   const fidelity: FidelityReport = manifest
@@ -241,12 +270,13 @@ async function runLevel(
         resultPng,
         manifest as unknown as { elements: Record<string, { bbox: Bbox }> },
         transform,
+        { toneEdit },
       )
-    : verifyGlobal(origPng, resultPng, transform);
+    : verifyGlobal(origPng, resultPng, transform, { toneEdit });
   const fidelityMs = Date.now() - tFid;
 
   rmQuiet(tmpFiles);
-  return { ok: true, cliMs: cliRes.ms, fidelityMs, fidelity, resultPng, psdInfo };
+  return { ok: true, cliMs, fidelityMs, fidelity, resultPng, psdInfo, engine };
 }
 
 export async function runEdit(req: EditRequest): Promise<EditResult> {
@@ -271,6 +301,15 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     meta: { source: "none", engine: "", license: "" },
     ...extra,
   });
+
+  /** 引擎标签：参考引擎（离线、无二进制）与生产 PhotoCraft 区分标注，绝不混淆 */
+  const engineMeta = (engine?: string) =>
+    engine === "surepix-js"
+      ? {
+          engine: "Surepix 参考引擎 (pure-TS + RMBG 语义去背)",
+          license: "surepix (MIT OR Apache-2.0)",
+        }
+      : { engine: "PhotoCraft CLI v0.15.1 (Rust)", license: "MIT OR Apache-2.0" };
 
   // 解析调用方计划（用于 fair-use 月度上限）；无订阅 / 异常回退 free。
   // 匿名（无 userId）直接按 free 档计；demo 模式由 fair-use 模块短路放行。
@@ -558,7 +597,7 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
       repairTrail: [],
       levelUsed: lv.level,
       image: { base64: res.resultPng.toString("base64"), width: img.w, height: img.h },
-      meta: { source, engine: "PhotoCraft CLI v0.15.1 (Rust)", license: "MIT OR Apache-2.0" },
+      meta: { ...engineMeta(res.engine), source },
     };
   }
 
@@ -594,7 +633,7 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
         levelUsed: lv.level,
         image: { base64: last.resultPng!.toString("base64"), width: img.w, height: img.h },
         psd: last.psdInfo,
-        meta: { source, engine: "PhotoCraft CLI v0.15.1 (Rust)", license: "MIT OR Apache-2.0" },
+        meta: { ...engineMeta(last.engine), source },
       };
     }
     // 未通过：记录并降级重试
@@ -615,6 +654,6 @@ export async function runEdit(req: EditRequest): Promise<EditResult> {
     levelUsed: levels[levels.length - 1].level,
     image: { base64: last!.resultPng!.toString("base64"), width: img.w, height: img.h },
     psd: last!.psdInfo,
-    meta: { source, engine: "PhotoCraft CLI v0.15.1 (Rust)", license: "MIT OR Apache-2.0" },
+    meta: { ...engineMeta(last!.engine), source },
   };
 }

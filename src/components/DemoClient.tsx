@@ -47,6 +47,7 @@ type Input = { kind: "sample"; id: string } | { kind: "b64"; data: string };
 const SAMPLES = [
   { id: "serum", name: "Serum bottles" },
   { id: "phones", name: "Earbuds" },
+  { id: "counter", name: "Bottle on table" },
   { id: "coffee", name: "Coffee bag" },
 ];
 
@@ -142,7 +143,15 @@ export default function DemoClient() {
       });
       const data = (await res.json()) as EditResult;
       if (!res.ok || !data.ok) {
-        setError(data.error || `request failed (${res.status})`);
+        // 离线参考引擎不支持的命令（背景移除 / 水印）给出明确、不误导的提示
+        const err = data.error || `request failed (${res.status})`;
+        if (err.includes("reference engine does not implement")) {
+          setError(
+            "该编辑（去背景 / 水印）需要原生 PhotoCraft 引擎。当前演示环境为离线参考引擎，仅支持调色 / 调光 / 缩放 / 锐化等确定性命令。",
+          );
+        } else {
+          setError(err);
+        }
       } else {
         setResult(data);
       }

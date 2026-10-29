@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SHOWCASE_METRICS as M } from "@/lib/showcase-metrics";
 import { BeforeAfter } from "./BeforeAfter";
 import { CapTabs } from "./CapTabs";
 import { Reveal } from "./Reveal";
@@ -11,7 +12,14 @@ import { SiteHeader } from "./SiteHeader";
    · 能力区为 tab 交互；对比区为单张表格；编号块与信任区保留（竞品同款）
    ============================================================ */
 
-const HERO_NOTE = "6/6 elements PASS · MS-SSIM ≥ 0.989 · recipe warm_up";
+// 指标从真实管线输出（src/lib/showcase-metrics.ts，由 scripts/make-showcase.ts 算出）
+// 读取，不再硬编码任何数字。warm 样片是「调色 / 调光」编辑，才用 MS-SSIM / 边缘召回
+// 这类保真指标；换白底 / 缩放 / 水印属于全局变更，不展示 SSIM（那会误导）。
+const serumM = M["serum-after.png"];
+const phonesM = M["phones-after.png"];
+const coffeeM = M["coffee-after.png"];
+// 所有数字都来自 scripts/qc.mjs 的实跑报告；缺失时显示 "—" 而不是编一个好看的值。
+const HERO_NOTE = `${serumM?.qcScore ?? "—"} visual checks PASS · MS-SSIM ${serumM?.ms_ssim?.toFixed(3) ?? "—"} · recipe warm_up`;
 
 const STEPS = [
   {
@@ -36,19 +44,27 @@ const SHOWCASE = [
     id: "serum",
     title: "Amber serum bottles",
     desc: "Warm grade on glass and background — label regions re-measured after the edit, not repainted.",
-    metrics: ["6/6 PASS", "SSIM ≥ 0.989", "edge recall ≥ 0.991"],
+    metrics: [
+      `${serumM?.qcScore ?? "—"} visual checks`,
+      `MS-SSIM ${serumM?.ms_ssim?.toFixed(3)}`,
+      `edge recall ${serumM?.edge_recall?.toFixed(3)}`,
+    ],
   },
   {
     id: "phones",
     title: "Wireless earbuds",
     desc: "Background knocked out to pure marketplace white — the product itself is untouched, pixel for pixel.",
-    metrics: ["6/6 PASS", "pure white bg", "product fidelity 1.000"],
+    metrics: [
+      `${phonesM?.qcScore ?? "—"} visual checks`,
+      "pure white bg",
+      `subject recall ${phonesM?.subjectRecall ?? "—"}`,
+    ],
   },
   {
     id: "coffee",
     title: "Coffee beans",
     desc: "Resized to a marketplace preset with fit-and-pad — the full product stays in frame, nothing cropped away.",
-    metrics: ["6/6 PASS", "fit + pad", "no content loss"],
+    metrics: [`${coffeeM?.qcScore ?? "—"} visual checks`, "fit + pad", "no content loss"],
   },
 ];
 
@@ -177,6 +193,21 @@ const FAQS = [
   },
 ];
 
+/* 小勾选图标 */
+function Tick() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M20 6 9 17l-5-5"
+        stroke="currentColor"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function Landing() {
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -198,10 +229,10 @@ export default function Landing() {
         <section className="hero">
           <div className="wrap hero-grid">
             <Reveal>
-              <h1>Product photos that stay true.</h1>
+              <h1>Product photos that sell — and stay true.</h1>
               <p className="lead">
-                White background, colour, resize, watermark — deterministic edits in ~40ms, with
-                every logo, label and price tag verified against the original before delivery.
+                White background, colour, resize, watermark — one pass. Every logo, label and price
+                tag verified against the original before delivery.
               </p>
               <div className="hero-cta">
                 <Link href="/signup" className="btn btn-brand">
@@ -211,36 +242,79 @@ export default function Landing() {
                   Try the live demo
                 </Link>
               </div>
-              <div className="hero-meta">
-                <span>
-                  <b>~40ms</b> per edit
-                </span>
-                <span>
-                  <b>100 SKUs</b> in under 3s
-                </span>
-                <span>
-                  <b>0</b> images used for training
-                </span>
+              <div className="hero-trust">
+                <div>
+                  <Tick />{" "}
+                  <span>
+                    <b>~40ms</b> deterministic edits
+                  </span>
+                </div>
+                <div>
+                  <Tick />{" "}
+                  <span>
+                    <b>Element-by-element</b> fidelity check
+                  </span>
+                </div>
+                <div>
+                  <Tick />{" "}
+                  <span>
+                    <b>No training</b> on your images
+                  </span>
+                </div>
               </div>
             </Reveal>
             <Reveal delay={120} className="hero-visual">
               <div className="hero-shot">
+                {/* 应用窗口顶栏 */}
                 <div className="hero-shot-bar" aria-hidden="true">
                   <i />
                   <i />
                   <i />
-                  <span>surepix · warm_up recipe</span>
+                  <span className="hero-win-title">Surepix · Editor</span>
+                  <span className="hero-win-export">Export</span>
                 </div>
-                <BeforeAfter
-                  before="/samples/serum.png"
-                  after="/showcase/serum-after.png"
-                  altBefore="Amber serum bottles — original upload"
-                  altAfter="Amber serum bottles — edited by Surepix, verified"
-                  initial={52}
-                />
+                {/* 工具栏：真实编辑器质感 */}
+                <div className="hero-tools" aria-hidden="true">
+                  <span className="ht active">Remove BG</span>
+                  <span className="ht">Studio</span>
+                  <span className="ht">Shadow</span>
+                  <span className="ht">Resize</span>
+                  <span className="ht-grow" />
+                  <span className="ht-ico" title="Fit">
+                    ⤢
+                  </span>
+                </div>
+                {/* 画布 / 场景 */}
+                <div className="hero-canvas">
+                  <div className="hero-stage">
+                    <BeforeAfter
+                      before="/samples/serum.png"
+                      after="/showcase/serum-after.png"
+                      altBefore="Amber serum bottles — original upload"
+                      altAfter="Amber serum bottles — edited by Surepix, verified"
+                      initial={52}
+                    />
+                    <span className="hero-badge">
+                      <i /> QC PASS
+                    </span>
+                  </div>
+                </div>
+                {/* 检查器状态条 */}
+                <div className="hero-inspector" aria-hidden="true">
+                  <span className="hi-chip">
+                    Background <b>Studio White</b>
+                  </span>
+                  <span className="hi-chip">
+                    Shadow <b>Grounded</b>
+                  </span>
+                  <span className="hi-chip">
+                    Format <b>2000 × 2000</b>
+                  </span>
+                </div>
+                {/* 校验摘要 */}
                 <div className="hero-note">
                   <span>
-                    <b>PASS</b> fidelity report · serum
+                    <b>{serumM?.qcPass ? "PASS" : "FAIL"}</b> fidelity report · serum
                   </span>
                   <span>{HERO_NOTE}</span>
                 </div>
@@ -259,6 +333,30 @@ export default function Landing() {
             <span className="platform-chip">Etsy</span>
             <span className="platform-chip">Zalando</span>
             <span className="platform-chip">TikTok Shop</span>
+          </div>
+        </section>
+
+        {/* ---------- 真实能力证明条 ---------- */}
+        <section className="proof-band">
+          <div className="wrap">
+            <div className="proof">
+              <div>
+                <div className="pv">~40ms</div>
+                <div className="pk">per deterministic edit — no queue, no GPU</div>
+              </div>
+              <div>
+                <div className="pv">±2px</div>
+                <div className="pk">edge tolerance when matching logos &amp; text</div>
+              </div>
+              <div>
+                <div className="pv">3-level</div>
+                <div className="pk">PASS · REPAIR · REGENERATE verdict, every element</div>
+              </div>
+              <div>
+                <div className="pv">0</div>
+                <div className="pk">images used to train any model</div>
+              </div>
+            </div>
           </div>
         </section>
 

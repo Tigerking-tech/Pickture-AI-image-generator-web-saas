@@ -22,17 +22,24 @@ export function Reveal({
       setShown(true);
       return;
     }
+    // 兜底：即便 IntersectionObserver 因环境原因不触发（无 JS 滚动、
+    // 截图/分享预览、异常布局），也在 1.4s 后显形，避免整页空白。
+    const failSafe = window.setTimeout(() => setShown(true), 1400);
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           setShown(true);
           io.disconnect();
+          window.clearTimeout(failSafe);
         }
       },
       { threshold: 0.1, rootMargin: "0px 0px -36px 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      window.clearTimeout(failSafe);
+      io.disconnect();
+    };
   }, []);
 
   return (

@@ -239,6 +239,26 @@ export const ALLOWED: Record<string, CommandSpec> = {
     },
     desc: "Remove background to transparency (layer mask from Select Subject)",
   },
+  // ── Surepix 自研算子（不在 PhotoCraft 注册表中，由 src/lib/grade.ts 实现）──
+  // 为什么要自研：PhotoCraft 只有 curves / hueSaturation 这类「逐通道」原语，
+  // 表达不了色温 + 分离色调 + 中性保护，硬拼出来就是「番茄红」。见 docs/ENGINE-MATRIX.md
+  "grade.pro": {
+    risk: "safe",
+    params: {
+      exposure: { type: "num", range: [-3, 3] },
+      contrast: { type: "num", range: [0, 1] },
+      warmth: { type: "num", range: [0, 1] },
+      satBoost: { type: "num", range: [-0.5, 0.5] },
+    },
+    desc: "Professional grade: OKLab tone curve + white-balance warmth + split toning (Surepix native)",
+  },
+  "effect.contactShadow": {
+    risk: "safe",
+    params: {
+      opacity: { type: "num", range: [0, 1] },
+    },
+    desc: "Contact shadow from column-floor profile (Surepix native)",
+  },
 };
 
 /** 模板 build 的入参：指令解析出的参数 + 原图尺寸（管线注入，几何类模板需要） */
@@ -273,45 +293,51 @@ export interface IntentTemplate {
 /** 语义动作 → 命令链模板（Surepix 自有映射资产，含降级链） */
 export const INTENT_TEMPLATES: IntentTemplate[] = [
   {
-    intent: "warm_up",
-    patterns: [/暖|warm|温暖|暖色/i],
-    desc: "Warm grade (lift red channel)",
+    intent: "product_shot",
+    patterns: [/商品图|主图|精修|上架|product\s*shot|product\s*photo|e-?commerce/i],
+    desc: "Product shot: cutout on pure white + warm grade + contact shadow + sharpen",
     build: () => [
-      {
-        cmd: "layer.newAdjustmentLayer.curves",
-        params: {
-          points: [
-            [0, 18],
-            [128, 142],
-            [255, 248],
-          ],
-        },
-      },
+      { cmd: "select.subject", params: {} },
+      { cmd: "select.inverse", params: {} },
+      { cmd: "edit.fill", params: { contents: "white" } },
+      { cmd: "grade.pro", params: { warmth: 0.45, exposure: 0.06, contrast: 0.15 } },
+      { cmd: "effect.contactShadow", params: { opacity: 0.42 } },
     ],
     fallbacks: [
       {
         level: 1,
-        desc: "Gentler warm grade (halved curve offset)",
+        desc: "Cutout on white only (no grade / shadow)",
         build: () => [
-          {
-            cmd: "layer.newAdjustmentLayer.curves",
-            params: {
-              points: [
-                [0, 9],
-                [128, 134],
-                [255, 244],
-              ],
-            },
-          },
+          { cmd: "select.subject", params: {} },
+          { cmd: "select.inverse", params: {} },
+          { cmd: "edit.fill", params: { contents: "white" } },
         ],
       },
       {
         level: 2,
-        desc: "Slight red-channel lift only",
+        desc: "Plain warm grade",
+        build: () => [{ cmd: "grade.pro", params: { warmth: 0.4 } }],
+      },
+    ],
+  },
+  {
+    intent: "warm_up",
+    patterns: [/暖|warm|温暖|暖色/i],
+    desc: "Warm grade (white-balance shift in linear light + OKLab tone curve)",
+    build: () => [{ cmd: "grade.pro", params: { warmth: 0.55, exposure: 0.07 } }],
+    fallbacks: [
+      {
+        level: 1,
+        desc: "Gentler warm grade",
+        build: () => [{ cmd: "grade.pro", params: { warmth: 0.3 } }],
+      },
+      {
+        level: 2,
+        desc: "Slight brightness lift only",
         build: () => [
           {
             cmd: "layer.newAdjustmentLayer.brightnessContrast",
-            params: { brightness: 8, contrast: 0 },
+            params: { brightness: 10, contrast: 4 },
           },
         ],
       },
@@ -320,17 +346,11 @@ export const INTENT_TEMPLATES: IntentTemplate[] = [
   {
     intent: "cool_down",
     patterns: [/冷|cool|清冷/i],
-    desc: "Cool grade (lift blue channel)",
+    desc: "Cool grade (hue rotate toward blue + slight desaturation)",
     build: () => [
       {
-        cmd: "layer.newAdjustmentLayer.curves",
-        params: {
-          points: [
-            [0, 10],
-            [128, 128],
-            [255, 240],
-          ],
-        },
+        cmd: "layer.newAdjustmentLayer.hueSaturation",
+        params: { hue: 12, saturation: -6, lightness: 0 },
       },
     ],
     fallbacks: [
@@ -339,14 +359,8 @@ export const INTENT_TEMPLATES: IntentTemplate[] = [
         desc: "Gentler cool grade",
         build: () => [
           {
-            cmd: "layer.newAdjustmentLayer.curves",
-            params: {
-              points: [
-                [0, 5],
-                [128, 128],
-                [255, 236],
-              ],
-            },
+            cmd: "layer.newAdjustmentLayer.hueSaturation",
+            params: { hue: 8, saturation: -4, lightness: 0 },
           },
         ],
       },
@@ -554,7 +568,7 @@ export const GENERATIVE_INTENTS = [
   {
     intent: "swap_background",
     patterns: [
-      /换背景|换成.{1,30}背景(?!白)|场景图?|把背景.{0,12}(?:改成|换成|调成|变)(?!白底|纯色|透明|纯白|白色)|背景换成(?!白底|纯色|透明|纯白|白色)|change (?:the )?background|replace (?:the )?background|new background|background to/i,
+      /换背景|换成.{1,30}背景(?!白)|场景图?|把背景.{0,12}(?:改成|换成|调成|变)(?!白底|纯色|透明|纯白|白色)|背景换成(?!白底|纯色|透明|纯白|白色)|change (?:the )?background (?!to white|to transparent)|replace (?:the )?background (?!to white|to transparent)|new background|background to (?!white|transparent|pure|solid|plain|blank|colourless|colorless)/i,
     ],
     desc: "Swap to a scene/coloured background (semantic; pure white/transparent is deterministic)",
   },
@@ -635,8 +649,10 @@ export function detectIntents(instruction: string): {
   deterministic: IntentTemplate[];
   generative: typeof GENERATIVE_INTENTS;
 } {
-  const deterministic = INTENT_TEMPLATES.filter((t) =>
-    t.patterns.some((re) => re.test(instruction)),
+  // 模板 id 直连（如 "product_shot"）：pipeline.buildTemplate 支持按 id 命中，
+  // 路由层必须同样认它，否则会走到 reject 分支
+  const deterministic = INTENT_TEMPLATES.filter(
+    (t) => t.intent === instruction || t.patterns.some((re) => re.test(instruction)),
   );
   const generative = GENERATIVE_INTENTS.filter((g) =>
     g.patterns.some((re) => re.test(instruction)),
@@ -678,7 +694,9 @@ export function planChain(
       args: BuildArgs;
     }
   | { ok: false; error: string } {
-  const matchedAll = INTENT_TEMPLATES.filter((t) => t.patterns.some((re) => re.test(instruction)));
+  const matchedAll = INTENT_TEMPLATES.filter(
+    (t) => t.intent === instruction || t.patterns.some((re) => re.test(instruction)),
+  );
   if (matchedAll.length === 0) return { ok: false, error: "no intent matched" };
   const matched = [...matchedAll].sort((a, b) => mergeRank(a.intent) - mergeRank(b.intent));
   const args: BuildArgs = {};
